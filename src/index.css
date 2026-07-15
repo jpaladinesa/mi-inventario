@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Configuración base para una aplicación profesional 
+*/
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ajustamos el body para que el Dashboard ocupe toda la pantalla 
+  sin problemas de centrado forzado una vez que inicias sesión.
+*/
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f8fafc; /* slate-50 */
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Transiciones globales para botones e inputs */
+button, input {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilización opcional de la barra de desplazamiento para un look más "Pro" */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
