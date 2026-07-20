@@ -1,24 +1,13 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { db } from './firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import React, { createContext, useState } from 'react';
 
 export const InventoryContext = createContext();
 
 export const InventoryProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
-  // Aquí podemos ir agregando luego clients, orders, etc.
-
-  useEffect(() => {
-    // Escucha en tiempo real la colección "productos"
-    const unsub = onSnapshot(collection(db, "productos"), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ ...doc.data() }));// Agrega esta línea
-setProducts(data);
-    });
-    return () => unsub();
-  }, []);
+  // Aquí podemos ir agregando luego clientes, pedidos, etc.
 
   return (
-    <InventoryContext.Provider value={{ products }}>
+    <InventoryContext.Provider value={{ products, setProducts }}>
       {children}
     </InventoryContext.Provider>
   );
