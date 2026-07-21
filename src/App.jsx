@@ -1073,29 +1073,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
         </div>
       )}
 
-      {modalType === 'orderSuccess' && lastSavedOrder && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60] animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} /></div>
-            <h3 className="font-black text-xl mb-2 tracking-tighter leading-tight">¡SOLICITUD GENERADA!</h3>
-            <p className="text-[10px] text-slate-400 font-black mb-6">PEDIDO: <span className="text-[#2596be]">{lastSavedOrder.id}</span></p>
-            
-            <p className="text-[10px] font-bold mb-6 text-slate-500 uppercase tracking-widest">NOTIFICAR CONFIRMACIÓN AL CLIENTE</p>
-            
-            <div className="flex flex-col gap-3 mb-8">
-              <button onClick={() => window.open(`https://wa.me/${formatWaPhone(lastSavedOrder.clientPhone)}?text=${encodeURIComponent(`Hola ${lastSavedOrder.clientName},\n\nSe ha generado exitosamente tu Solicitud de Pedido *${lastSavedOrder.id}* por un valor de *${formatCurrency(lastSavedOrder.totalValue)}*.\n\n¡Gracias por preferir a Distribuciones Castilla S.A.S.!`)}`, '_blank')} className="w-full py-4 bg-[#25D366] hover:bg-[#1EBE55] text-white rounded-xl font-black text-[10px] shadow-xl transition-all flex items-center justify-center gap-3">
-                <MessageCircle size={18} /> ENVIAR VÍA WHATSAPP
-              </button>
-              
-              <button onClick={() => window.open(`mailto:${lastSavedOrder.clientEmail}?subject=${encodeURIComponent(`Confirmación Pedido ${lastSavedOrder.id} - Distribuciones Castilla`)}&body=${encodeURIComponent(`Hola ${lastSavedOrder.clientName},\n\nSe ha generado tu Solicitud de Pedido ${lastSavedOrder.id} por un valor de ${formatCurrency(lastSavedOrder.totalValue)}.\n\nAtentamente,\nDistribuciones Castilla S.A.S.`)}`, '_blank')} className="w-full py-4 bg-[#ea4335] hover:bg-[#d33828] text-white rounded-xl font-black text-[10px] shadow-xl transition-all flex items-center justify-center gap-3">
-                <Mail size={18} /> ENVIAR VÍA CORREO
-              </button>
-            </div>
-
-            <button onClick={() => setModalType(null)} className="w-full py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl font-black text-xs uppercase transition-all">FINALIZAR Y CERRAR</button>
-          </div>
-        </div>
-      )}
+      
 
       <Footer />
     </div>
