@@ -146,6 +146,8 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
 
 // --- MÓDULO DE PRODUCTOS ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
+const [csvPreview, setCsvPreview] = useState(null);
+const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const getNextNumericID = () => {
     if (products.length === 0) return '00001';
     let max = 0;
@@ -216,38 +218,76 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("El archivo es demasiado pesado. El límite máximo es 5 MB.");
+      return;
+    }
+
+    const fileSizeFormatted = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` 
+      : `${(file.size / 1024).toFixed(2)} KB`;
+
+    setCsvFileMeta({ name: file.name, size: fileSizeFormatted });
+
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target.result;
       const lines = text.split('\n');
-      const newProducts = [];
       
-      for(let i=1; i<lines.length; i++) {
-         const line = lines[i].trim();
-         if(!line) continue;
-         const [id, name, unit, cost, utility, taxPercentage] = line.split(/[;,]/);
-         
-         if (name && id) {
-            const taxObj = taxes.find(t => t.value === parseFloat(taxPercentage)) || taxes[0];
-            newProducts.push({
-                id: String(id).padStart(5, '0'),
-                name: name.toUpperCase().substring(0, 100),
-                unitName: unitOptions.includes(unit?.toUpperCase()) ? unit.toUpperCase() : 'UNIDAD',
-                taxId: taxObj?.id || '',
-                taxName: taxObj?.name || '0%',
-                taxValue: taxObj?.value || 0,
-                cost: parseFloat(cost) || 0,
-                utility: parseFloat(utility) || 0
-            });
-         }
+      const validRows = [];
+      const errors = [];
+      const seenIdsInFile = new Set();
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const [id, name, unit, cost, utility, taxPercentage] = line.split(/[,;]/);
+        const cleanId = String(id || '').trim();
+        const cleanName = String(name || '').trim();
+
+        if (!cleanId || !cleanName) {
+          errors.push(`Línea ${i + 1}: Falta el ID o el Nombre del producto.`);
+          continue;
+        }
+
+        if (seenIdsInFile.has(cleanId)) {
+          errors.push(`Línea ${i + 1}: El ID '${cleanId}' está duplicado en este archivo.`);
+          continue;
+        }
+        seenIdsInFile.add(cleanId);
+
+        // Validar si ya existe en la base de datos actual
+        const existsInDB = products.some(p => p.id === cleanId.padStart(5, '0') || p.id === cleanId);
+        if (existsInDB) {
+          errors.push(`Línea ${i + 1}: El producto con ID '${cleanId}' ya existe en el sistema.`);
+          continue;
+        }
+
+        const taxObj = taxes.find(t => t.value === parseFloat(taxPercentage)) || taxes[0];
+
+        validRows.push({
+          id: cleanId.padStart(5, '0'),
+          name: cleanName.toUpperCase().substring(0, 100),
+          unitName: unit ? unit.toUpperCase() : 'UNIDAD',
+          taxId: taxObj?.id || '',
+          taxName: taxObj?.name || '0%',
+          taxValue: taxObj?.value || 0,
+          cost: parseFloat(cost) || 0,
+          utility: parseFloat(utility) || 0
+        });
       }
-      
-      const filteredNew = newProducts.filter(np => !products.some(p => p.id === np.id));
-      setProducts([...products, ...filteredNew]);
-      setModalType(null);
+
+      setCsvPreview({
+        validRows,
+        errors,
+        totalFound: validRows.length + errors.length
+      });
     };
+
     reader.readAsText(file);
+    e.target.value = '';
   };
 
   const downloadTemplate = () => {
@@ -356,11 +396,61 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
                 </button>
 
-                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
-                    <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                    <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
-                    <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
-                </label>
+               {csvPreview ? (
+  <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
+    <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 space-y-3">
+      <div className="flex justify-between items-center">
+        <span className="text-[10px] font-black text-slate-400 uppercase">ARCHIVO:</span>
+        <span className="text-xs font-black text-[#134b60]">{csvFileMeta.name} ({csvFileMeta.size})</span>
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-[10px] font-black text-slate-400 uppercase">REGISTROS VÁLIDOS:</span>
+        <span className="text-xs font-black text-emerald-600">{csvPreview.validRows.length} listos para importar</span>
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-[10px] font-black text-slate-400 uppercase">ERRORES / ADVERTENCIAS:</span>
+        <span className={`text-xs font-black ${csvPreview.errors.length > 0 ? 'text-rose-500' : 'text-emerald-600'}`}>
+          {csvPreview.errors.length} errores
+        </span>
+      </div>
+    </div>
+
+    {csvPreview.errors.length > 0 && (
+      <div className="max-h-36 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1">
+        <p className="text-[10px] font-black text-rose-600 uppercase mb-2">DETALLE DE FILAS IGNORADAS:</p>
+        {csvPreview.errors.map((err, idx) => (
+          <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
+        ))}
+      </div>
+    )}
+
+    <div className="flex gap-4 pt-2">
+      <button 
+        onClick={() => setCsvPreview(null)} 
+        className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all"
+      >
+        CANCELAR
+      </button>
+      <button 
+        onClick={() => {
+          setProducts([...csvPreview.validRows, ...products]);
+          setCsvPreview(null);
+          setModalType(null); // Cierra el modal
+        }} 
+        disabled={csvPreview.validRows.length === 0}
+        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all"
+      >
+        CONFIRMAR E IMPORTAR
+      </button>
+    </div>
+  </div>
+) : (
+  <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
+    <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+    <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
+    <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
+  </label>
+)}
                 <button onClick={() => setModalType(null)} className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-200 uppercase">CANCELAR</button>
             </div>
         </div>
@@ -455,35 +545,87 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   };
 
   // --- CSV CARGUE MASIVO INVENTARIO ---
-  const handleFileUpload = (e) => {
+ const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Validación de tamaño (ejemplo: máximo 5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("El archivo es demasiado pesado. El límite máximo es 5 MB.");
+      return;
+    }
+
+    // Formatear el peso del archivo para mostrarlo (KB o MB)
+    const fileSizeFormatted = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` 
+      : `${(file.size / 1024).toFixed(2)} KB`;
+
+    setCsvFileMeta({ name: file.name, size: fileSizeFormatted });
+
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target.result;
       const lines = text.split('\n');
-      const newInv = [];
-      for(let i=1; i<lines.length; i++) {
-         const line = lines[i].trim();
-         if(!line) continue;
-         const [code, qty] = line.split(/[;,]/);
-         const prod = products.find(p => p.id === String(code).padStart(5, '0'));
-         if (prod && qty && parseFloat(qty)) {
-             newInv.push({
-                 id: `IV${String(inventory.length + newInv.length + 1).padStart(6, '0')}`,
-                 productId: prod.id,
-                 productName: prod.name,
-                 unitName: prod.unitName,
-                 quantity: parseFloat(qty),
-                 date: new Date().toLocaleString(),
-                 user: 'CARGUE MASIVO CSV'
-             });
-         }
+      
+      const validRows = [];
+      const errors = [];
+      const seenCodesInFile = new Set(); // Para detectar IDs duplicados dentro del mismo archivo
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const parts = line.split(/[,;]/);
+        if (parts.length < 2) {
+          errors.hacia ? null : errors.push(`Línea ${i + 1}: Formato incompleto o mal separado.`);
+          continue;
+        }
+
+        const [code, qty] = parts;
+        const cleanCode = String(code || '').trim();
+        const parsedQty = parseFloat(qty);
+
+        // Validar si falta información o la cantidad no es válida
+        if (!cleanCode || isNaN(parsedQty) || parsedQty <= 0) {
+          errors.push(`Línea ${i + 1}: Código vacío o cantidad no válida.`);
+          continue;
+        }
+
+        // Validar códigos duplicados dentro del mismo archivo CSV
+        if (seenCodesInFile.has(cleanCode)) {
+          errors.push(`Línea ${i + 1}: El código '${cleanCode}' está duplicado en este archivo.`);
+          continue;
+        }
+        seenCodesInFile.add(cleanCode);
+
+        // Buscar el producto en la base de datos general
+        const prod = products.find(p => p.id === cleanCode.padStart(5, '0') || p.id === cleanCode);
+        
+        if (!prod) {
+          errors.push(`Línea ${i + 1}: El código '${cleanCode}' no existe en la base de productos.`);
+          continue;
+        }
+
+        validRows.push({
+          productId: prod.id,
+          productName: prod.name,
+          unitName: prod.unitName,
+          quantity: parsedQty,
+          date: new Date().toLocaleString(),
+          user: currentUser?.name || 'CARGUE MASIVO CSV'
+        });
       }
-      setInventory([...newInv, ...inventory]);
-      setModalType(null);
+
+      // Guardar todo en el estado de previsualización para mostrarlo en el modal
+      setCsvPreview({
+        validRows,
+        errors,
+        totalFound: validRows.length + errors.length
+      });
     };
+
     reader.readAsText(file);
+    e.target.value = ''; // Limpiar el input file para permitir re-subir el mismo archivo si es necesario
   };
 
   const downloadTemplate = () => {
@@ -955,7 +1097,8 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
         clientEmail,
         date: new Date().toLocaleString(), 
         status: 'NUEVA', 
-        items: cart, 
+        globalDiscount: 0, // Inicializado en 0 para los descuentos globales
+        items: cart.map(item => ({ ...item, discount: 0 })), // Cada ítem nace con 0% de descuento
         totalItems: cart.length, 
         totalValue: cartFinancials 
     };
@@ -1085,8 +1228,63 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const [pendingChange, setPendingChange] = useState(null); 
+  // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
 
-  const filteredOrders = useMemo(() => {
+  // AQUÍ PEGAS EL CÓDIGO DEL PASO 2:
+  const [discountData, setDiscountData] = useState({ global: 0, items: [] });
+  const [modalType, setModalType] = useState(null); 
+
+  // Función maestra para calcular totales con descuentos aplicados
+ const getCalculatedTotals = (order) => {
+    if (!order || !order.items) return { rawSubtotal: 0, totalItemDiscounts: 0, globalDiscountAmount: 0, taxesAmount: 0, total: 0 };
+    
+    let rawSubtotal = 0;
+    let totalItemDiscounts = 0;
+
+    order.items.forEach(item => {
+      const unitPrice = item.totalPricePerUnit || item.price || 0;
+      const lineTotal = unitPrice * (item.quantity || 0);
+      rawSubtotal += lineTotal;
+      const discountAmount = lineTotal * ((item.discount || 0) / 100);
+      totalItemDiscounts += discountAmount;
+    });
+
+    const subtotalAfterItemDiscounts = rawSubtotal - totalItemDiscounts;
+    const globalDiscPct = order.globalDiscount || 0;
+    const globalDiscountAmount = subtotalAfterItemDiscounts * (globalDiscPct / 100);
+    const subtotalAfterGlobal = subtotalAfterItemDiscounts - globalDiscountAmount;
+
+    let taxesAmount = 0;
+    order.items.forEach(item => {
+      const unitPrice = item.totalPricePerUnit || item.price || 0;
+      const lineTotal = unitPrice * (item.quantity || 0);
+      const lineDisc = lineTotal * ((item.discount || 0) / 100);
+      const lineAfterDisc = lineTotal - lineDisc;
+      const proportion = subtotalAfterItemDiscounts > 0 ? lineAfterDisc / subtotalAfterItemDiscounts : 0;
+      const itemSubAfterGlobal = subtotalAfterGlobal * proportion;
+      const taxRate = (item.taxValue || 0) / 100;
+      taxesAmount += itemSubAfterGlobal * taxRate;
+    });
+
+    const total = subtotalAfterGlobal + taxesAmount;
+
+    return {
+      rawSubtotal,
+      totalItemDiscounts,
+      subtotalAfterItemDiscounts,
+      globalDiscountAmount,
+      subtotalAfterGlobal,
+      taxesAmount,
+      total
+    };
+  };
+  const executeDiscountUpdate = () => {
+     // ... todo el resto del código del paso 2
+  };
+  // FIN DEL CÓDIGO DEL PASO 2
+
+  // A partir de aquí sigue lo que ya tenías:
+    const filteredOrders = useMemo(() => {
     if (!filterStatus || filterStatus === 'TODOS') return orders;
     return orders.filter(o => o.status === filterStatus);
   }, [orders, filterStatus]);
@@ -1205,7 +1403,55 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
             </div>
         </div>
       )}
+{modalType === 'editDiscounts' && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[150] flex items-center justify-center p-4 uppercase print:hidden">
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div className="p-8 border-b-2 border-slate-100 flex justify-between items-center bg-[#e9f4f8]/30">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-amber-100 text-amber-600 rounded-xl"><Tag size={24}/></div>
+                    <div><h3 className="font-black text-xl text-[#134b60] tracking-tighter">APLICAR DESCUENTOS</h3><p className="text-[10px] text-slate-400 font-bold">SOLICITUD: {selectedOrder?.id}</p></div>
+                </div>
+            </div>
+            
+            <div className="p-8 overflow-y-auto flex-1">
+                <div className="mb-8 p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center gap-6">
+                    <div className="flex-1">
+                        <label className="text-[10px] font-black text-[#134b60] tracking-widest uppercase">DESCUENTO GLOBAL (%) SOBRE SUBTOTAL</label>
+                        <p className="text-[9px] text-slate-400 font-bold mt-1">Se aplica a toda la factura antes de impuestos.</p>
+                    </div>
+                    <input type="number" min="0" max="100" value={discountData.global} onChange={(e) => setDiscountData({...discountData, global: parseFloat(e.target.value) || 0})} className="w-32 px-4 py-3 border-2 border-amber-200 focus:border-amber-500 rounded-xl font-black text-xl text-center outline-none text-amber-700 bg-amber-50 transition-all" />
+                </div>
 
+                <p className="text-[10px] font-black text-[#134b60] tracking-widest uppercase mb-4">DESCUENTO ESPECÍFICO POR ÍTEM (%)</p>
+                <div className="border-2 border-slate-100 rounded-2xl overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase"><tr><th className="px-5 py-3">PRODUCTO</th><th className="px-5 py-3 text-center">CANT.</th><th className="px-5 py-3 text-right">DESCUENTO %</th></tr></thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {discountData.items.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-slate-50">
+                                    <td className="px-5 py-3 text-[10px] font-black text-[#134b60]">{item.name}</td>
+                                    <td className="px-5 py-3 text-center font-mono text-sm">{item.quantity}</td>
+                                    <td className="px-5 py-3 text-right">
+                                        <input type="number" min="0" max="100" value={item.discount || 0} onChange={(e) => {
+                                            const newItems = [...discountData.items];
+                                            newItems[idx].discount = parseFloat(e.target.value) || 0;
+                                            setDiscountData({...discountData, items: newItems});
+                                        }} className="w-24 px-3 py-2 border-2 border-slate-200 rounded-lg text-center font-black outline-none focus:border-[#2596be] text-[#134b60]" />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div className="p-8 border-t-2 border-slate-100 bg-white flex gap-4">
+                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button>
+                <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"><CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS</button>
+            </div>
+          </div>
+        </div>
+      )}
       {selectedOrder && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:bg-white print:backdrop-blur-none print:p-0">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full ${viewMode === 'pdf' ? 'max-w-[816px] print:shadow-none print:rounded-none' : 'max-w-2xl animate-in zoom-in-95 duration-300'}`}>
@@ -1257,28 +1503,46 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                         </div>
                     </div>
                   )}
-
+{role === 'ADMIN' && (
+                    <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl mt-4">
+                        <p className="text-[9px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN FINANCIERA</p>
+                        <button 
+                            onClick={() => { 
+                                setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] }); 
+                                setModalType('editDiscounts'); 
+                            }}
+                            className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl text-[10px] font-black shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase"
+                        >
+                            <Tag size={18}/> APLICAR DESCUENTOS AL PEDIDO
+                        </button>
+                    </div>
+                  )}
                   <div className="border-2 border-slate-100 rounded-2xl overflow-hidden bg-white">
                     <table className="w-full text-left">
-                      <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
+<thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
                         <tr>
                           <th className="px-5 py-4">PRODUCTO</th>
                           <th className="px-5 py-4 text-center">CANTIDAD</th>
+                          <th className="px-5 py-4 text-center">DESC.</th>
                           <th className="px-5 py-4 text-right">TOTAL</th>
                         </tr>
                       </thead>
                       <tbody className="text-[10px] font-bold text-[#134b60] divide-y divide-slate-50">
-                        {selectedOrder.items.map((item, idx) => (
+                        {selectedOrder.items.map((item, idx) => {
+                           const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
+                           const finalTotal = (baseUnit * (1 - ((item.discount || 0) / 100))) * (1 + (item.taxValue / 100)) * item.quantity;
+                           return (
                           <tr key={idx}>
                             <td className="px-5 py-4">
-  <p className="text-[#134b60] font-black">{item.name}</p>
-  <p className="text-[8px] text-slate-400 uppercase">{item.unit}</p>
-  {item.observation && <p className="text-[8px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
-</td>
+                              <p className="text-[#134b60] font-black">{item.name}</p>
+                              <p className="text-[8px] text-slate-400 uppercase">{item.unit}</p>
+                              {item.observation && <p className="text-[8px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
+                            </td>
                             <td className="px-5 py-4 text-center font-mono text-[#134b60] bg-slate-50/50">{item.quantity}</td>
-                            <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
+                            <td className="px-5 py-4 text-center font-mono text-amber-500 font-black">{item.discount || 0}%</td>
+                            <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(finalTotal)}</td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                   </div>
@@ -1343,10 +1607,19 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                   </div>
 
                   <div className="flex justify-end mb-12">
-                    <div className="w-72 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-2xl">
-                      <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL</span><span>{formatCurrency(selectedOrder.totalValue / 1.19)}</span></div>
-                      <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS (19%)</span><span>{formatCurrency(selectedOrder.totalValue - (selectedOrder.totalValue / 1.19))}</span></div>
-                      <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#2596be]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span className="text-[#134b60] font-mono">{formatCurrency(selectedOrder.totalValue)}</span></div>
+                    <div className="w-80 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-2xl">
+                      {(() => {
+                          const calc = getCalculatedTotals(selectedOrder);
+                          return (
+                              <>
+                                <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span>{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
+<div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span>- {formatCurrency(calc?.totalItemDiscounts || 0)}</span></div>
+<div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span>- {formatCurrency(calc?.globalDiscountAmount || 0)}</span></div>
+<div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span>{formatCurrency(calc?.taxesAmount || 0)}</span></div>
+<div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span>{formatCurrency(calc?.total || 0)}</span></div>
+                              </>
+                          )
+                      })()}
                     </div>
                   </div>
 
@@ -1688,7 +1961,8 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   const [clients, setClients] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [orders, setOrders] = useState([]);
-
+  const [csvPreview, setCsvPreview] = useState(null);
+  const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const adminMenu = [
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={20} /> },
     { id: 'admin_orders', label: 'PEDIDOS', icon: <Activity size={20} /> },
@@ -1795,4 +2069,4 @@ export default function App() {
   ) : (
     <Login onLogin={handleLogin} logoImage={globalLogo} />
   );
-}
+};
