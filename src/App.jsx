@@ -1447,7 +1447,20 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
 
             <div className="p-8 border-t-2 border-slate-100 bg-white flex gap-4">
                 <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button>
-                <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"><CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS</button>
+                
+<button 
+  onClick={() => {
+    // 1. Aquí conservas tu lógica actual de guardado (si ya la tienes en otra función)
+    
+    // 2. Esta línea es la que cierra la ventana de descuentos y te regresa a la orden:
+    // (Ajusta 'setShowDiscount' al nombre del estado que utilizas para abrir/cerrar esta vista)
+    setShowDiscount(false); 
+  }}
+  className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"
+>
+  <CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS
+</button>
+
             </div>
           </div>
         </div>
