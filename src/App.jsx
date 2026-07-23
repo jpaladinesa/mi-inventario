@@ -2052,7 +2052,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [globalLogo, setGlobalLogo] = useState("logo pestaña.jpg");
   const [users, setUsers] = useState([
-    { id: 'US000001', name: 'ADMINISTRADOR PRINCIPAL', email: 'admin@castilla.com', password: '123', role: 'ADMIN', relatedId: null }
+        { id: 'US000001', name: 'ADMINISTRADOR PRINCIPAL', email: '1@1', password: '1', role: 'ADMIN', relatedId: null }
   ]);
 
   const handleLogin = (email, password) => {
