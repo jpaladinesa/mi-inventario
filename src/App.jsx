@@ -38,6 +38,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
   const [modalType, setModalType] = useState(null); 
   const [selectedItem, setSelectedItem] = useState(null);
   const [editData, setEditData] = useState({ name: '', value: '' });
+  const [duplicateMessage, setDuplicateMessage] = useState('');
 
   const getNextID = () => {
     const existingNums = items.map(t => parseInt(t.id.replace(prefix, ''), 10));
@@ -49,8 +50,27 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
   const handleAdd = (e) => {
     e.preventDefault();
     const cleanName = newItem.name.toUpperCase().trim();
-    if (items.some(i => i.name === cleanName)) return;
-    setItems([...items, { id: getNextID(), name: cleanName, value: parseFloat(newItem.value) || 0 }]);
+    const cleanValue = parseFloat(newItem.value) || 0;
+
+    const nameExists = items.some(i => i.name === cleanName);
+    const valueExists = items.some(i => i.value === cleanValue);
+
+    if (nameExists || valueExists) {
+      let msg = '';
+      if (nameExists && valueExists) {
+        msg = 'EL NOMBRE Y EL PORCENTAJE YA EXISTEN EN EL SISTEMA.';
+      } else if (nameExists) {
+        msg = 'EL NOMBRE YA EXISTE.';
+      } else {
+        msg = 'EL PORCENTAJE YA ESTÁ ASIGNADO.';
+      }
+      
+      setDuplicateMessage(msg);
+      setModalType('duplicateWarning');
+      return;
+    }
+
+    setItems([...items, { id: getNextID(), name: cleanName, value: cleanValue }]);
     setNewItem({ name: '', value: '' });
   };
 
@@ -104,16 +124,16 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           </table>
         </div>
       </div>
-      {modalType && (
+     {modalType && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
             <div className="p-8 text-[#134b60]">
               <div className="flex flex-col items-center text-center gap-4 mb-8">
                 <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
+                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : modalType === 'duplicateWarning' ? <AlertTriangle size={40} /> : <AlertTriangle size={40} />}
                 </div>
                 <h3 className="font-black text-xl uppercase tracking-tighter">
-                  {modalType === 'edit' ? 'EDITAR REGISTRO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR REGISTRO'}
+                  {modalType === 'edit' ? 'EDITAR REGISTRO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : modalType === 'duplicateWarning' ? 'AVISO DE DUPLICADO' : 'ELIMINAR REGISTRO'}
                 </h3>
               </div>
               <div className="space-y-4">
@@ -124,16 +144,23 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                   </div>
                 )}
                 {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
+                {modalType === 'duplicateWarning' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">{duplicateMessage}</p></div>}
                 {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN TOTAL DE {selectedItem?.id}.</p></div>}
               </div>
               <div className="flex gap-4 mt-10">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
-                <button onClick={() => {
-                   if (modalType === 'edit') setModalType('updateConfirm');
-                   else if (modalType === 'updateConfirm') executeUpdate();
-                   else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-                   else if (modalType === 'deleteSecond') { setItems(items.filter(i => i.id !== selectedItem.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                {modalType === 'duplicateWarning' ? (
+                  <button onClick={() => setModalType(null)} className="w-full py-4 bg-[#134b60] text-white rounded-2xl font-black text-xs uppercase hover:bg-[#0f3c4c] transition-colors">SALIR / CANCELAR</button>
+                ) : (
+                  <>
+                    <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
+                    <button onClick={() => {
+                       if (modalType === 'edit') setModalType('updateConfirm');
+                       else if (modalType === 'updateConfirm') executeUpdate();
+                       else if (modalType === 'deleteFirst') setModalType('deleteSecond');
+                       else if (modalType === 'deleteSecond') { setItems(items.filter(i => i.id !== selectedItem.id)); setModalType(null); }
+                    }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -1230,7 +1257,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
   const [pendingChange, setPendingChange] = useState(null); 
   // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
 
-  // AQUÍ PEGAS EL CÓDIGO DEL PASO 2:
+  
   const [discountData, setDiscountData] = useState({ global: 0, items: [] });
   const [modalType, setModalType] = useState(null); 
 
