@@ -187,6 +187,9 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
 
   const initialForm = { id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' };
   const [newProd, setNewProd] = useState(initialForm);
+  useEffect(() => {
+    setNewProd(prev => ({ ...prev, id: getNextNumericID() }));
+  }, [products]);
   const [modalType, setModalType] = useState(null);
   const [selectedProd, setSelectedProd] = useState(null);
   const [editData, setEditData] = useState(initialForm);
@@ -222,7 +225,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
                 
         // 2. Actualizar la tabla en la pantalla si se guardó con éxito
         setProducts([...products, nuevoProductoData]);
-        setNewProd({ id: String(parseInt(newProd.id, 10) + 1).padStart(5, '0'), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' }); 
+        setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' }); 
         setErrorMsg('');
     } catch (error) {
         setErrorMsg('HUBO UN ERROR AL COMUNICARSE CON EL SERVIDOR');
