@@ -244,7 +244,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
     setModalType(null);
   };
 
-  // --- CSV CARGUE MASIVO PRODUCTOS ---
+ // --- CSV CARGUE MASIVO PRODUCTOS ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -263,7 +263,8 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target.result;
-      const lines = text.split('\n');
+      // Normalización de saltos de línea para compatibilidad con Excel
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
       
       const validRows = [];
       const errors = [];
@@ -273,7 +274,13 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
         const line = lines[i].trim();
         if (!line) continue;
 
-        const [id, name, unit, cost, utility, taxPercentage] = line.split(/[,;]/);
+        const parts = line.split(/[,;]/).map(p => p ? p.trim() : '');
+        if (parts.length < 5) {
+          errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
+          continue;
+        }
+
+        const [id, name, unit, cost, utility, taxPercentage] = parts;
         const cleanId = String(id || '').trim();
         const cleanName = String(name || '').trim();
 
@@ -295,7 +302,22 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
           continue;
         }
 
-        const taxObj = taxes.find(t => t.value === parseFloat(taxPercentage)) || taxes[0];
+        // VALIDACIÓN ESTRICTA DE COSTO (Atrapa letras como "verde" en la celda D)
+        const parsedCost = parseFloat(cost);
+        if (isNaN(parsedCost)) {
+          errors.push(`Línea ${i + 1} (Columna Costo): El valor '${cost}' no es un número válido.`);
+          continue;
+        }
+
+        // VALIDACIÓN ESTRICTA DE UTILIDAD (Celda E)
+        const parsedUtility = parseFloat(utility);
+        if (isNaN(parsedUtility)) {
+          errors.push(`Línea ${i + 1} (Columna Utilidad): El valor '${utility}' no es un número válido.`);
+          continue;
+        }
+
+        const parsedTax = taxPercentage ? parseFloat(taxPercentage) : 0;
+        const taxObj = taxes.find(t => t.value === parsedTax) || taxes[0];
 
         validRows.push({
           id: cleanId.padStart(5, '0'),
@@ -304,8 +326,8 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
           taxId: taxObj?.id || '',
           taxName: taxObj?.name || '0%',
           taxValue: taxObj?.value || 0,
-          cost: parseFloat(cost) || 0,
-          utility: parseFloat(utility) || 0
+          cost: parsedCost,
+          utility: parsedUtility
         });
       }
 
@@ -316,7 +338,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
       });
     };
 
-    reader.readAsText(file);
+    reader.readAsText(file, 'UTF-8');
     e.target.value = '';
   };
 
@@ -467,7 +489,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
           setCsvPreview(null);
           setModalType(null); // Cierra el modal
         }} 
-        disabled={csvPreview.validRows.length === 0}
+        disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
         className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all"
       >
         CONFIRMAR E IMPORTAR
