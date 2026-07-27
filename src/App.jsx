@@ -70,8 +70,15 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
       return;
     }
 
+    setModalType('createConfirm');
+  };
+
+  const executeCreate = () => {
+    const cleanName = newItem.name.toUpperCase().trim();
+    const cleanValue = parseFloat(newItem.value) || 0;
     setItems([...items, { id: getNextID(), name: cleanName, value: cleanValue }]);
     setNewItem({ name: '', value: '' });
+    setModalType(null);
   };
 
   const executeUpdate = () => {
@@ -129,11 +136,11 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
             <div className="p-8 text-[#134b60]">
               <div className="flex flex-col items-center text-center gap-4 mb-8">
-                <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : modalType === 'duplicateWarning' ? <AlertTriangle size={40} /> : <AlertTriangle size={40} />}
+                <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
+                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' || modalType === 'createConfirm' ? <Info size={40} /> : modalType === 'duplicateWarning' ? <AlertTriangle size={40} /> : <AlertTriangle size={40} />}
                 </div>
                 <h3 className="font-black text-xl uppercase tracking-tighter">
-                  {modalType === 'edit' ? 'EDITAR REGISTRO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : modalType === 'duplicateWarning' ? 'AVISO DE DUPLICADO' : 'ELIMINAR REGISTRO'}
+                  {modalType === 'edit' ? 'EDITAR REGISTRO' : modalType === 'createConfirm' ? 'CONFIRMAR CREACIÓN' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : modalType === 'duplicateWarning' ? 'AVISO DE DUPLICADO' : 'ELIMINAR REGISTRO'}
                 </h3>
               </div>
               <div className="space-y-4">
@@ -141,6 +148,13 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                   <div className="space-y-4">
                     <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase">NOMBRE</label><input type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black uppercase text-sm outline-none focus:border-[#2596be] transition-all text-[#134b60]" /></div>
                     <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase">VALOR %</label><input type="number" value={editData.value} onChange={(e) => setEditData({...editData, value: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] transition-all text-[#134b60]" /></div>
+                  </div>
+                )}
+                {modalType === 'createConfirm' && (
+                  <div className="p-5 bg-indigo-50 border-2 border-indigo-200 rounded-2xl">
+                    <p className="text-indigo-700 font-black text-xs text-center leading-relaxed uppercase">
+                      ESTÁS CREANDO {newItem.name.toUpperCase()} DE {newItem.value}%
+                    </p>
                   </div>
                 )}
                 {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
@@ -154,11 +168,12 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                   <>
                     <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
                     <button onClick={() => {
-                       if (modalType === 'edit') setModalType('updateConfirm');
+                       if (modalType === 'createConfirm') executeCreate();
+                       else if (modalType === 'edit') setModalType('updateConfirm');
                        else if (modalType === 'updateConfirm') executeUpdate();
                        else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                        else if (modalType === 'deleteSecond') { setItems(items.filter(i => i.id !== selectedItem.id)); setModalType(null); }
-                    }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                    }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
                   </>
                 )}
               </div>
