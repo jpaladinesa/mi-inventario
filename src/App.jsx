@@ -210,7 +210,13 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const [editData, setEditData] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
   
-  const unitOptions = ['UNIDAD', 'PAQUETE', 'CAJA', 'BOLSA'];
+  const unitOptions = [
+  'UNIDAD', 'PAQUETE', 'CAJA', 'BOLSA',
+  'GRAMO', 'LIBRA', 'KILO', 'ARROBA',
+  'MILILITRO', 'LITRO', 'GALON',
+  'MILIMETRO', 'CENTIMETRO', 'METRO',
+  'FRASCO', 'BOTELLA'
+];
 
   const getCalculatedValues = (cost, utility, taxId) => {
     const c = parseFloat(cost) || 0;
@@ -225,6 +231,17 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
 
  const handleAdd = async (e) => {
     e.preventDefault();
+   // Validación: Si no hay impuestos creados en el sistema
+    if (taxes.length === 0) {
+      setErrorMsg('DEBE CREAR AL MENOS UN IMPUESTO EN EL MÓDULO DE IMPUESTOS ANTES DE REGISTRAR PRODUCTOS.');
+      return;
+    }
+
+    // Validación: Si no ha seleccionado ningún impuesto
+    if (!newProd.taxId) {
+      setErrorMsg('DEBE SELECCIONAR UN IMPUESTO VÁLIDO.');
+      return;
+    } 
     const cleanName = newProd.name.toUpperCase().trim();
     if (products.some(p => p.id === newProd.id)) { setErrorMsg('ESTE CÓDIGO ID YA EXISTE'); return; }
     
@@ -399,7 +416,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
             <div className="space-y-1 lg:col-span-1">
               <label className="text-[9px] font-black text-slate-400 uppercase">IVA</label>
               <select value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60]">
-                 <option value="">EXENTO</option>
+                 <option value="">SELECCIONE</option>
                  {taxes.map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
               </select>
             </div>
@@ -579,7 +596,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-slate-400">IVA</label>
                       <select value={editData.taxId} onChange={(e) => setEditData({...editData, taxId: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase">
-                         <option value="">EXENTO</option>
+                         <option value="">SELECCIONE</option>
                          {taxes.map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
                       </select>
                     </div>
