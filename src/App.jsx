@@ -1387,22 +1387,46 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
         </div>
       )}
 
-      {modalType === 'confirmSaveOrder' && (
+     {modalType === 'confirmSaveOrder' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
             <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} /></div>
-            <h3 className="font-black text-xl mb-4 tracking-tighter leading-tight">¿CONFIRMAR ENVÍO?</h3>
+            <h3 className="font-black text-xl mb-4 tracking-tighter leading-tight">¿DESEA CREAR LA SOLICITUD?</h3>
             <p className="text-[10px] text-slate-400 font-black mb-8">TOTAL ESTIMADO: <span className="text-[#2596be]">{formatCurrency(cartFinancials)}</span></p>
-            <div className="flex gap-4"><button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl font-black text-xs uppercase">VOLVER</button><button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-xs shadow-xl uppercase">CONFIRMAR</button></div>
+            <div className="flex gap-4">
+              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl font-black text-xs uppercase">VOLVER</button>
+              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-xs shadow-xl uppercase">CREAR SOLICITUD</button>
+            </div>
           </div>
         </div>
       )}
 
-      
 
-      <Footer />
+
+{modalType === 'orderSuccess' && lastSavedOrder && (
+  <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
+    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
+      <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+        <CheckCircle2 size={40} />
+      </div>
+      <h3 className="font-black text-xl mb-2 tracking-tighter leading-tight">¡SOLICITUD CREADA CON ÉXITO!</h3>
+      <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl mb-8 space-y-2">
+        <p className="text-[10px] text-slate-400 font-black uppercase">NÚMERO DE SOLICITUD</p>
+        <p className="text-2xl font-black text-[#2596be] font-mono">{lastSavedOrder.id}</p>
+        <p className="text-[10px] text-slate-400 font-black uppercase pt-2">VALOR TOTAL</p>
+        <p className="text-xl font-black text-emerald-600 font-mono">{formatCurrency(lastSavedOrder.totalValue)}</p>
+      </div>
+      <button 
+        onClick={() => { setModalType(null); setLastSavedOrder(null); }} 
+        className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-xs shadow-xl uppercase transition-all"
+      >
+        CERRAR
+      </button>
     </div>
-  );
+  </div>
+)}
+  </div>
+);
 };
 
 // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
