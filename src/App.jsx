@@ -697,14 +697,18 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
           continue;
         }
 
-        validRows.push({
-          productId: prod.id,
-          productName: prod.name,
-          unitName: prod.unitName,
-          quantity: parsedQty,
-          date: new Date().toLocaleString(),
-          user: 'CARGUE MASIVO CSV'
-        });
+        const nextIndex = inventory.length + validRows.length + 1;
+                    const movementId = `IV${String(nextIndex).padStart(6, '0')}`;
+
+                    validRows.push({
+                      id: movementId,
+                      productId: prod.id,
+                      productName: prod.name,
+                      unitName: prod.unitName,
+                      quantity: parsedQty,
+                      date: new Date().toLocaleString(),
+                      user: 'ADMINISTRADOR'
+                    });
       }
 
       setCsvPreview({
