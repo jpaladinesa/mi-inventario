@@ -452,73 +452,100 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
         </div>
       </div>
 
-      {modalType === 'bulkUpload' && (
+{modalType === 'bulkUpload' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center text-[#134b60]">
-                <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
-                <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO (CSV)</h3>
-                <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO ESPERADO: ID, NOMBRE, UNIDAD, COSTO, UTILIDAD, IVA(%)</p>
+            <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
                 
-                <button onClick={downloadTemplate} className="w-full mb-6 py-3 border-2 border-[#2596be] text-[#2596be] rounded-xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2">
-                    <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
-                </button>
+                {!csvPreview ? (
+                  <>
+                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
+                    <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO DE PRODUCTOS (CSV)</h3>
+                    <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO: ID, NOMBRE, UNIDAD, COSTO, UTILIDAD, IVA(%)</p>
+                    
+                    <button onClick={downloadTemplate} className="w-full mb-6 py-3 border-2 border-[#2596be] text-[#2596be] rounded-xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2">
+                        <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
+                    </button>
 
-               {csvPreview ? (
-  <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
-    <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 space-y-3">
-      <div className="flex justify-between items-center">
-        <span className="text-[10px] font-black text-slate-400 uppercase">ARCHIVO:</span>
-        <span className="text-xs font-black text-[#134b60]">{csvFileMeta.name} ({csvFileMeta.size})</span>
-      </div>
-      <div className="flex justify-between items-center">
-        <span className="text-[10px] font-black text-slate-400 uppercase">REGISTROS VÁLIDOS:</span>
-        <span className="text-xs font-black text-emerald-600">{csvPreview.validRows.length} listos para importar</span>
-      </div>
-      <div className="flex justify-between items-center">
-        <span className="text-[10px] font-black text-slate-400 uppercase">ERRORES / ADVERTENCIAS:</span>
-        <span className={`text-xs font-black ${csvPreview.errors.length > 0 ? 'text-rose-500' : 'text-emerald-600'}`}>
-          {csvPreview.errors.length} errores
-        </span>
-      </div>
-    </div>
+                    <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
+                        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                        <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
+                        <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
+                    </label>
+                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-200 uppercase">CANCELAR</button>
+                  </>
+                ) : (
+                  <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                      <div>
+                        <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE PRODUCTOS</h3>
+                        <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
+                      </div>
+                      <div className="flex gap-3 text-right">
+                        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
+                          {csvPreview.validRows.length} VÁLIDOS
+                        </span>
+                        <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${csvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                          {csvPreview.errors.length} ERRORES
+                        </span>
+                      </div>
+                    </div>
 
-    {csvPreview.errors.length > 0 && (
-      <div className="max-h-36 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1">
-        <p className="text-[10px] font-black text-rose-600 uppercase mb-2">DETALLE DE FILAS IGNORADAS:</p>
-        {csvPreview.errors.map((err, idx) => (
-          <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
-        ))}
-      </div>
-    )}
+                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl">
+                      <table className="w-full text-left uppercase">
+                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest">
+                          <tr>
+                            <th className="px-4 py-3">ID</th>
+                            <th className="px-4 py-3">PRODUCTO</th>
+                            <th className="px-4 py-3 text-center">UNIDAD</th>
+                            <th className="px-4 py-3 text-right">COSTO</th>
+                            <th className="px-4 py-3 text-center">UTILIDAD</th>
+                            <th className="px-4 py-3 text-center">IVA</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
+                          {csvPreview.validRows.length === 0 ? (
+                            <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-300">NO HAY REGISTROS VÁLIDOS</td></tr>
+                          ) : (
+                            csvPreview.validRows.map((row, idx) => (
+                              <tr key={idx} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                                <td className="px-4 py-3 font-mono text-[#2596be] font-black">{row.id}</td>
+                                <td className="px-4 py-3">{row.name}</td>
+                                <td className="px-4 py-3 text-center">{row.unitName}</td>
+                                <td className="px-4 py-3 text-right font-mono">{row.cost}</td>
+                                <td className="px-4 py-3 text-center">{row.utility}%</td>
+                                <td className="px-4 py-3 text-center text-amber-600">{row.taxName}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
 
-    <div className="flex gap-4 pt-2">
-      <button 
-        onClick={() => setCsvPreview(null)} 
-        className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all"
-      >
-        CANCELAR
-      </button>
-      <button 
-        onClick={() => {
-          setProducts([...csvPreview.validRows, ...products]);
-          setCsvPreview(null);
-          setModalType(null); // Cierra el modal
-        }} 
-        disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
-        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all"
-      >
-        CONFIRMAR E IMPORTAR
-      </button>
-    </div>
-  </div>
-) : (
-  <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
-    <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-    <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
-    <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
-  </label>
-)}
-                <button onClick={() => setModalType(null)} className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-200 uppercase">CANCELAR</button>
+                    {csvPreview.errors.length > 0 && (
+                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1">
+                        <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
+                        {csvPreview.errors.map((err, idx) => (
+                          <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-4 pt-2">
+                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all">CANCELAR</button>
+                      <button 
+                        onClick={() => {
+                          setProducts([...csvPreview.validRows, ...products]);
+                          setCsvPreview(null);
+                          setModalType(null);
+                        }} 
+                        disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
+                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all"
+                      >
+                        CONFIRMAR E IMPORTAR {csvPreview.validRows.length} REGISTROS
+                      </button>
+                    </div>
+                  </div>
+                )}
             </div>
         </div>
       )}
@@ -591,6 +618,8 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   const [filters, setFilters] = useState({ id: '', name: '' });
   const [selectedItem, setSelectedItem] = useState(null);
   const [editData, setEditData] = useState({ quantity: '' });
+  const [csvPreview, setCsvPreview] = useState(null);
+  const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
 
   const filteredOptions = useMemo(() => {
     if (Object.values(filters).every(v => !v)) return [];
@@ -616,13 +645,11 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validación de tamaño (ejemplo: máximo 5 MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("El archivo es demasiado pesado. El límite máximo es 5 MB.");
       return;
     }
 
-    // Formatear el peso del archivo para mostrarlo (KB o MB)
     const fileSizeFormatted = file.size > 1024 * 1024 
       ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` 
       : `${(file.size / 1024).toFixed(2)} KB`;
@@ -632,19 +659,19 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target.result;
-      const lines = text.split('\n');
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
       
       const validRows = [];
       const errors = [];
-      const seenCodesInFile = new Set(); // Para detectar IDs duplicados dentro del mismo archivo
+      const seenCodesInFile = new Set();
 
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
 
-        const parts = line.split(/[,;]/);
+        const parts = line.split(/[,;]/).map(p => p ? p.trim() : '');
         if (parts.length < 2) {
-          errors.hacia ? null : errors.push(`Línea ${i + 1}: Formato incompleto o mal separado.`);
+          errors.push(`Línea ${i + 1}: Formato incompleto o mal separado.`);
           continue;
         }
 
@@ -652,20 +679,17 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
         const cleanCode = String(code || '').trim();
         const parsedQty = parseFloat(qty);
 
-        // Validar si falta información o la cantidad no es válida
         if (!cleanCode || isNaN(parsedQty) || parsedQty <= 0) {
           errors.push(`Línea ${i + 1}: Código vacío o cantidad no válida.`);
           continue;
         }
 
-        // Validar códigos duplicados dentro del mismo archivo CSV
         if (seenCodesInFile.has(cleanCode)) {
           errors.push(`Línea ${i + 1}: El código '${cleanCode}' está duplicado en este archivo.`);
           continue;
         }
         seenCodesInFile.add(cleanCode);
 
-        // Buscar el producto en la base de datos general
         const prod = products.find(p => p.id === cleanCode.padStart(5, '0') || p.id === cleanCode);
         
         if (!prod) {
@@ -679,11 +703,10 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
           unitName: prod.unitName,
           quantity: parsedQty,
           date: new Date().toLocaleString(),
-          user: currentUser?.name || 'CARGUE MASIVO CSV'
+          user: 'CARGUE MASIVO CSV'
         });
       }
 
-      // Guardar todo en el estado de previsualización para mostrarlo en el modal
       setCsvPreview({
         validRows,
         errors,
@@ -691,8 +714,8 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
       });
     };
 
-    reader.readAsText(file);
-    e.target.value = ''; // Limpiar el input file para permitir re-subir el mismo archivo si es necesario
+    reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
   };
 
   const downloadTemplate = () => {
@@ -741,21 +764,92 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
 
       {modalType === 'bulkUpload' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center text-[#134b60]">
-                <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
-                <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO INVENTARIO (CSV)</h3>
-                <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO ESPERADO: CÓDIGO_ID, CANTIDAD</p>
+            <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-2xl' : 'max-w-md'}`}>
                 
-                <button onClick={downloadTemplate} className="w-full mb-6 py-3 border-2 border-[#2596be] text-[#2596be] rounded-xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2">
-                    <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
-                </button>
+                {!csvPreview ? (
+                  <>
+                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
+                    <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO INVENTARIO (CSV)</h3>
+                    <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO ESPERADO: CÓDIGO_ID, CANTIDAD</p>
+                    
+                    <button onClick={downloadTemplate} className="w-full mb-6 py-3 border-2 border-[#2596be] text-[#2596be] rounded-xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2">
+                        <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
+                    </button>
 
-                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
-                    <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                    <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
-                    <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
-                </label>
-                <button onClick={() => setModalType(null)} className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-200 uppercase">CANCELAR</button>
+                    <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
+                        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                        <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
+                        <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
+                    </label>
+                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-200 uppercase">CANCELAR</button>
+                  </>
+                ) : (
+                  <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                      <div>
+                        <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DEL INVENTARIO</h3>
+                        <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
+                      </div>
+                      <div className="flex gap-3 text-right">
+                        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
+                          {csvPreview.validRows.length} VÁLIDOS
+                        </span>
+                        <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${csvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                          {csvPreview.errors.length} ERRORES
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl">
+                      <table className="w-full text-left uppercase">
+                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest">
+                          <tr>
+                            <th className="px-4 py-3">CÓDIGO ID</th>
+                            <th className="px-4 py-3">PRODUCTO</th>
+                            <th className="px-4 py-3 text-center">CANTIDAD</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
+                          {csvPreview.validRows.length === 0 ? (
+                            <tr><td colSpan="3" className="px-4 py-8 text-center text-slate-300">NO HAY REGISTROS VÁLIDOS</td></tr>
+                          ) : (
+                            csvPreview.validRows.map((row, idx) => (
+                              <tr key={idx} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                                <td className="px-4 py-3 font-mono text-[#2596be] font-black">{row.productId}</td>
+                                <td className="px-4 py-3">{row.productName}</td>
+                                <td className="px-4 py-3 text-center font-mono text-emerald-600 font-black">{row.quantity} {row.unitName}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {csvPreview.errors.length > 0 && (
+                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1">
+                        <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
+                        {csvPreview.errors.map((err, idx) => (
+                          <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-4 pt-2">
+                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all">CANCELAR</button>
+                      <button 
+                        onClick={() => {
+                          setInventory([...csvPreview.validRows, ...inventory]);
+                          setCsvPreview(null);
+                          setModalType(null);
+                        }} 
+                        disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
+                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all"
+                      >
+                        CONFIRMAR E IMPORTAR {csvPreview.validRows.length} REGISTROS
+                      </button>
+                    </div>
+                  </div>
+                )}
             </div>
         </div>
       )}
