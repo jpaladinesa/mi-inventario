@@ -417,7 +417,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
               <label className="text-[9px] font-black text-slate-400 uppercase">IVA</label>
               <select value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60]">
                  <option value="">SELECCIONE</option>
-                 {taxes.map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
+                 {taxes.slice().sort((a, b) => a.value - b.value).map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
               </select>
             </div>
 
