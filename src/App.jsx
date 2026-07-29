@@ -1832,8 +1832,13 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                           return (
                               <>
                                 <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span>{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
-<div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span>- {formatCurrency(calc?.totalItemDiscounts || 0)}</span></div>
-<div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span>- {formatCurrency(calc?.globalDiscountAmount || 0)}</span></div>
+{calc.totalItemDiscounts > 0 && (
+  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span>- {formatCurrency(calc.totalItemDiscounts)}</span></div>
+)}
+
+{calc.globalDiscountAmount > 0 && (
+  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span>- {formatCurrency(calc.globalDiscountAmount)}</span></div>
+)}
 <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span>{formatCurrency(calc?.taxesAmount || 0)}</span></div>
 <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span>{formatCurrency(calc?.total || 0)}</span></div>
                               </>
