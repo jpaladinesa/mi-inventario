@@ -1485,11 +1485,22 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
     };
   };
   const executeDiscountUpdate = () => {
-     // ... todo el resto del código del paso 2
+  const calculated = getCalculatedTotals({
+    ...selectedOrder,
+    globalDiscount: discountData.global,
+    items: discountData.items
+  });
+  const updatedOrder = {
+    ...selectedOrder,
+    globalDiscount: discountData.global,
+    items: discountData.items,
+    totalValue: calculated.total
   };
-  // FIN DEL CÓDIGO DEL PASO 2
+  setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+  setSelectedOrder(updatedOrder);
+  setModalType(null);
+};
 
-  // A partir de aquí sigue lo que ya tenías:
     const filteredOrders = useMemo(() => {
     if (!filterStatus || filterStatus === 'TODOS') return orders;
     return orders.filter(o => o.status === filterStatus);
@@ -1620,58 +1631,98 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
             </div>
             
             <div className="p-8 overflow-y-auto flex-1">
-                <div className="mb-8 p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center gap-6">
-                    <div className="flex-1">
-                        <label className="text-[10px] font-black text-[#134b60] tracking-widest uppercase">DESCUENTO GLOBAL (%) SOBRE SUBTOTAL</label>
-                        <p className="text-[9px] text-slate-400 font-bold mt-1">Se aplica a toda la factura antes de impuestos.</p>
-                    </div>
-                    <input type="number" min="0" max="100" value={discountData.global} onChange={(e) => setDiscountData({...discountData, global: parseFloat(e.target.value) || 0})} className="w-32 px-4 py-3 border-2 border-amber-200 focus:border-amber-500 rounded-xl font-black text-xl text-center outline-none text-amber-700 bg-amber-50 transition-all" />
-                </div>
+                {(() => {
+                    const hasItemDiscounts = discountData.items.some(i => (i.discount || 0) > 0);
+                    const hasGlobalDiscount = (discountData.global || 0) > 0;
 
-                <p className="text-[10px] font-black text-[#134b60] tracking-widest uppercase mb-4">DESCUENTO ESPECÍFICO POR ÍTEM (%)</p>
-                <div className="border-2 border-slate-100 rounded-2xl overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase"><tr><th className="px-5 py-3">PRODUCTO</th><th className="px-5 py-3 text-center">CANT.</th><th className="px-5 py-3 text-right">DESCUENTO %</th></tr></thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {discountData.items.map((item, idx) => (
-                                <tr key={idx} className="hover:bg-slate-50">
-                                    <td className="px-5 py-3 text-[10px] font-black text-[#134b60]">{item.name}</td>
-                                    <td className="px-5 py-3 text-center font-mono text-sm">{item.quantity}</td>
-                                    <td className="px-5 py-3 text-right">
-                                        <input type="number" min="0" max="100" value={item.discount || 0} onChange={(e) => {
-                                            const newItems = [...discountData.items];
-                                            newItems[idx].discount = parseFloat(e.target.value) || 0;
-                                            setDiscountData({...discountData, items: newItems});
-                                        }} className="w-24 px-3 py-2 border-2 border-slate-200 rounded-lg text-center font-black outline-none focus:border-[#2596be] text-[#134b60]" />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                    return (
+                        <>
+                            <div className="mb-8 p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center gap-6">
+                                <div className="flex-1">
+                                    <label className="text-[10px] font-black text-[#134b60] tracking-widest uppercase">DESCUENTO GLOBAL (%) SOBRE SUBTOTAL</label>
+                                    <p className="text-[9px] text-slate-400 font-bold mt-1">Se aplica a toda la factura antes de impuestos. {hasItemDiscounts && <span className="text-rose-500 block">Bloqueado por tener descuentos en ítems.</span>}</p>
+                                </div>
+                                <input 
+                                    type="number" 
+                                    min="0" 
+                                    max="100" 
+                                    disabled={hasItemDiscounts}
+                                    value={discountData.global} 
+                                    onChange={(e) => setDiscountData({
+                                        global: parseFloat(e.target.value) || 0,
+                                        items: discountData.items.map(item => ({ ...item, discount: 0 }))
+                                    })} 
+                                    className="w-32 px-4 py-3 border-2 border-amber-200 focus:border-amber-500 rounded-xl font-black text-xl text-center outline-none text-amber-700 bg-amber-50 disabled:opacity-40 transition-all" 
+                                />
+                            </div>
+
+                            <p className="text-[10px] font-black text-[#134b60] tracking-widest uppercase mb-4">DESCUENTO ESPECÍFICO POR ÍTEM (%) {hasGlobalDiscount && <span className="text-rose-500 font-normal">(Bloqueado por Descuento Global activo)</span>}</p>
+                            <div className="border-2 border-slate-100 rounded-2xl overflow-hidden">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase"><tr><th className="px-5 py-3">PRODUCTO</th><th className="px-5 py-3 text-center">CANT.</th><th className="px-5 py-3 text-right">DESCUENTO %</th></tr></thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {discountData.items.map((item, idx) => (
+                                            <tr key={idx} className="hover:bg-slate-50">
+                                                <td className="px-5 py-3 text-[10px] font-black text-[#134b60]">{item.name}</td>
+                                                <td className="px-5 py-3 text-center font-mono text-sm">{item.quantity}</td>
+                                                <td className="px-5 py-3 text-right">
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" 
+                                                        max="100" 
+                                                        disabled={hasGlobalDiscount}
+                                                        value={item.discount || 0} 
+                                                        onChange={(e) => {
+                                                            const newItems = [...discountData.items];
+                                                            newItems[idx].discount = parseFloat(e.target.value) || 0;
+                                                            setDiscountData({
+                                                                global: 0,
+                                                                items: newItems
+                                                            });
+                                                        }} 
+                                                        className="w-24 px-3 py-2 border-2 border-slate-200 rounded-lg text-center font-black outline-none focus:border-[#2596be] text-[#134b60] disabled:opacity-40" 
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    );
+                })()}
             </div>
 
             <div className="p-8 border-t-2 border-slate-100 bg-white flex gap-4">
                 <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button>
-                
 <button 
-  onClick={() => {
-    // 1. Aquí conservas tu lógica actual de guardado (si ya la tienes en otra función)
-    
-    // 2. Esta línea es la que cierra la ventana de descuentos y te regresa a la orden:
-    // (Ajusta 'setShowDiscount' al nombre del estado que utilizas para abrir/cerrar esta vista)
-    setShowDiscount(false); 
-  }}
-  className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"
+  onClick={() => setModalType('confirmSaveDiscounts')}
+  className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"
 >
   <CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS
 </button>
+</div>
+  </div>
+</div>
+)}
 
-            </div>
+{modalType === 'confirmSaveDiscounts' && (
+  <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center border-t-8 border-amber-500">
+          <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <AlertTriangle size={40} />
           </div>
-        </div>
-      )}
-      {selectedOrder && (
+          <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO DE APLICAR ESTE DESCUENTO?</h3>
+          <p className="text-[10px] text-slate-400 font-bold mb-8">ESTA ACCIÓN MODIFICARÁ LOS VALORES FINANCIEROS DE LA SOLICITUD.</p>
+          <div className="flex gap-4">
+              <button onClick={() => setModalType('editDiscounts')} className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500">VOLVER</button>
+              <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-amber-600">CONFIRMAR</button>
+          </div>
+      </div>
+  </div>
+)}
+
+{selectedOrder && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:bg-white print:backdrop-blur-none print:p-0">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full ${viewMode === 'pdf' ? 'max-w-[816px] print:shadow-none print:rounded-none' : 'max-w-2xl animate-in zoom-in-95 duration-300'}`}>
             
