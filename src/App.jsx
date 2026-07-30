@@ -1461,7 +1461,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">NUEVA SOLICITUD DE PEDIDO</h2></div>
+      <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">HACER PEDIDO</h2></div>
       
       {currentUser.role === 'ADMIN' && (
         <div className="bg-[#e9f4f8] p-6 rounded-3xl border-2 border-[#2596be]/20 shadow-sm w-full">
@@ -2418,7 +2418,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   ];
   const clientMenu = [
     { id: 'client_dashboard', label: 'INICIO', icon: <LayoutDashboard size={20} /> },
-    { id: 'client_new_order', label: 'NUEVA SOLICITUD', icon: <Plus size={20} /> },
+    { id: 'client_new_order', label: 'HACER PEDIDO', icon: <Plus size={20} /> },
     { id: 'client_orders_history', label: 'MIS PEDIDOS', icon: <History size={20} /> },
   ];
 
