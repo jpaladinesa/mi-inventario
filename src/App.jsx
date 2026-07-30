@@ -930,12 +930,24 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
 
 // --- MÓDULO DE CLIENTES ---
 const ClientsView = ({ clients, setClients, clientTypes }) => {
-  const initialForm = { name: '', docType: 'NIT', docNumber: '', typeId: '', email: '', phone: '', extension: '', mobile: '', address: '', contact: '' };
+  // Estado para el Interruptor Maestro Global de Descuentos
+  const [globalDiscountEngine, setGlobalDiscountEngine] = useState(true);
+
+  const initialForm = { 
+    name: '', docType: 'NIT', docNumber: '', typeId: '', 
+    email: '', phone: '', extension: '', mobile: '', address: '', contact: '',
+    // Campos de configuración de descuento por cliente
+    autoDiscountActive: false,
+    discountPercentage: '',
+    recurrenceOrdersCount: '',
+    topItemsActive: false
+  };
+  
   const [newClient, setNewClient] = useState(initialForm);
   const [modalType, setModalType] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [editData, setEditData] = useState(initialForm);
-
+  
   const getNextID = () => `CL${String(clients.length + 1).padStart(6, '0')}`;
 
   const handleAdd = (e) => {
@@ -973,7 +985,20 @@ const ClientsView = ({ clients, setClients, clientTypes }) => {
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">GESTIÓN DE CLIENTES</h2></div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-[#2596be] pb-2 gap-4">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">GESTIÓN DE CLIENTES</h2>
+        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-[#e9f4f8] shadow-sm">
+          <span className="text-[9px] font-black text-slate-400 uppercase">MOTOR DE DESCUENTOS:</span>
+          <button 
+            type="button"
+            onClick={() => setGlobalDiscountEngine(!globalDiscountEngine)}
+            className={`px-4 py-1.5 rounded-xl text-[9px] font-black transition-all uppercase ${globalDiscountEngine ? 'bg-emerald-500 text-white shadow-md' : 'bg-rose-500 text-white shadow-md'}`}
+          >
+            {globalDiscountEngine ? 'ACTIVO (GLOBAL)' : 'APAGADO (GLOBAL)'}
+          </button>
+        </div>
+      </div>
+
       <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full">
         <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><UserPlus size={18} className="text-[#2596be]" /> REGISTRO DE CLIENTE</h3>
         <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
@@ -1035,6 +1060,59 @@ const ClientsView = ({ clients, setClients, clientTypes }) => {
             <input type="text" maxLength={20} value={newClient.contact} onChange={e => setNewClient({...newClient, contact: e.target.value.toUpperCase()})} className={getInputClass(newClient.contact, 20)} />
             <InputWarning val={newClient.contact} max={20} />
           </div>
+
+          {/* CONFIGURACIÓN DE DESCUENTOS POR CLIENTE */}
+          <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
+            <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
+              <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
+              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                <input 
+                  type="checkbox" 
+                  checked={newClient.autoDiscountActive} 
+                  onChange={e => setNewClient({...newClient, autoDiscountActive: e.target.checked})}
+                  className="w-4 h-4 accent-[#2596be] cursor-pointer"
+                />
+                <span className="text-[9px] font-black text-[#134b60] uppercase">ACTIVAR DESCUENTOS</span>
+              </label>
+            </div>
+
+            {newClient.autoDiscountActive && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400">DESCUENTO SUBTOTAL (%)</label>
+                  <input 
+                    type="number" 
+                    placeholder="0%" 
+                    value={newClient.discountPercentage} 
+                    onChange={e => setNewClient({...newClient, discountPercentage: e.target.value})} 
+                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400">RECURRENCIA (Nº ÓRDENES AL MES)</label>
+                  <input 
+                    type="number" 
+                    placeholder="Ej: 3" 
+                    value={newClient.recurrenceOrdersCount} 
+                    onChange={e => setNewClient({...newClient, recurrenceOrdersCount: e.target.value})} 
+                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                  />
+                </div>
+                <div className="flex items-center pt-5">
+                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center">
+                    <input 
+                      type="checkbox" 
+                      checked={newClient.topItemsActive} 
+                      onChange={e => setNewClient({...newClient, topItemsActive: e.target.checked})}
+                      className="w-4 h-4 accent-[#2596be] cursor-pointer"
+                    />
+                    <span className="text-[9px] font-black text-[#134b60] uppercase">APLICAR A ÍTEMS MÁS PEDIDOS</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="md:col-span-2 pt-2">
             <button type="submit" className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] shadow-xl transition-all active:scale-95 tracking-widest flex justify-center items-center gap-2"><Plus size={16} /> REGISTRAR CLIENTE</button>
           </div>
@@ -1158,6 +1236,59 @@ const ClientsView = ({ clients, setClients, clientTypes }) => {
                       <input type="text" maxLength={20} value={editData.contact} onChange={e => setEditData({...editData, contact: e.target.value.toUpperCase()})} className={getInputClass(editData.contact, 20)} />
                       <InputWarning val={editData.contact} max={20} />
                     </div>
+
+                    {/* CONFIGURACIÓN DE DESCUENTOS EN EDICIÓN */}
+                    <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
+                      <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
+                        <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
+                        <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                          <input 
+                            type="checkbox" 
+                            checked={editData.autoDiscountActive || false} 
+                            onChange={e => setEditData({...editData, autoDiscountActive: e.target.checked})}
+                            className="w-4 h-4 accent-[#2596be] cursor-pointer"
+                          />
+                          <span className="text-[9px] font-black text-[#134b60] uppercase">ACTIVAR DESCUENTOS</span>
+                        </label>
+                      </div>
+
+                      {editData.autoDiscountActive && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400">DESCUENTO SUBTOTAL (%)</label>
+                            <input 
+                              type="number" 
+                              placeholder="0%" 
+                              value={editData.discountPercentage || ''} 
+                              onChange={e => setEditData({...editData, discountPercentage: e.target.value})} 
+                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400">RECURRENCIA (Nº ÓRDENES AL MES)</label>
+                            <input 
+                              type="number" 
+                              placeholder="Ej: 3" 
+                              value={editData.recurrenceOrdersCount || ''} 
+                              onChange={e => setEditData({...editData, recurrenceOrdersCount: e.target.value})} 
+                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                            />
+                          </div>
+                          <div className="flex items-center pt-5">
+                            <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center">
+                              <input 
+                                type="checkbox" 
+                                checked={editData.topItemsActive || false} 
+                                onChange={e => setEditData({...editData, topItemsActive: e.target.checked})}
+                                className="w-4 h-4 accent-[#2596be] cursor-pointer"
+                              />
+                              <span className="text-[9px] font-black text-[#134b60] uppercase">APLICAR A ÍTEMS MÁS PEDIDOS</span>
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 )}
                 {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
@@ -1182,7 +1313,7 @@ const ClientsView = ({ clients, setClients, clientTypes }) => {
 };
 
 // --- MÓDULO DE SOLICITUD DE PEDIDO ---
-const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory }) => {
+  const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
   const [cart, setCart] = useState([]);
   const [searchID, setSearchID] = useState('');
@@ -1193,6 +1324,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   const [modalType, setModalType] = useState(null);
   const [editItem, setEditItem] = useState(null);
   const [lastSavedOrder, setLastSavedOrder] = useState(null);
+  
 
   const activeClientRecord = currentUser.role === 'ADMIN' ? clients.find(c => c.id === adminOrderClient) : clients.find(c => c.id === currentUser.relatedId);
   const activeClientType = clientTypes.find(ct => ct.id === activeClientRecord?.typeId);
@@ -1269,6 +1401,42 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
     const clientPhone = activeClientRecord ? activeClientRecord.mobile || activeClientRecord.phone : 'NO REGISTRADO';
     const clientEmail = activeClientRecord ? activeClientRecord.email : currentUser.email;
 
+    // EVALUACIÓN DE DESCUENTO AUTOMÁTICO DEL CLIENTE (Si el motor global está activo)
+    let appliedGlobalDiscount = 0;
+    if (globalDiscountEngine && activeClientRecord && activeClientRecord.autoDiscountActive) {
+      // Contar cuántas órdenes ha hecho este cliente en el mes actual
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const clientOrdersThisMonth = orders.filter(o => {
+        if (o.clientName !== clientNameToSave) return false;
+        const orderDate = new Date(o.date);
+        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear && o.status !== 'CANCELADA';
+      }).length;
+
+      const requiredRecurrence = parseInt(activeClientRecord.recurrenceOrdersCount) || 0;
+      
+      // Si cumple con la recurrencia o no se especificó un mínimo estricto
+      if (clientOrdersThisMonth >= requiredRecurrence) {
+        appliedGlobalDiscount = parseFloat(activeClientRecord.discountPercentage) || 0;
+      }
+    }
+
+    // Cálculo inicial de la orden con el descuento global aplicado si corresponde
+    const rawSubtotal = cart.reduce((acc, item) => acc + (item.totalPricePerUnit * item.quantity), 0);
+    const globalDiscountAmount = rawSubtotal * (appliedGlobalDiscount / 100);
+    const subtotalAfterGlobal = rawSubtotal - globalDiscountAmount;
+
+    let taxesAmount = 0;
+    cart.forEach(item => {
+      const lineTotal = item.totalPricePerUnit * item.quantity;
+      const proportion = rawSubtotal > 0 ? lineTotal / rawSubtotal : 0;
+      const itemSubAfterGlobal = subtotalAfterGlobal * proportion;
+      const taxRate = (item.taxValue || 0) / 100;
+      taxesAmount += itemSubAfterGlobal * taxRate;
+    });
+
+    const finalCalculatedTotal = subtotalAfterGlobal + taxesAmount;
+
     const newOrder = { 
         id: nextID, 
         clientName: clientNameToSave, 
@@ -1279,10 +1447,10 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
         clientEmail,
         date: new Date().toLocaleString(), 
         status: 'NUEVA', 
-        globalDiscount: 0, // Inicializado en 0 para los descuentos globales
-        items: cart.map(item => ({ ...item, discount: 0 })), // Cada ítem nace con 0% de descuento
+        globalDiscount: appliedGlobalDiscount, 
+        items: cart.map(item => ({ ...item, discount: 0 })), 
         totalItems: cart.length, 
-        totalValue: cartFinancials 
+        totalValue: finalCalculatedTotal 
     };
 
     setOrders([newOrder, ...orders]);
@@ -2229,7 +2397,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   const [activeTab, setActiveTab] = useState(role === 'ADMIN' ? 'dashboard' : 'client_dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('TODOS');
-  
+  const [globalDiscountEngine, setGlobalDiscountEngine] = useState(true);
   const [taxes, setTaxes] = useState([]);
   const [clientTypes, setClientTypes] = useState([]);
   const [products, setProducts] = useState([]);
@@ -2315,7 +2483,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           {activeTab === 'products' && <ProductsView products={products} setProducts={setProducts} taxes={taxes} inventory={inventory} orders={orders} />}         {activeTab === 'taxes' && <ConfigurationListView title="IMPUESTOS" items={taxes} setItems={setTaxes} prefix="CI" labelName="IMPUESTO" labelValue="PORCENTAJE" /> }
           {activeTab === 'client_types' && <ConfigurationListView title="TIPO CLIENTE" items={clientTypes} setItems={setClientTypes} prefix="TC" labelName="TIPO" labelValue="RECARGO" />}
           {activeTab === 'client_dashboard' && <ClientDashboardView orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
-          {activeTab === 'client_new_order' && <ClientNewOrderView products={products} orders={orders} setOrders={setOrders} currentUser={currentUser} clients={clients} clientTypes={clientTypes} inventory={inventory} />}
+          {activeTab === 'client_new_order' && <ClientNewOrderView products={products} orders={orders} setOrders={setOrders} currentUser={currentUser} clients={clients} clientTypes={clientTypes} inventory={inventory} globalDiscountEngine={globalDiscountEngine} />}
           {activeTab === 'client_orders_history' && <OrdersManagementView orders={orders} setOrders={setOrders} role="CLIENTE" filterStatus={filterStatus} setFilterStatus={setFilterStatus} />}
         </div>
       </main>
