@@ -1315,7 +1315,18 @@ const ClientsView = ({ clients, setClients, clientTypes }) => {
 // --- MÓDULO DE SOLICITUD DE PEDIDO ---
   const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem('repeatOrderItems');
+    if (saved) {
+      localStorage.removeItem('repeatOrderItems');
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
   const [searchID, setSearchID] = useState('');
   const [searchName, setSearchName] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -1598,7 +1609,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
 };
 
 // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
-const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus }) => {
+  const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus, setActiveTab }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const [pendingChange, setPendingChange] = useState(null); 
@@ -1757,14 +1768,25 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                     <td className="px-6 py-5 text-center">{o.totalItems}</td>
                     <td className="px-6 py-5 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
                     <td className="px-6 py-5 text-center"><StatusBadge status={o.status} /></td>
-                    <td className="px-6 py-5 text-right">
-                      <button 
-                        onClick={() => { setSelectedOrder(o); setViewMode('list'); }} 
-                        className="bg-[#e9f4f8] text-[#2596be] hover:text-white px-5 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 ml-auto hover:bg-[#2596be] active:scale-95 transition-all"
-                      >
-                        <Eye size={14} /> VER DETALLE
-                      </button>
-                    </td>
+<td className="px-6 py-5 text-right">
+  <div className="flex justify-end gap-2 items-center">
+  <button 
+    onClick={() => {
+      localStorage.setItem('repeatOrderItems', JSON.stringify(o.items));
+      setActiveTab('client_new_order');
+    }}
+    className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 transition-all shadow-sm"
+  >
+    <History size={14} /> REPETIR
+  </button>
+  <button 
+    onClick={() => { setSelectedOrder(o); setViewMode('list'); }} 
+    className="bg-[#e9f4f8] text-[#2596be] hover:text-white px-5 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 hover:bg-[#2596be] active:scale-95 transition-all"
+  >
+    <Eye size={14} /> VER DETALLE
+  </button>
+</div>
+</td>
                   </tr>
                 ))
               )}
@@ -2476,7 +2498,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
         </header>
         <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
           {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
-          {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} />}
+          {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
           {activeTab === 'inventory' && <InventoryView inventory={inventory} setInventory={setInventory} products={products} orders={orders} />}
           {activeTab === 'clients' && <ClientsView clients={clients} setClients={setClients} clientTypes={clientTypes} />}
           {activeTab === 'access' && <AccessManagementView users={users} setUsers={setUsers} clients={clients} />}
@@ -2484,7 +2506,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           {activeTab === 'client_types' && <ConfigurationListView title="TIPO CLIENTE" items={clientTypes} setItems={setClientTypes} prefix="TC" labelName="TIPO" labelValue="RECARGO" />}
           {activeTab === 'client_dashboard' && <ClientDashboardView orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
           {activeTab === 'client_new_order' && <ClientNewOrderView products={products} orders={orders} setOrders={setOrders} currentUser={currentUser} clients={clients} clientTypes={clientTypes} inventory={inventory} globalDiscountEngine={globalDiscountEngine} />}
-          {activeTab === 'client_orders_history' && <OrdersManagementView orders={orders} setOrders={setOrders} role="CLIENTE" filterStatus={filterStatus} setFilterStatus={setFilterStatus} />}
+          {activeTab === 'client_orders_history' && <OrdersManagementView orders={orders} setOrders={setOrders} role="CLIENTE" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
         </div>
       </main>
     </div>
