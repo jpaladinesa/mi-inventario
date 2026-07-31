@@ -1403,7 +1403,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
     resetSearchState();
   };
 
-  const saveOrder = () => {
+ const saveOrder = () => {
     const nextID = `SO${String(orders.length + 1).padStart(6, '0')}`;
     const clientNameToSave = activeClientRecord ? activeClientRecord.name : currentUser.name;
     const clientDocType = activeClientRecord ? activeClientRecord.docType : 'NIT';
@@ -1415,24 +1415,22 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
     // EVALUACIÓN DE DESCUENTO AUTOMÁTICO DEL CLIENTE (Si el motor global está activo)
     let appliedGlobalDiscount = 0;
     if (globalDiscountEngine && activeClientRecord && activeClientRecord.autoDiscountActive) {
-      // Contar cuántas órdenes ha hecho este cliente en el mes actual
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
       const clientOrdersThisMonth = orders.filter(o => {
         if (o.clientName !== clientNameToSave) return false;
-        const orderDate = new Date(o.date);
-        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear && o.status !== 'CANCELADA';
+        if (o.status === 'CANCELADA') return false;
+        const orderDate = o.timestamp ? new Date(o.timestamp) : new Date(o.date);
+        return !isNaN(orderDate) && orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
       }).length;
 
       const requiredRecurrence = parseInt(activeClientRecord.recurrenceOrdersCount) || 0;
       
-      // Si cumple con la recurrencia o no se especificó un mínimo estricto
       if (clientOrdersThisMonth >= requiredRecurrence) {
         appliedGlobalDiscount = parseFloat(activeClientRecord.discountPercentage) || 0;
       }
     }
 
-    // Cálculo inicial de la orden con el descuento global aplicado si corresponde
     const rawSubtotal = cart.reduce((acc, item) => acc + (item.totalPricePerUnit * item.quantity), 0);
     const globalDiscountAmount = rawSubtotal * (appliedGlobalDiscount / 100);
     const subtotalAfterGlobal = rawSubtotal - globalDiscountAmount;
@@ -1457,6 +1455,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
         clientPhone,
         clientEmail,
         date: new Date().toLocaleString(), 
+        timestamp: Date.now(), 
         status: 'NUEVA', 
         globalDiscount: appliedGlobalDiscount, 
         items: cart.map(item => ({ ...item, discount: 0 })), 
@@ -2420,12 +2419,54 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('TODOS');
   const [globalDiscountEngine, setGlobalDiscountEngine] = useState(true);
-  const [taxes, setTaxes] = useState([]);
-  const [clientTypes, setClientTypes] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [inventory, setInventory] = useState([]);
-  const [orders, setOrders] = useState([]);
+  const [taxes, setTaxes] = useState(() => {
+    const saved = localStorage.getItem('inventrack_taxes');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_taxes', JSON.stringify(taxes));
+  }, [taxes]);
+
+  const [clientTypes, setClientTypes] = useState(() => {
+    const saved = localStorage.getItem('inventrack_clientTypes');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_clientTypes', JSON.stringify(clientTypes));
+  }, [clientTypes]);
+
+  const [products, setProducts] = useState(() => {
+    const saved = localStorage.getItem('inventrack_products');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_products', JSON.stringify(products));
+  }, [products]);
+
+  const [clients, setClients] = useState(() => {
+    const saved = localStorage.getItem('inventrack_clients');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_clients', JSON.stringify(clients));
+  }, [clients]);
+
+  const [inventory, setInventory] = useState(() => {
+    const saved = localStorage.getItem('inventrack_inventory');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_inventory', JSON.stringify(inventory));
+  }, [inventory]);
+
+  const [orders, setOrders] = useState(() => {
+    const saved = localStorage.getItem('inventrack_orders');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_orders', JSON.stringify(orders));
+  }, [orders]);
+
   const [csvPreview, setCsvPreview] = useState(null);
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const adminMenu = [
