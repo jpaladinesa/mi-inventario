@@ -929,14 +929,13 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
 };
 
 // --- MÓDULO DE CLIENTES ---
-const ClientsView = ({ clients, setClients, clientTypes }) => {
-  // Estado para el Interruptor Maestro Global de Descuentos
-  const [globalDiscountEngine, setGlobalDiscountEngine] = useState(true);
+const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, setGlobalDiscountEngine }) => {
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [targetDiscountState, setTargetDiscountState] = useState(false);
 
   const initialForm = { 
     name: '', docType: 'NIT', docNumber: '', typeId: '', 
     email: '', phone: '', extension: '', mobile: '', address: '', contact: '',
-    // Campos de configuración de descuento por cliente
     autoDiscountActive: false,
     discountPercentage: '',
     recurrenceOrdersCount: '',
@@ -991,13 +990,53 @@ const ClientsView = ({ clients, setClients, clientTypes }) => {
           <span className="text-[9px] font-black text-slate-400 uppercase">MOTOR DE DESCUENTOS:</span>
           <button 
             type="button"
-            onClick={() => setGlobalDiscountEngine(!globalDiscountEngine)}
-            className={`px-4 py-1.5 rounded-xl text-[9px] font-black transition-all uppercase ${globalDiscountEngine ? 'bg-emerald-500 text-white shadow-md' : 'bg-rose-500 text-white shadow-md'}`}
+            onClick={() => {
+              setTargetDiscountState(!globalDiscountEngine);
+              setShowDiscountModal(true);
+            }}
+            className={`px-4 py-1.5 rounded-xl text-[9px] font-black transition-all uppercase shadow-md ${globalDiscountEngine ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}
           >
             {globalDiscountEngine ? 'ACTIVO (GLOBAL)' : 'APAGADO (GLOBAL)'}
           </button>
         </div>
       </div>
+
+      {showDiscountModal && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
+          <div className={`bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center border-t-8 ${targetDiscountState ? 'border-emerald-500' : 'border-rose-500'}`}>
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ${targetDiscountState ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
+              {targetDiscountState ? <CheckCircle2 size={40} /> : <AlertTriangle size={40} />}
+            </div>
+            <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">
+              {targetDiscountState ? '¿DESEA ACTIVAR LOS DESCUENTOS?' : '¿DESEA DESACTIVAR LOS DESCUENTOS?'}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-bold mb-8 uppercase">
+              {targetDiscountState 
+                ? 'EL MOTOR GLOBAL SE ACTIVARÁ Y OPERARÁ EN TODO EL SISTEMA.' 
+                : 'EL MOTOR GLOBAL SE APAGARÁ Y SE MANTENDRÁ EN ROJO (DESACTIVADO) HASTA QUE UN ADMINISTRADOR VUELVA A ACTIVARLO.'}
+            </p>
+            <div className="flex gap-4">
+              <button 
+                type="button"
+                onClick={() => setShowDiscountModal(false)} 
+                className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors"
+              >
+                CANCELAR
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setGlobalDiscountEngine(targetDiscountState);
+                  setShowDiscountModal(false);
+                }} 
+                className={`flex-1 py-4 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase transition-all ${targetDiscountState ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'}`}
+              >
+                ACEPTAR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full">
         <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><UserPlus size={18} className="text-[#2596be]" /> REGISTRO DE CLIENTE</h3>
@@ -2418,7 +2457,13 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   const [activeTab, setActiveTab] = useState(role === 'ADMIN' ? 'dashboard' : 'client_dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('TODOS');
-  const [globalDiscountEngine, setGlobalDiscountEngine] = useState(true);
+  const [globalDiscountEngine, setGlobalDiscountEngine] = useState(() => {
+    const saved = localStorage.getItem('inventrack_globalDiscountEngine');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_globalDiscountEngine', JSON.stringify(globalDiscountEngine));
+  }, [globalDiscountEngine]);
   const [taxes, setTaxes] = useState(() => {
     const saved = localStorage.getItem('inventrack_taxes');
     return saved ? JSON.parse(saved) : [];
@@ -2541,7 +2586,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
           {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
           {activeTab === 'inventory' && <InventoryView inventory={inventory} setInventory={setInventory} products={products} orders={orders} />}
-          {activeTab === 'clients' && <ClientsView clients={clients} setClients={setClients} clientTypes={clientTypes} />}
+          {activeTab === 'clients' && <ClientsView clients={clients} setClients={setClients} clientTypes={clientTypes} globalDiscountEngine={globalDiscountEngine} setGlobalDiscountEngine={setGlobalDiscountEngine} />}
           {activeTab === 'access' && <AccessManagementView users={users} setUsers={setUsers} clients={clients} />}
           {activeTab === 'products' && <ProductsView products={products} setProducts={setProducts} taxes={taxes} inventory={inventory} orders={orders} />}         {activeTab === 'taxes' && <ConfigurationListView title="IMPUESTOS" items={taxes} setItems={setTaxes} prefix="CI" labelName="IMPUESTO" labelValue="PORCENTAJE" /> }
           {activeTab === 'client_types' && <ConfigurationListView title="TIPO CLIENTE" items={clientTypes} setItems={setClientTypes} prefix="TC" labelName="TIPO" labelValue="RECARGO" />}
