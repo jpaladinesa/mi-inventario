@@ -441,7 +441,7 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
       </div>
 
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
           <table className="w-full text-left min-w-[1200px] uppercase">
             <thead className="bg-[#134b60] text-white text-[9px] font-black"><tr><th className="px-6 py-6">ID CÓDIGO</th><th className="px-6 py-6">PRODUCTO / UNIDAD</th><th className="px-6 py-6 text-center">STOCK DISP.</th><th className="px-6 py-6 text-right">VALOR BASE</th><th className="px-6 py-6 text-right">IVA</th><th className="px-6 py-6 text-right">FINAL</th><th className="px-6 py-6 text-right">GESTIÓN</th></tr></thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-slate-600">
@@ -1159,9 +1159,9 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
       </div>
 
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
           <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-6">ID</th>
                 <th className="px-6 py-6">CLIENTE</th>
