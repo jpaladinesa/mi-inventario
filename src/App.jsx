@@ -1780,8 +1780,8 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
         ))}
       </div>
 
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
+        <div className="flex-1 overflow-y-auto overflow-x-auto">
           <table className="w-full text-left min-w-[1100px]">
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest uppercase">
               <tr>
