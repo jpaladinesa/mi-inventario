@@ -2388,8 +2388,8 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
         </form>
       </div>
 
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
+        <div className="flex-1 overflow-y-auto overflow-x-auto">
           <table className="w-full text-left min-w-[1000px] uppercase">
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest"><tr><th className="px-6 py-6">ID USUARIO</th><th className="px-6 py-6">NOMBRE ASIGNADO</th><th className="px-6 py-6">CORREO ACCESO</th><th className="px-6 py-6 text-center">ROL</th><th className="px-6 py-6 text-right">GESTIÓN</th></tr></thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
