@@ -2202,12 +2202,12 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus }) => {
         ))}
       </div>
 
-      <div className="bg-white rounded-[40px] border-2 border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[40px] border-2 border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
         <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-[#e9f4f8]/30">
           <h4 className="text-[10px] font-black text-[#134b60] tracking-widest flex items-center gap-2 uppercase"><Activity size={16} className="text-[#2596be]"/> MOVIMIENTOS RECIENTES</h4>
           <button onClick={() => setActiveTab('client_new_order')} className="bg-[#2596be] text-white px-6 py-3 rounded-2xl font-black text-[10px] flex items-center gap-2 hover:bg-[#1e7a9b] shadow-lg shadow-[#2596be]/20 uppercase transition-all">CREAR SOLICITUD <ChevronRight size={14} /></button>
         </div>
-        <div className="overflow-x-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-auto">
           <table className="w-full text-left uppercase">
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest"><tr><th className="px-8 py-6">ID SOLICITUD</th><th className="px-8 py-6">FECHA</th><th className="px-8 py-6 text-center">ITEMS</th><th className="px-8 py-6 text-right">TOTAL ESTIMADO</th><th className="px-8 py-6 text-center">ESTADO</th><th className="px-8 py-6 text-right">ACCIÓN</th></tr></thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
