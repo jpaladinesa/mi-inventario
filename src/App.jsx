@@ -768,8 +768,8 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
         <button onClick={() => setModalType('confirm')} disabled={!selectedProd || !quantity} className="w-full bg-[#2596be] text-white py-5 rounded-xl font-black hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl flex items-center justify-center gap-3 disabled:opacity-50"><ArrowUpRight size={20} /> PROCESAR CARGUE</button>
       </div>
 
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
+        <div className="flex-1 overflow-y-auto overflow-x-auto">
           <table className="w-full text-left min-w-[1300px] uppercase">
             <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest"><tr><th className="px-6 py-6">ID MOV.</th><th className="px-6 py-6">CÓDIGO ID</th><th className="px-6 py-6">PRODUCTO</th><th className="px-6 py-6 text-center">CANTIDAD</th><th className="px-6 py-6 text-center">FECHA / HORA</th><th className="px-6 py-6 text-center">USUARIO</th><th className="px-6 py-6 text-right">GESTIÓN</th></tr></thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
