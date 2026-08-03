@@ -2212,7 +2212,7 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus }) => {
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest"><tr><th className="px-8 py-6">ID SOLICITUD</th><th className="px-8 py-6">FECHA</th><th className="px-8 py-6 text-center">ITEMS</th><th className="px-8 py-6 text-right">TOTAL ESTIMADO</th><th className="px-8 py-6 text-center">ESTADO</th><th className="px-8 py-6 text-right">ACCIÓN</th></tr></thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
               {orders.length === 0 ? (<tr><td colSpan="6" className="px-8 py-24 text-center text-slate-300 font-black tracking-tighter uppercase">SIN SOLICITUDES REGISTRADAS</td></tr>) : (
-                orders.slice(0, 5).map(o => (
+                orders.map(o => (
                   <tr key={o.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
                     <td className="px-8 py-6 font-mono text-[#2596be] font-black">{o.id}</td>
                     <td className="px-8 py-6 text-slate-400 font-mono text-[10px]">{o.date}</td>
