@@ -1374,7 +1374,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
   const [modalType, setModalType] = useState(null);
   const [editItem, setEditItem] = useState(null);
   const [lastSavedOrder, setLastSavedOrder] = useState(null);
-  
+  const [generalObservation, setGeneralObservation] = useState('');
 
   const activeClientRecord = currentUser.role === 'ADMIN' ? clients.find(c => c.id === adminOrderClient) : clients.find(c => c.id === currentUser.relatedId);
   const activeClientType = clientTypes.find(ct => ct.id === activeClientRecord?.typeId);
@@ -1507,11 +1507,13 @@ const handleAddToOrder = (e) => {
         globalDiscount: appliedGlobalDiscount, 
         items: cart.map(item => ({ ...item, discount: 0 })), 
         totalItems: cart.length, 
-        totalValue: finalCalculatedTotal 
+        totalValue: finalCalculatedTotal,
+        generalObservation: generalObservation
     };
 
     setOrders([newOrder, ...orders]);
     setCart([]); 
+    setGeneralObservation('');
     setLastSavedOrder(newOrder);
     setModalType('orderSuccess');
   };
@@ -1608,7 +1610,23 @@ const handleAddToOrder = (e) => {
             </tbody>
           </table>
         </div>
-        {cart.length > 0 && (<div className="p-8 bg-slate-50 flex flex-col md:flex-row gap-4 border-t border-slate-100"><button onClick={() => setCart([])} className="flex-1 py-4 border-2 border-rose-200 text-rose-500 rounded-2xl font-black text-xs hover:bg-rose-50 transition-all uppercase">REINICIAR</button><button onClick={() => setModalType('confirmSaveOrder')} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2"><CheckCircle2 size={18} /> ENVIAR SOLICITUD</button></div>)}
+      {cart.length > 0 && (
+          <div className="p-8 bg-slate-50 border-t border-slate-100 flex flex-col gap-6">
+            <div className="w-full">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">OBSERVACIÓN GENERAL DEL PEDIDO (OPCIONAL)</label>
+              <textarea 
+                value={generalObservation} 
+                onChange={e => setGeneralObservation(e.target.value.toUpperCase())} 
+                className="w-full p-4 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all resize-none min-h-[80px]" 
+                placeholder="ESPECIFICACIONES DE ENTREGA, NOTAS PARA EL ASESOR O PRODUCTOS ADICIONALES NO ENCONTRADOS..."
+              />
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <button onClick={() => { setCart([]); setGeneralObservation(''); }} className="flex-1 py-4 border-2 border-rose-200 text-rose-500 rounded-2xl font-black text-xs hover:bg-rose-50 transition-all uppercase">REINICIAR</button>
+              <button onClick={() => setModalType('confirmSaveOrder')} className="flex-1 py-4 px-8 bg-[#2596be] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2"><CheckCircle2 size={18} /> ENVIAR SOLICITUD</button>
+            </div>
+          </div>
+        )}  
       </div>
 
       {modalType === 'editCart' && (
@@ -2061,6 +2079,13 @@ const handleAddToOrder = (e) => {
                       </tbody>
                     </table>
                   </div>
+                  {/* Mostrar observación general si existe (Vista Normal) */}
+                  {selectedOrder.generalObservation && (
+                    <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
+                      <p className="text-xs font-bold text-amber-900">{selectedOrder.generalObservation}</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-white p-10 md:p-14 w-full max-w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60]">
@@ -2120,7 +2145,13 @@ const handleAddToOrder = (e) => {
                       </tbody>
                     </table>
                   </div>
-
+{/* Mostrar observación general si existe (Vista PDF) */}
+                  {selectedOrder.generalObservation && (
+                    <div className="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">OBSERVACIONES GENERALES DEL PEDIDO:</p>
+                      <p className="text-xs font-bold text-[#134b60]">{selectedOrder.generalObservation}</p>
+                    </div>
+                  )}
                   <div className="flex justify-end mb-12">
                     <div className="w-80 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-2xl">
                       {(() => {
