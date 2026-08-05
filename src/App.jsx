@@ -1414,16 +1414,25 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
 
 const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity(''); setSelectedProd(null); setObservation(''); };
 
-  const handleAddToOrder = (e) => {
+const handleAddToOrder = (e) => {
     e.preventDefault();
     if (!selectedProd || !quantity || parseFloat(quantity) <= 0) return;
+
+    // 1. Preparamos el texto de advertencia si supera el stock
+    const warningText = "SUJETO A DISPONIBILIDAD CON ASESOR";
+    let currentObs = observation.toUpperCase();
     
+    // Si la cantidad ingresada supera el stock disponible, inyectamos la advertencia
+    if (parseFloat(quantity) > availableStock) {
+        currentObs = currentObs ? `${currentObs} | ${warningText}` : warningText;
+    }
+
     const existing = cart.find(c => c.productId === selectedProd.id);
     if (existing) { 
       setCart(cart.map(c => c.productId === selectedProd.id ? { 
         ...c, 
         quantity: c.quantity + parseFloat(quantity),
-        observation: observation ? (c.observation ? `${c.observation} | ${observation.toUpperCase()}` : observation.toUpperCase()) : c.observation
+        observation: currentObs ? (c.observation ? `${c.observation} | ${currentObs}` : currentObs) : c.observation
       } : c)); 
     }
     else { 
@@ -1435,7 +1444,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
             quantity: parseFloat(quantity), 
             taxValue: selectedProd.taxValue, 
             totalPricePerUnit: financialData.totalUnit,
-            observation: observation.toUpperCase()
+            observation: currentObs
         }]); 
     }
     resetSearchState();
