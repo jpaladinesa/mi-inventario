@@ -1417,8 +1417,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
   const handleAddToOrder = (e) => {
     e.preventDefault();
     if (!selectedProd || !quantity || parseFloat(quantity) <= 0) return;
-    if (parseFloat(quantity) > availableStock) { alert(`STOCK INSUFICIENTE. DISPONIBLE ACTUAL: ${availableStock}`); return; }
-
+    
     const existing = cart.find(c => c.productId === selectedProd.id);
     if (existing) { 
       setCart(cart.map(c => c.productId === selectedProd.id ? { 
@@ -1552,27 +1551,36 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-50">
-            <div className="space-y-1">
-              <label className={`text-[9px] font-black uppercase tracking-widest ${isOverStock ? 'text-rose-500' : 'text-[#2596be]'}`}>CANTIDAD {selectedProd && `(DISP: ${availableStock})`}</label>
-              <div className="relative">
-                <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input type="number" step="0.01" disabled={!selectedProd || isSearchDisabled} value={quantity} onChange={e => setQuantity(e.target.value)} className={`w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all ${isOverStock ? 'bg-rose-50 border-2 border-rose-400 text-rose-600' : 'bg-slate-50 border-2 border-slate-100 text-[#134b60]'}`} placeholder="0.00" required />
-              </div>
-            </div>
-            
-            <div className="space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OBSERVACIÓN (OPCIONAL)</label>
-              <div className="relative">
-                <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input type="text" maxLength={50} disabled={!selectedProd || isSearchDisabled} value={observation} onChange={e => setObservation(e.target.value)} className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-30 transition-all" placeholder="EJ: EMPAQUE DOBLE..." />
-              </div>
-              {observation.length >= 50 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse uppercase">Límite 50 alcanzado</span>}
-            </div>
+  <div className="space-y-1">
+    <label className="text-[9px] font-black uppercase tracking-widest text-[#2596be]">CANTIDAD</label>
+    <div className="relative">
+      <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      <input type="number" step="0.01" disabled={!selectedProd || isSearchDisabled} value={quantity} onChange={e => setQuantity(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" placeholder="0.00" required />
+    </div>
+  </div>
+  
+  <div className="space-y-1 relative">
+    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OBSERVACIÓN (OPCIONAL)</label>
+    <div className="relative">
+      <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      <input type="text" maxLength={50} disabled={!selectedProd || isSearchDisabled} value={observation} onChange={e => setObservation(e.target.value)} className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-30 transition-all" placeholder="EJ: EMPAQUE DOBLE..." />
+    </div>
+    {observation.length >= 50 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse uppercase">Límite 50 alcanzado</span>}
+  </div>
 
-            <button type="submit" disabled={!selectedProd || !quantity || isSearchDisabled || isOverStock} className="w-full bg-[#2596be] text-white font-black rounded-xl hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] self-end">
-              <Plus size={20} /> AGREGAR
-            </button>
-          </div>
+  <button type="submit" disabled={!selectedProd || !quantity || isSearchDisabled} className="w-full bg-[#2596be] text-white font-black rounded-xl hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] self-end">
+    <Plus size={20} /> AGREGAR
+  </button>
+
+  {isOverStock && (
+    <div className="md:col-span-3 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
+      <AlertTriangle size={20} className="animate-pulse" />
+      <span className="text-[10px] font-black uppercase tracking-widest">
+        AVISO IMPORTANTE: ¡CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR!
+      </span>
+    </div>
+  )}
+</div>
         </form>
       </div>
 
