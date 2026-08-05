@@ -1576,7 +1576,7 @@ const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity
     <div className="md:col-span-3 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
       <AlertTriangle size={20} className="animate-pulse" />
       <span className="text-[10px] font-black uppercase tracking-widest">
-        AVISO IMPORTANTE: ¡CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR!
+        AVISO: CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR
       </span>
     </div>
   )}
