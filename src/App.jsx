@@ -1505,7 +1505,13 @@ const handleAddToOrder = (e) => {
         timestamp: Date.now(), 
         status: 'NUEVA', 
         globalDiscount: appliedGlobalDiscount, 
-        items: cart.map(item => ({ ...item, discount: 0 })), 
+        items: cart.map(item => ({ 
+    ...item, 
+    discount: 0,
+    deliveredQuantity: item.quantity,
+    pendingQuantity: 0,
+    deliveryObservation: ''
+})),
         totalItems: cart.length, 
         totalValue: finalCalculatedTotal,
         generalObservation: generalObservation
@@ -1718,10 +1724,42 @@ const handleAddToOrder = (e) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const [pendingChange, setPendingChange] = useState(null); 
+  const [editingItems, setEditingItems] = useState({});
   // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
 
   
   const [discountData, setDiscountData] = useState({ global: 0, items: [] });
+  // Función para manejar cambios en la cantidad entregada o la observación de un ítem
+  const handleItemDeliveryChange = (index, field, value) => {
+    const item = selectedOrder.items[index];
+    const qtyRequested = item.quantity;
+
+    const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(i => ({
+      deliveredQuantity: i.deliveredQuantity ?? i.quantity,
+      pendingQuantity: i.pendingQuantity ?? 0,
+      deliveryObservation: i.deliveryObservation || ''
+    }));
+
+    if (field === 'deliveredQuantity') {
+      const delivered = Math.max(0, Math.min(qtyRequested, parseFloat(value) || 0));
+      const pending = qtyRequested - delivered;
+      currentEdits[index] = {
+        ...currentEdits[index],
+        deliveredQuantity: delivered,
+        pendingQuantity: pending
+      };
+    } else if (field === 'deliveryObservation') {
+      currentEdits[index] = {
+        ...currentEdits[index],
+        deliveryObservation: value.toUpperCase()
+      };
+    }
+
+    setEditingItems({
+      ...editingItems,
+      [selectedOrder.id]: currentEdits
+    });
+  };
   const [modalType, setModalType] = useState(null); 
 
   // Función maestra para calcular totales con descuentos aplicados
@@ -2082,18 +2120,25 @@ const handleAddToOrder = (e) => {
                         </button>
                     </div>
                   )}
-                  <div className="border-2 border-slate-100 rounded-2xl overflow-hidden bg-white">
+<div className="border-2 border-slate-100 rounded-2xl overflow-hidden bg-white">
                     <table className="w-full text-left">
-<thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
+                      <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
                         <tr>
                           <th className="px-5 py-4">PRODUCTO</th>
-                          <th className="px-5 py-4 text-center">CANTIDAD</th>
-                          <th className="px-5 py-4 text-center">DESC.</th>
+                          <th className="px-5 py-4 text-center">SOLICITADA</th>
+                          <th className="px-5 py-4 text-center">ENTREGADOS (OK)</th>
+                          <th className="px-5 py-4 text-center">PENDIENTE</th>
+                          <th className="px-5 py-4">OBSERVACIÓN</th>
                           <th className="px-5 py-4 text-right">TOTAL</th>
                         </tr>
                       </thead>
                       <tbody className="text-[10px] font-bold text-[#134b60] divide-y divide-slate-50">
                         {selectedOrder.items.map((item, idx) => {
+                           const currentEdits = editingItems[selectedOrder.id]?.[idx] || {
+                             deliveredQuantity: item.deliveredQuantity ?? item.quantity,
+                             pendingQuantity: item.pendingQuantity ?? 0,
+                             deliveryObservation: item.deliveryObservation || ''
+                           };
                            const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
                            const finalTotal = (baseUnit * (1 - ((item.discount || 0) / 100))) * (1 + (item.taxValue / 100)) * item.quantity;
                            return (
@@ -2103,14 +2148,64 @@ const handleAddToOrder = (e) => {
                               <p className="text-[8px] text-slate-400 uppercase">{item.unit}</p>
                               {item.observation && <p className="text-[8px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
                             </td>
-                            <td className="px-5 py-4 text-center font-mono text-[#134b60] bg-slate-50/50">{item.quantity}</td>
-                            <td className="px-5 py-4 text-center font-mono text-amber-500 font-black">{item.discount || 0}%</td>
+                            <td className="px-5 py-4 text-center font-mono">{item.quantity}</td>
+                            <td className="px-5 py-4 text-center font-mono">
+                              <input 
+                                type="number" 
+                                min="0" 
+                                max={item.quantity} 
+                                step="1"
+                                value={currentEdits.deliveredQuantity}
+                                onChange={(e) => handleItemDeliveryChange(idx, 'deliveredQuantity', parseInt(e.target.value) || 0)}
+                                className="w-20 px-2 py-1.5 bg-[#e9f4f8] border border-[#2596be]/30 rounded-lg text-center font-black text-emerald-600 outline-none focus:border-[#2596be]"
+                              />
+                            </td>
+                            <td className="px-5 py-4 text-center font-mono text-rose-500 font-black">{currentEdits.pendingQuantity}</td>
+                            <td className="px-5 py-4">
+                              <input 
+                                type="text" 
+                                maxLength={50}
+                                placeholder="OBSERVACIÓN..."
+                                value={currentEdits.deliveryObservation}
+                                onChange={(e) => handleItemDeliveryChange(idx, 'deliveryObservation', e.target.value)}
+                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-600 outline-none focus:border-[#2596be] uppercase text-[10px]"
+                              />
+                            </td>
                             <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(finalTotal)}</td>
                           </tr>
                         )})}
                       </tbody>
                     </table>
                   </div>
+
+                  {role === 'ADMIN' && (
+                    <div className="pt-4">
+                      <button 
+                        onClick={() => {
+                          const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
+                            deliveredQuantity: item.deliveredQuantity ?? item.quantity,
+                            pendingQuantity: item.pendingQuantity ?? 0,
+                            deliveryObservation: item.deliveryObservation || ''
+                          }));
+
+                          const updatedItems = selectedOrder.items.map((item, idx) => ({
+                            ...item,
+                            deliveredQuantity: Math.round(Number(currentEdits[idx]?.deliveredQuantity ?? item.quantity)),
+                            pendingQuantity: Math.round(Number(currentEdits[idx]?.pendingQuantity ?? 0)),
+                            deliveryObservation: currentEdits[idx]?.deliveryObservation || ''
+                          }));
+
+                          const updatedOrder = { ...selectedOrder, items: updatedItems };
+                          setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+                          setEditingItems({ ...editingItems, [selectedOrder.id]: null });
+                          setSelectedOrder(null);
+                        }}
+                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 size={18} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
+                      </button>
+                    </div>
+                  )}
                   {/* Mostrar observación general si existe (Vista Normal) */}
                   {selectedOrder.generalObservation && (
                     <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
