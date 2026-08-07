@@ -2138,19 +2138,20 @@ const handleAddToOrder = (e) => {
                     </div>
                   )}
                  {role === 'ADMIN' && (
-                    <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl mt-4">
-                        <p className="text-[9px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN FINANCIERA</p>
-                        <button 
-                            onClick={() => { 
-                                setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] }); 
-                                setModalType('editDiscounts'); 
-                            }}
-                            className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl text-[10px] font-black shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase"
-                        >
-                            <Tag size={18}/> APLICAR DESCUENTOS AL PEDIDO
-                        </button>
-                    </div>
-                  )}
+    <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl mt-4">
+        <p className="text-[9px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN FINANCIERA</p>
+        <button 
+            disabled={selectedOrder.status === 'CANCELADA'}
+            onClick={() => { 
+                setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] }); 
+                setModalType('editDiscounts'); 
+            }}
+            className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl text-[10px] font-black shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-500"
+        >
+            <Tag size={18}/> {selectedOrder.status === 'CANCELADA' ? 'PEDIDO CANCELADO (BLOQUEADO)' : 'APLICAR DESCUENTOS AL PEDIDO'}
+        </button>
+    </div>
+)}
                     <div className="border-2 border-slate-100 rounded-2xl overflow-x-auto bg-white">
                     <table className="w-full text-left min-w-[750px]">
                       <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
@@ -2212,29 +2213,30 @@ const handleAddToOrder = (e) => {
                   {role === 'ADMIN' && (
                     <div className="pt-4">
                       <button 
-                        onClick={() => {
-                          const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
-                            deliveredQuantity: item.deliveredQuantity ?? item.quantity,
-                            pendingQuantity: item.pendingQuantity ?? 0,
-                            deliveryObservation: item.deliveryObservation || ''
-                          }));
+  disabled={selectedOrder.status === 'CANCELADA'}
+  onClick={() => {
+    const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
+      deliveredQuantity: item.deliveredQuantity ?? item.quantity,
+      pendingQuantity: item.pendingQuantity ?? 0,
+      deliveryObservation: item.deliveryObservation || ''
+    }));
 
-                          const updatedItems = selectedOrder.items.map((item, idx) => ({
-                            ...item,
-                            deliveredQuantity: Math.round(Number(currentEdits[idx]?.deliveredQuantity ?? item.quantity)),
-                            pendingQuantity: Math.round(Number(currentEdits[idx]?.pendingQuantity ?? 0)),
-                            deliveryObservation: currentEdits[idx]?.deliveryObservation || ''
-                          }));
+    const updatedItems = selectedOrder.items.map((item, idx) => ({
+      ...item,
+      deliveredQuantity: Math.round(Number(currentEdits[idx]?.deliveredQuantity ?? item.quantity)),
+      pendingQuantity: Math.round(Number(currentEdits[idx]?.pendingQuantity ?? 0)),
+      deliveryObservation: currentEdits[idx]?.deliveryObservation || ''
+    }));
 
-                          const updatedOrder = { ...selectedOrder, items: updatedItems };
-                          setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
-                          setEditingItems({ ...editingItems, [selectedOrder.id]: null });
-                          setSelectedOrder(null);
-                        }}
-                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle2 size={18} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
-                      </button>
+    const updatedOrder = { ...selectedOrder, items: updatedItems };
+    setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+    setEditingItems({ ...editingItems, [selectedOrder.id]: null });
+    setSelectedOrder(null);
+  }}
+  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
+>
+  <CheckCircle2 size={18} /> {selectedOrder.status === 'CANCELADA' ? 'PEDIDO CANCELADO - NO SE PUEDE MODIFICAR' : 'GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES'}
+</button>
                     </div>
                   )}
                   {/* Mostrar observación general si existe (Vista Normal) */}
