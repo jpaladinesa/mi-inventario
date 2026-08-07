@@ -785,8 +785,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
 
       {modalType === 'bulkUpload' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
-            <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-2xl' : 'max-w-md'}`}>
-                
+            <div className={`bg-white rounded-3xl shadow-2xl p-4 md:p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-sm md:max-w-3xl lg:max-w-5xl' : 'max-w-sm'}`}>
                 {!csvPreview ? (
                   <>
                     <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
@@ -2057,9 +2056,8 @@ const handleAddToOrder = (e) => {
 
 {selectedOrder && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:bg-white print:backdrop-blur-none print:p-0">
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full ${viewMode === 'pdf' ? 'max-w-[816px] print:shadow-none print:rounded-none' : 'max-w-2xl animate-in zoom-in-95 duration-300'}`}>
-            
-            {viewMode === 'list' && (
+          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full ${viewMode === 'pdf' ? 'max-w-full md:max-w-[816px] overflow-x-auto print:shadow-none print:rounded-none' : 'max-w-sm md:max-w-4xl lg:max-w-6xl animate-in zoom-in-95 duration-300'}`}>
+             {viewMode === 'list' && (
               <div className="p-6 border-b-2 border-[#e9f4f8] flex justify-between items-center bg-white print:hidden">
                 <div className="flex items-center gap-3">
                   <div className="bg-[#e9f4f8] p-2.5 rounded-xl text-[#2596be] shadow-sm border border-[#2596be]/20"><FileText size={20} /></div>
@@ -2106,7 +2104,7 @@ const handleAddToOrder = (e) => {
                         </div>
                     </div>
                   )}
-{role === 'ADMIN' && (
+                 {role === 'ADMIN' && (
                     <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl mt-4">
                         <p className="text-[9px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN FINANCIERA</p>
                         <button 
@@ -2120,8 +2118,8 @@ const handleAddToOrder = (e) => {
                         </button>
                     </div>
                   )}
-<div className="border-2 border-slate-100 rounded-2xl overflow-hidden bg-white">
-                    <table className="w-full text-left">
+                    <div className="border-2 border-slate-100 rounded-2xl overflow-x-auto bg-white">
+                    <table className="w-full text-left min-w-[750px]">
                       <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
                         <tr>
                           <th className="px-5 py-4">PRODUCTO</th>
@@ -2210,12 +2208,13 @@ const handleAddToOrder = (e) => {
                   {selectedOrder.generalObservation && (
                     <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
                       <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
-                      <p className="text-xs font-bold text-amber-900">{selectedOrder.generalObservation}</p>
+                      <p className="text-xs font-bold text-amber-900 break-all">{selectedOrder.generalObservation}</p>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="bg-white p-10 md:p-14 w-full max-w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60]">
+  
+    <div className="bg-white p-6 md:p-14 w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60] overflow-x-auto">
                   <div className="flex justify-between items-start border-b-4 border-[#134b60] pb-6 mb-8">
                     <div>
                       <h2 className="text-3xl font-black text-[#134b60] tracking-tighter leading-none">DISTRIBUCIONES<br/>CASTILLA S.A.S.</h2>
