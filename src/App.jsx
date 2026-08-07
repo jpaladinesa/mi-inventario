@@ -643,7 +643,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
     return products.filter(p => 
       p.id.includes(filters.id) && 
       p.name.toUpperCase().includes(filters.name.toUpperCase())
-    ).slice(0, 5);
+    )
   }, [filters, products]);
 
   const handleSave = () => {
@@ -755,17 +755,50 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
         <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-4 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 shadow-lg transition-all"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
       </div>
       
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full relative">
+      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full overflow-visible">
         <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><Boxes size={18} className="text-[#2596be]" /> BÚSQUEDA INTELIGENTE</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase">CÓDIGO ID</label><input type="text" value={filters.id} onChange={e => {setFilters({...filters, id: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" placeholder="BUSCAR..." /></div>
-          <div className="space-y-1 md:col-span-2"><label className="text-[9px] font-black text-slate-400 uppercase">PRODUCTO</label><input type="text" value={filters.name} onChange={e => {setFilters({...filters, name: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" placeholder="NOMBRE..." /></div>
-          <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CANTIDAD</label><input type="number" step="0.01" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="0.00" /></div>
+        
+        <div className="relative mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase">CÓDIGO ID</label>
+              <input type="text" value={filters.id} onChange={e => {setFilters({...filters, id: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" placeholder="BUSCAR..." />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase">PRODUCTO</label>
+              <input type="text" value={filters.name} onChange={e => {setFilters({...filters, name: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" placeholder="NOMBRE..." />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CANTIDAD</label>
+              <input type="number" step="0.01" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="0.00" />
+            </div>
+          </div>
+
+          {!selectedProd && filteredOptions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 bg-white border-2 border-[#e9f4f8] shadow-2xl rounded-2xl mt-2 z-[100] max-h-60 overflow-y-auto">
+              {filteredOptions.map(p => (
+                <button 
+                  key={p.id} 
+                  onClick={() => {setSelectedProd(p); setFilters({id: p.id, name: p.name});}} 
+                  className="w-full text-left px-5 py-3 hover:bg-[#e9f4f8] border-b border-slate-50 flex justify-between items-center group transition-colors"
+                >
+                  <div className="flex gap-4 items-center">
+                    <div className="bg-slate-100 p-2 rounded-lg text-slate-500 font-mono text-[9px] font-bold">{p.id}</div>
+                    <div>
+                      <p className="text-[10px] font-black text-[#134b60] uppercase">{p.name}</p>
+                      <p className="text-[8px] text-slate-400 font-bold uppercase">{p.unitName}</p>
+                    </div>
+                  </div>
+                  <Plus size={16} className="text-[#2596be] opacity-0 group-hover:opacity-100" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        {!selectedProd && filteredOptions.length > 0 && (
-          <div className="absolute top-[160px] left-8 right-8 bg-white border-2 border-[#e9f4f8] shadow-2xl rounded-2xl z-[100] overflow-hidden">{filteredOptions.map(p => <button key={p.id} onClick={() => {setSelectedProd(p); setFilters({id: p.id, name: p.name});}} className="w-full text-left px-5 py-3 hover:bg-[#e9f4f8] border-b border-slate-50 flex justify-between items-center group transition-colors"><div className="flex gap-4 items-center"><div className="bg-slate-100 p-2 rounded-lg text-slate-500 font-mono text-[9px] font-bold">{p.id}</div><div><p className="text-[10px] font-black text-[#134b60] uppercase">{p.name}</p><p className="text-[8px] text-slate-400 font-bold uppercase">{p.unitName}</p></div></div><Plus size={16} className="text-[#2596be] opacity-0 group-hover:opacity-100" /></button>)}</div>
-        )}
-        <button onClick={() => setModalType('confirm')} disabled={!selectedProd || !quantity} className="w-full bg-[#2596be] text-white py-5 rounded-xl font-black hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl flex items-center justify-center gap-3 disabled:opacity-50"><ArrowUpRight size={20} /> PROCESAR CARGUE</button>
+
+        <button onClick={() => setModalType('confirm')} disabled={!selectedProd || !quantity} className="w-full bg-[#2596be] text-white py-5 rounded-xl font-black hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl flex items-center justify-center gap-3 disabled:opacity-50">
+          <ArrowUpRight size={20} /> PROCESAR CARGUE
+        </button>
       </div>
 
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
