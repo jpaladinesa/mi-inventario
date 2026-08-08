@@ -1757,6 +1757,8 @@ const handleAddToOrder = (e) => {
   const [viewMode, setViewMode] = useState('list');
   const [pendingChange, setPendingChange] = useState(null); 
   const [editingItems, setEditingItems] = useState({});
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelOtherText, setCancelOtherText] = useState('');
   // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
 
   
@@ -1871,9 +1873,29 @@ const handleAddToOrder = (e) => {
 
   const confirmUpdateStatus = () => {
     const { id, newStatus } = pendingChange;
-    setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-    if(selectedOrder?.id === id) setSelectedOrder({...selectedOrder, status: newStatus});
+    
+    let finalCancelReason = '';
+    if (newStatus === 'CANCELADA') {
+      finalCancelReason = cancelReason === 'OTROS' ? cancelOtherText : cancelReason;
+    }
+
+    setOrders(orders.map(o => o.id === id ? { 
+      ...o, 
+      status: newStatus, 
+      ...(newStatus === 'CANCELADA' ? { cancelReason: finalCancelReason } : {}) 
+    } : o));
+
+    if(selectedOrder?.id === id) {
+      setSelectedOrder({
+        ...selectedOrder, 
+        status: newStatus,
+        ...(newStatus === 'CANCELADA' ? { cancelReason: finalCancelReason } : {})
+      });
+    }
+
     setPendingChange(null);
+    setCancelReason('');
+    setCancelOtherText('');
   };
 
   const getNextStatusOptions = (current) => {
@@ -1906,7 +1928,7 @@ const handleAddToOrder = (e) => {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {['TODOS', 'NUEVA', 'EN ALISTAMIENTO', 'EN CAMINO', 'ENTREGADA', 'CANCELADA'].map(s => (
+        {['TODOS', 'NUEVA', 'EN ALISTAMIENTO', 'EN CAMINO', 'ENTREGADA', 'ANULADA'].map(s => (
           <button 
             key={s} 
             onClick={() => setFilterStatus(s)}
@@ -1972,15 +1994,73 @@ const handleAddToOrder = (e) => {
 
       {pendingChange && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center border-t-8 border-indigo-500">
-                <div className="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse shadow-inner">
-                    <ShieldCheck size={40} />
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center border-t-8 border-indigo-500">
+                <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                    <ShieldCheck size={32} />
                 </div>
-                <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO?</h3>
-                <p className="text-[10px] text-slate-400 font-bold mb-8">EL ESTADO PASARÁ A: <br/><span className="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-1 rounded-full inline-block mt-2 border border-indigo-100">{pendingChange.newStatus}</span></p>
+                <h3 className="font-black text-lg mb-1 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO?</h3>
+                <p className="text-[10px] text-slate-400 font-bold mb-4">EL ESTADO PASARÁ A: <br/><span className="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-1 rounded-full inline-block mt-2 border border-indigo-100">{pendingChange.newStatus}</span></p>
+                
+                {pendingChange.newStatus === 'CANCELADA' && (
+                  <div className="mb-6 text-left space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label className="text-[9px] font-black text-[#134b60] uppercase block">MOTIVO DE CANCELACIÓN <span className="text-rose-500">*</span></label>
+                    <select 
+                      value={cancelReason} 
+                      onChange={(e) => {
+                        setCancelReason(e.target.value);
+                        if (e.target.value !== 'OTROS') setCancelOtherText('');
+                      }} 
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer"
+                      required
+                    >
+                      <option value="">SELECCIONE UN MOTIVO...</option>
+                      <option value="ERROR DE CREACION">ERROR DE CREACIÓN</option>
+                      <option value="DUPLICADA">DUPLICADA</option>
+                      <option value="CLIENTE DESISTE">CLIENTE DESISTE</option>
+                      <option value="PRODUCTO NO ENCONTRADO">PRODUCTO NO ENCONTRADO</option>
+                      <option value="SIN STOCK">SIN STOCK</option>
+                      <option value="OTROS">OTROS</option>
+                    </select>
+
+                    {cancelReason === 'OTROS' && (
+                      <div className="space-y-1 pt-1 animate-in fade-in duration-300">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[8px] font-black text-slate-400 uppercase">ESPECIFIQUE EL MOTIVO</label>
+                          <span className={`text-[8px] font-black ${cancelOtherText.length >= 80 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                            {cancelOtherText.length} / 80
+                          </span>
+                        </div>
+                        <input 
+                          type="text" 
+                          maxLength={80}
+                          placeholder="ESCRIBA EL MOTIVO (MÁX. 80 CARACTERES)..."
+                          value={cancelOtherText}
+                          onChange={(e) => setCancelOtherText(e.target.value.toUpperCase())}
+                          className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-4">
-                    <button onClick={() => setPendingChange(null)} className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500">VOLVER</button>
-                    <button onClick={confirmUpdateStatus} className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-indigo-600">CONFIRMAR</button>
+                    <button 
+                      onClick={() => { 
+                        setPendingChange(null); 
+                        setCancelReason(''); 
+                        setCancelOtherText(''); 
+                      }} 
+                      className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors"
+                    >
+                      VOLVER
+                    </button>
+                    <button 
+                      onClick={confirmUpdateStatus} 
+                      disabled={pendingChange.newStatus === 'CANCELADA' && (!cancelReason || (cancelReason === 'OTROS' && !cancelOtherText.trim()))}
+                      className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      CONFIRMAR
+                    </button>
                 </div>
             </div>
         </div>
@@ -2249,7 +2329,22 @@ const handleAddToOrder = (e) => {
                 </div>
               ) : (
   
-    <div className="bg-white p-6 md:p-14 w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60] overflow-x-auto">
+                <div className="bg-white p-6 md:p-14 w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60] overflow-x-auto relative">
+                  
+                  {/* SELLO GIGANTE DE ANULADO */}
+                  {selectedOrder.status === 'CANCELADA' && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 overflow-hidden">
+                      <div className="border-8 border-rose-500/30 text-rose-500/30 font-black text-6xl md:text-8xl tracking-widest px-12 py-6 rounded-3xl transform -rotate-12 select-none uppercase text-center">
+                        CANCELADA
+                        {selectedOrder.cancelReason && (
+                          <span className="block text-xl md:text-2xl mt-2 tracking-normal font-bold">
+                            MOTIVO: {selectedOrder.cancelReason}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-start border-b-4 border-[#134b60] pb-6 mb-8">
                     <div>
                       <h2 className="text-3xl font-black text-[#134b60] tracking-tighter leading-none">DISTRIBUCIONES<br/>CASTILLA S.A.S.</h2>
