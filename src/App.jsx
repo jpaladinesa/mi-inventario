@@ -2192,10 +2192,10 @@ const handleAddToOrder = (e) => {
 )}
 
 {selectedOrder && (
-  <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:bg-white print:backdrop-blur-none print:p-0">
-    <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full ${viewMode === 'pdf' ? 'max-w-full md:max-w-[816px] overflow-x-auto print:shadow-none print:rounded-none' : 'max-w-sm md:max-w-4xl lg:max-w-6xl animate-in zoom-in-95 duration-300'}`}>
+  <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:bg-white print:backdrop-blur-none print:p-0">
+    <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full flex flex-col max-h-[90vh] ${viewMode === 'pdf' ? 'max-w-full md:max-w-[816px] overflow-x-auto print:shadow-none print:rounded-none print:max-h-none' : 'max-w-sm md:max-w-4xl lg:max-w-6xl animate-in zoom-in-95 duration-300'}`}>
        {viewMode === 'list' && (
-        <div className="p-6 border-b-2 border-[#e9f4f8] flex justify-between items-center bg-white print:hidden">
+        <div className="p-6 border-b-2 border-[#e9f4f8] flex justify-between items-center bg-white shrink-0 print:hidden">
           <div className="flex items-center gap-3">
             <div className="bg-[#e9f4f8] p-2.5 rounded-xl text-[#2596be] shadow-sm border border-[#2596be]/20"><FileText size={20} /></div>
             <div>
@@ -2207,7 +2207,7 @@ const handleAddToOrder = (e) => {
         </div>
       )}
 
-      <div className={viewMode === 'pdf' ? "" : "p-8"}>
+      <div className={`flex-1 overflow-y-auto ${viewMode === 'pdf' ? "overflow-x-auto" : "p-8"}`}>
         {viewMode === 'list' ? (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
@@ -2479,7 +2479,7 @@ const handleAddToOrder = (e) => {
         )}
       </div>
 
-      <div className="p-6 border-t border-slate-100 bg-white flex gap-4 print:hidden">
+      <div className="p-6 border-t border-slate-100 bg-white flex gap-4 shrink-0 print:hidden">
         {viewMode === 'list' ? (
           <>
             <button onClick={() => setViewMode('pdf')} className="flex-1 bg-[#134b60] text-white py-5 rounded-[24px] font-black text-[11px] flex items-center justify-center gap-3 hover:bg-[#0f3c4c] shadow-xl transition-all active:scale-95 uppercase"><FileText size={18}/> GENERAR PDF</button>
