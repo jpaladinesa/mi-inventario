@@ -2917,7 +2917,6 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
 <div className="hidden sm:block relative w-96 uppercase tracking-widest z-50">
   <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
   
-  {/* INPUT CONECTADO A REACT + ESCAPE PARA CERRAR */}
   <input 
     type="text" 
     value={globalSearch}
@@ -2926,39 +2925,31 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
       setIsSearchOpen(e.target.value.trim().length > 0);
     }}
     onKeyDown={(e) => {
-      if (e.key === 'Escape') {
-        setIsSearchOpen(false); // Cierra con la tecla Esc
-      }
+      if (e.key === 'Escape') setIsSearchOpen(false);
     }}
-    placeholder="BÚSQUEDA OPERATIVA DEL SISTEMA..." 
+    placeholder="BÚSQUEDA TOTAL DEL SISTEMA..." 
     className="w-full pl-14 pr-6 py-3 bg-slate-50 rounded-full text-[10px] outline-none font-black uppercase transition-all focus:ring-8 focus:ring-[#e9f4f8] border-2 border-transparent focus:border-[#2596be] text-[#134b60]" 
   />
   
-  {/* CAPA INVISIBLE PARA CERRAR AL HACER CLIC AFUERA */}
   {isSearchOpen && (
-    <div 
-      className="fixed inset-0 z-40 cursor-default" 
-      onClick={() => setIsSearchOpen(false)}
-    ></div>
+    <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsSearchOpen(false)}></div>
   )}
 
-  {/* PANEL FLOTANTE CONDICIONADO (AHORA CON z-50) */}
   {isSearchOpen && (
-    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border-2 border-[#e9f4f8] overflow-hidden max-h-96 overflow-y-auto flex flex-col z-50">
+    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border-2 border-[#e9f4f8] overflow-hidden max-h-[500px] overflow-y-auto flex flex-col z-50 scrollbar-hide">
       {(() => {
         const busqueda = globalSearch.toLowerCase();
         
-        const pedidosEncontrados = orders.filter(o => 
-          o.id.toLowerCase().includes(busqueda) || 
-          (o.clientName && o.clientName.toLowerCase().includes(busqueda))
-        ).slice(0, 5);
+        // FILTROS PARA TODAS LAS BASES DE DATOS (Máximo 3 para no saturar)
+        const pedidosEncontrados = orders.filter(o => o.id.toLowerCase().includes(busqueda) || (o.clientName && o.clientName.toLowerCase().includes(busqueda))).slice(0, 3);
+        const clientesEncontrados = clients.filter(c => c.docNumber.includes(busqueda) || (c.name && c.name.toLowerCase().includes(busqueda))).slice(0, 3);
+        const productosEncontrados = products.filter(p => p.id.toLowerCase().includes(busqueda) || p.name.toLowerCase().includes(busqueda)).slice(0, 3);
+        const inventarioEncontrado = inventory.filter(i => i.id.toLowerCase().includes(busqueda) || i.productName.toLowerCase().includes(busqueda) || i.productId.toLowerCase().includes(busqueda)).slice(0, 3);
+        const usuariosEncontrados = users.filter(u => u.id.toLowerCase().includes(busqueda) || u.name.toLowerCase().includes(busqueda) || u.email.toLowerCase().includes(busqueda)).slice(0, 3);
+        const impuestosEncontrados = taxes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
+        const tiposClienteEncontrados = clientTypes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
 
-        const clientesEncontrados = clients.filter(c => 
-          c.docNumber.includes(busqueda) || 
-          (c.name && c.name.toLowerCase().includes(busqueda))
-        ).slice(0, 5);
-
-        const hayResultados = pedidosEncontrados.length > 0 || clientesEncontrados.length > 0;
+        const hayResultados = pedidosEncontrados.length > 0 || clientesEncontrados.length > 0 || productosEncontrados.length > 0 || inventarioEncontrado.length > 0 || usuariosEncontrados.length > 0 || impuestosEncontrados.length > 0 || tiposClienteEncontrados.length > 0;
 
         if (!hayResultados) {
           return (
@@ -2968,61 +2959,98 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           );
         }
 
+        // Función rápida para navegar y limpiar
+        const navegarA = (ruta) => {
+            setActiveTab(ruta);
+            setFilterStatus('TODOS');
+            setIsSearchOpen(false);
+            setGlobalSearch('');
+        };
+
         return (
           <div className="flex flex-col relative z-50">
             
-            {/* SECCIÓN PEDIDOS */}
+            {/* 📦 PEDIDOS */}
             {pedidosEncontrados.length > 0 && (
               <div className="p-2">
-                <p className="px-4 py-2 text-[9px] font-black text-[#2596be] uppercase tracking-widest bg-[#e9f4f8]/50 rounded-lg mb-1">
-                  📦 Pedidos Encontrados
-                </p>
+                <p className="px-4 py-2 text-[9px] font-black text-[#2596be] uppercase tracking-widest bg-[#e9f4f8]/50 rounded-lg mb-1">📦 Pedidos</p>
                 {pedidosEncontrados.map(o => (
-                  <div 
-                    key={o.id} 
-                    onClick={() => { 
-                      setActiveTab(role === 'ADMIN' ? 'admin_orders' : 'client_orders_history'); 
-                      setFilterStatus('TODOS'); 
-                      setIsSearchOpen(false); 
-                      setGlobalSearch(''); 
-                      // MAGIA: Le avisamos al módulo que abra este pedido específico (con un pequeñisimo retraso para que cargue la pestaña)
-                      setTimeout(() => window.dispatchEvent(new CustomEvent('abrirPedidoGlobal', { detail: o.id })), 150);
-                    }} 
-                    className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center border-b border-slate-50 transition-colors rounded-xl"
-                  >
-                    <div>
-                      <p className="text-xs font-black text-[#134b60]">{o.id}</p>
-                      <p className="text-[9px] text-slate-400 uppercase">{o.clientName}</p>
-                    </div>
+                  <div key={o.id} onClick={() => { navegarA(role === 'ADMIN' ? 'admin_orders' : 'client_orders_history'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirPedidoGlobal', { detail: o.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                    <div><p className="text-xs font-black text-[#134b60]">{o.id}</p><p className="text-[9px] text-slate-400 uppercase">{o.clientName}</p></div>
                     <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{o.status}</span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* SECCIÓN CLIENTES */}
+            {/* 🏢 CLIENTES */}
             {clientesEncontrados.length > 0 && role === 'ADMIN' && (
               <div className="p-2 border-t border-slate-100">
-                <p className="px-4 py-2 text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50/50 rounded-lg mb-1">
-                  🏢 Clientes Encontrados
-                </p>
+                <p className="px-4 py-2 text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50/50 rounded-lg mb-1">🏢 Clientes</p>
                 {clientesEncontrados.map(c => (
-                  <div 
-                    key={c.id} 
-                    onClick={() => { 
-                      setActiveTab('clients'); 
-                      setIsSearchOpen(false); 
-                      setGlobalSearch(''); 
-                      // MAGIA: Le avisamos al módulo que abra este cliente
-                      setTimeout(() => window.dispatchEvent(new CustomEvent('abrirClienteGlobal', { detail: c.id })), 150);
-                    }} 
-                    className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center border-b border-slate-50 transition-colors rounded-xl"
-                  >
-                    <div>
-                      <p className="text-xs font-black text-[#134b60]">{c.name}</p>
-                      <p className="text-[9px] text-slate-400 uppercase">{c.docType}: {c.docNumber}</p>
-                    </div>
+                  <div key={c.id} onClick={() => { navegarA('clients'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirClienteGlobal', { detail: c.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                    <div><p className="text-xs font-black text-[#134b60]">{c.name}</p><p className="text-[9px] text-slate-400 uppercase">{c.docType}: {c.docNumber}</p></div>
                     <span className="text-[9px] font-black text-slate-400">{c.typeName}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 📋 PRODUCTOS */}
+            {productosEncontrados.length > 0 && role === 'ADMIN' && (
+              <div className="p-2 border-t border-slate-100">
+                <p className="px-4 py-2 text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50 rounded-lg mb-1">📋 Productos</p>
+                {productosEncontrados.map(p => (
+                  <div key={p.id} onClick={() => navegarA('products')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                    <div><p className="text-xs font-black text-[#134b60]">{p.name}</p><p className="text-[9px] text-slate-400 uppercase">CÓDIGO: {p.id}</p></div>
+                    <span className="text-[9px] font-black text-slate-400">{p.unitName}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 🏭 INVENTARIO */}
+            {inventarioEncontrado.length > 0 && role === 'ADMIN' && (
+              <div className="p-2 border-t border-slate-100">
+                <p className="px-4 py-2 text-[9px] font-black text-amber-600 uppercase tracking-widest bg-amber-50/50 rounded-lg mb-1">🏭 Mov. Inventario</p>
+                {inventarioEncontrado.map(i => (
+                  <div key={i.id} onClick={() => navegarA('inventory')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                    <div><p className="text-xs font-black text-[#134b60]">{i.productName}</p><p className="text-[9px] text-slate-400 uppercase">MOV: {i.id} | COD: {i.productId}</p></div>
+                    <span className="text-[9px] font-black text-emerald-600">CANT: {i.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 🔐 ACCESOS */}
+            {usuariosEncontrados.length > 0 && role === 'ADMIN' && (
+              <div className="p-2 border-t border-slate-100">
+                <p className="px-4 py-2 text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-50/50 rounded-lg mb-1">🔐 Accesos y Usuarios</p>
+                {usuariosEncontrados.map(u => (
+                  <div key={u.id} onClick={() => navegarA('access')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                    <div><p className="text-xs font-black text-[#134b60]">{u.name}</p><p className="text-[9px] text-slate-400 lowercase">{u.email}</p></div>
+                    <span className="text-[9px] font-black text-slate-400">{u.role}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ⚖️ IMPUESTOS Y TIPOS CLIENTE */}
+            {(impuestosEncontrados.length > 0 || tiposClienteEncontrados.length > 0) && role === 'ADMIN' && (
+              <div className="p-2 border-t border-slate-100">
+                <p className="px-4 py-2 text-[9px] font-black text-purple-500 uppercase tracking-widest bg-purple-50/50 rounded-lg mb-1">⚙️ Configuraciones</p>
+                
+                {impuestosEncontrados.map(t => (
+                  <div key={t.id} onClick={() => navegarA('taxes')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                    <div><p className="text-xs font-black text-[#134b60]">IMPUESTO: {t.name}</p><p className="text-[9px] text-slate-400 uppercase">ID: {t.id}</p></div>
+                    <span className="text-[9px] font-black text-purple-600">VALOR: {t.value}%</span>
+                  </div>
+                ))}
+
+                {tiposClienteEncontrados.map(t => (
+                  <div key={t.id} onClick={() => navegarA('client_types')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                    <div><p className="text-xs font-black text-[#134b60]">TIPO CLIENTE: {t.name}</p><p className="text-[9px] text-slate-400 uppercase">ID: {t.id}</p></div>
+                    <span className="text-[9px] font-black text-cyan-600">RECARGO: {t.value}%</span>
                   </div>
                 ))}
               </div>
