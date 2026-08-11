@@ -6,7 +6,7 @@ import {
   History, X, ChevronDown, Mail, Phone, PhoneCall, UserPlus, Fingerprint, 
   Clock, User, CheckCircle2, Truck, FileText, ChevronRight, UserCircle, 
   Receipt, Calculator, Eye, Download, Printer, XCircle, Activity, Calendar, 
-  ShieldCheck, MapPin, MessageCircle, Smartphone, UploadCloud, FileSpreadsheet
+  ShieldCheck, MapPin, MessageCircle, Smartphone, UploadCloud, FileSpreadsheet, Megaphone
 } from 'lucide-react';
 import { InventoryContext } from './InventoryContext';
 import { Footer, RealTimeClock, Login } from './components/CommonComponents';
@@ -2500,8 +2500,45 @@ const handleAddToOrder = (e) => {
   );
 };
 
+
 // --- DASHBOARD DE CLIENTE ---
-const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus }) => {
+const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions, currentUser, clients }) => {
+  const [showPromo, setShowPromo] = useState(false);
+  const [activePromo, setActivePromo] = useState(null);
+
+  useEffect(() => {
+    if (!promotions || promotions.length === 0 || !currentUser) return;
+
+    const activeClient = clients?.find(c => c.id === currentUser.relatedId);
+    const clientTypeId = activeClient?.typeId;
+
+    const now = new Date();
+
+    const currentPromo = promotions.find(p => {
+      if (p.status !== 'ACTIVA') return false;
+      
+      const start = new Date(p.startDate);
+      // Conversión de horas a milisegundos (1 hora = 3,600,000 ms)
+      const end = new Date(start.getTime() + (p.durationHours * 3600000));
+      const isTimeValid = now >= start && now <= end;
+
+      const isTargetAudience = clientTypeId && p.targetClients.includes(clientTypeId);
+
+      return isTimeValid && isTargetAudience;
+    });
+
+    if (currentPromo) {
+      setActivePromo(currentPromo);
+      setShowPromo(true);
+
+      const timer = setTimeout(() => {
+        setShowPromo(false);
+      }, currentPromo.screenTimeSeconds * 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [promotions, currentUser, clients]);
+
   const stats = useMemo(() => ({
       new: orders.filter(o => o.status === 'NUEVA').length,
       prep: orders.filter(o => o.status === 'EN ALISTAMIENTO').length,
@@ -2518,7 +2555,48 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus }) => {
   ];
 
   return (
-    <div className="flex flex-col min-h-full animate-in fade-in duration-500 uppercase space-y-8">
+    <div className="flex flex-col min-h-full animate-in fade-in duration-500 uppercase space-y-8 relative">
+      
+      {/* --- EL POP-UP DE LA PROMOCIÓN --- */}
+      {showPromo && activePromo && (
+        <div className="fixed inset-0 bg-[#134b60]/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4 print:hidden animate-in zoom-in duration-300">
+          <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden w-full max-w-lg relative border-4 border-[#2596be]">
+            <button 
+              onClick={() => setShowPromo(false)} 
+              className="absolute top-4 right-4 bg-white/80 backdrop-blur-md text-[#134b60] p-2 rounded-full shadow-lg hover:bg-rose-500 hover:text-white transition-all z-10"
+            >
+              <X size={20} />
+            </button>
+            
+            {activePromo.image && (
+              <img src={activePromo.image} alt="Promoción" className="w-full h-80 object-contain bg-slate-50" />
+            )}
+            
+            <div className="p-8 text-center bg-white">
+              <h3 className="font-black text-2xl text-[#134b60] tracking-tighter mb-2">{activePromo.name}</h3>
+              {activePromo.text && <p className="text-[11px] font-bold text-slate-500 uppercase">{activePromo.text}</p>}
+            </div>
+            
+            <div className="w-full bg-slate-100 h-1.5 relative overflow-hidden">
+              <div 
+                className="absolute inset-y-0 left-0 bg-[#2596be]" 
+                style={{ 
+                  width: '100%',
+                  animation: `shrinkWidth ${activePromo.screenTimeSeconds}s linear forwards`
+                }}
+              ></div>
+            </div>
+          </div>
+          <style>{`
+            @keyframes shrinkWidth {
+              from { width: 100%; }
+              to { width: 0%; }
+            }
+          `}</style>
+        </div>
+      )}
+      {/* --- FIN DEL POP-UP --- */}
+
       <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">PORTAL CLIENTE CASTILLA</h2></div>
       
       <RealTimeClock />
@@ -2787,6 +2865,203 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   );
 };
 
+// --- MÓDULO DE PROMOCIONES ---
+const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) => {
+  const initialForm = { name: '', targetClients: [], startDate: '', durationHours: '', screenTimeSeconds: '', text: '', image: '' };
+  const [newPromo, setNewPromo] = useState(initialForm);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      setErrorMsg("FORMATO NO VÁLIDO. SOLO SE PERMITEN IMÁGENES JPG O PNG.");
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 1 * 1024 * 1024) {
+      setErrorMsg("LA IMAGEN ES DEMASIADO PESADA. EL TAMAÑO MÁXIMO PERMITIDO ES 1 MB.");
+      e.target.value = '';
+      return;
+    }
+
+    setErrorMsg('');
+    const reader = new FileReader();
+    reader.onloadend = () => setNewPromo({ ...newPromo, image: reader.result });
+    reader.readAsDataURL(file);
+  };
+
+  const handleToggleClient = (id) => {
+    if (newPromo.targetClients.includes(id)) {
+      setNewPromo({ ...newPromo, targetClients: newPromo.targetClients.filter(t => t !== id) });
+    } else {
+      setNewPromo({ ...newPromo, targetClients: [...newPromo.targetClients, id] });
+    }
+  };
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    if (newPromo.targetClients.length === 0) {
+      setErrorMsg("DEBES SELECCIONAR AL MENOS UN PÚBLICO OBJETIVO (TIPO DE CLIENTE).");
+      return;
+    }
+
+    try {
+      setErrorMsg('');
+      const newId = `PR${String(promotions.length + 1).padStart(4, '0')}`;
+      setPromotions([{ ...newPromo, id: newId, status: 'ACTIVA' }, ...promotions]);
+      setNewPromo(initialForm);
+    } catch (error) {
+      setErrorMsg("ERROR: EL ALMACENAMIENTO LOCAL SE HA LLENADO. INTENTA CON UNA IMAGEN MÁS LIGERA.");
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
+      <div className="border-b-4 border-[#2596be] w-fit pb-2">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PROMOCIONES</h2>
+      </div>
+
+      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full">
+        <h3 className="font-black text-[#134b60] mb-6 flex items-center gap-2 text-[11px] uppercase"><Megaphone size={18} className="text-[#2596be]" /> CREAR NUEVA CAMPAÑA</h3>
+        
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl flex items-center gap-3 animate-pulse">
+            <AlertTriangle size={18} className="shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+          
+          <div className="space-y-6 lg:col-span-2">
+            <div className="space-y-1 relative">
+              <div className="flex justify-between items-center">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE DE LA CAMPAÑA</label>
+                <span className={`text-[8px] font-black ${newPromo.name.length >= 80 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                  {newPromo.name.length} / 80
+                </span>
+              </div>
+              <input 
+                type="text" 
+                maxLength={80} 
+                value={newPromo.name} 
+                onChange={e => setNewPromo({...newPromo, name: e.target.value.toUpperCase()})} 
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" 
+                required 
+                placeholder="EJ: OFERTA RELÁMPAGO (MÁX. 80 CARACTERES)" 
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">INICIO (FECHA Y HORA)</label>
+                <input type="datetime-local" value={newPromo.startDate} onChange={e => setNewPromo({...newPromo, startDate: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VIGENCIA (HORAS)</label>
+                <input type="number" min="1" value={newPromo.durationHours} onChange={e => setNewPromo({...newPromo, durationHours: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="EJ: 24" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EN PANTALLA (SEGUNDOS)</label>
+                <input type="number" min="1" max="60" value={newPromo.screenTimeSeconds} onChange={e => setNewPromo({...newPromo, screenTimeSeconds: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="EJ: 15" />
+              </div>
+            </div>
+
+            <div className="space-y-3 p-5 bg-[#e9f4f8]/30 rounded-2xl border-2 border-[#2596be]/10">
+              <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block border-b border-[#2596be]/10 pb-2">PÚBLICO OBJETIVO (TIPO DE CLIENTE)</label>
+              <div className="flex flex-wrap gap-3 pt-2">
+                {clientTypes.map(ct => (
+                  <label key={ct.id} className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:border-[#2596be] transition-colors select-none">
+                    <input type="checkbox" checked={newPromo.targetClients.includes(ct.id)} onChange={() => handleToggleClient(ct.id)} className="w-4 h-4 accent-[#2596be] cursor-pointer" />
+                    <span className="text-[9px] font-black text-[#134b60] uppercase">{ct.name}</span>
+                  </label>
+                ))}
+                {clientTypes.length === 0 && <span className="text-[9px] text-rose-500 font-bold bg-rose-50 px-4 py-2 rounded-xl">NO HAY TIPOS DE CLIENTE CREADOS</span>}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TEXTO / OBSERVACIONES (OPCIONAL)</label>
+              <textarea maxLength={150} value={newPromo.text} onChange={e => setNewPromo({...newPromo, text: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase resize-none h-24 text-[#134b60]" placeholder="TÉRMINOS Y CONDICIONES..." />
+            </div>
+          </div>
+
+          <div className="space-y-2 lg:col-span-1 flex flex-col h-full">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IMAGEN DE LA PROMOCIÓN</label>
+            <label className="flex-1 w-full min-h-[300px] border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden group">
+              <input type="file" accept=".jpg, .jpeg, .png" className="hidden" onChange={handleImageUpload} required />
+              {newPromo.image ? (
+                <>
+                  <img src={newPromo.image} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-4" />
+                  <div className="absolute inset-0 bg-[#134b60]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"><span className="bg-white text-[#134b60] px-5 py-3 rounded-xl text-[10px] font-black uppercase shadow-2xl flex items-center gap-2"><UploadCloud size={16}/> CAMBIAR IMAGEN</span></div>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><UploadCloud size={24} /></div>
+                  <span className="text-[10px] font-black text-slate-500 uppercase text-center px-6 leading-relaxed">
+                    CLIC PARA CARGAR IMAGEN<br/>
+                    <span className="text-[8px] font-bold text-amber-600 block mt-2">FORMATOS: JPG, PNG</span>
+                    <span className="text-[8px] font-bold text-rose-500 block">TAMAÑO MÁXIMO: 1 MB</span>
+                  </span>
+                </>
+              )}
+            </label>
+          </div>
+
+          <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100">
+            <button type="submit" className="w-full bg-[#2596be] text-white py-4 rounded-xl font-black text-[11px] hover:bg-[#1e7a9b] transition-all shadow-xl tracking-widest flex items-center justify-center gap-3 active:scale-[0.99]"><Plus size={18}/> GUARDAR Y PROGRAMAR CAMPAÑA</button>
+          </div>
+        </form>
+      </div>
+
+      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+          <table className="w-full text-left min-w-[1000px] uppercase">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+              <tr>
+                <th className="px-6 py-6">ID</th>
+                <th className="px-6 py-6">CAMPAÑA</th>
+                <th className="px-6 py-6 text-center">INICIO Y VIGENCIA</th>
+                <th className="px-6 py-6 text-center">PÚBLICO</th>
+                <th className="px-6 py-6 text-center">ESTADO</th>
+                <th className="px-6 py-6 text-right">ACCIÓN</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+              {promotions.length === 0 ? (
+                <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black tracking-tighter">SIN PROMOCIONES REGISTRADAS</td></tr>
+              ) : (
+                promotions.map(p => (
+                  <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                    <td className="px-6 py-5 font-mono text-[#2596be]">{p.id}</td>
+                    <td className="px-6 py-5 truncate max-w-[250px]">{p.name}</td>
+                    <td className="px-6 py-5 text-center">
+                      <p className="text-[10px] font-black">{new Date(p.startDate).toLocaleString()}</p>
+                      <p className="text-[9px] text-[#2596be] font-black mt-1 bg-[#e9f4f8] inline-block px-3 py-1 rounded-full">DURACIÓN: {p.durationHours} H</p>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-lg text-[9px] border border-indigo-100 font-black">{p.targetClients.length} TIPOS SEL.</span>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-lg text-[9px] border border-emerald-100 font-black">{p.status}</span>
+                    </td>
+                    <td className="px-6 py-5 text-right flex justify-end">
+                      <button onClick={() => setPromotions(promotions.filter(promo => promo.id !== p.id))} className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center gap-2 text-[9px] font-black" title="Finalizar/Eliminar"><XCircle size={14}/> FINALIZAR</button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- COMPONENTE PRINCIPAL (DASHBOARD WRAPPER) ---
 const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlobalLogo }) => {
   const role = currentUser.role; 
@@ -2849,6 +3124,13 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   useEffect(() => {
     localStorage.setItem('inventrack_orders', JSON.stringify(orders));
   }, [orders]);
+  const [promotions, setPromotions] = useState(() => {
+    const saved = localStorage.getItem('inventrack_promotions');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_promotions', JSON.stringify(promotions));
+  }, [promotions]);
 
   const [csvPreview, setCsvPreview] = useState(null);
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
@@ -2861,6 +3143,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     { id: 'inventory', label: 'INVENTARIO', icon: <Boxes size={20} /> },
     { id: 'products', label: 'PRODUCTOS', icon: <ClipboardList size={20} /> },
     { id: 'taxes', label: 'IMPUESTOS', icon: <Percent size={20} /> },
+    { id: 'promotions', label: 'PROMOCIONES', icon: <Megaphone size={20} /> },
   ];
   const clientMenu = [
     { id: 'client_dashboard', label: 'INICIO', icon: <LayoutDashboard size={20} /> },
@@ -3075,7 +3358,8 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           {activeTab === 'access' && <AccessManagementView users={users} setUsers={setUsers} clients={clients} />}
           {activeTab === 'products' && <ProductsView products={products} setProducts={setProducts} taxes={taxes} inventory={inventory} orders={orders} />}         {activeTab === 'taxes' && <ConfigurationListView title="IMPUESTOS" items={taxes} setItems={setTaxes} prefix="CI" labelName="IMPUESTO" labelValue="PORCENTAJE" /> }
           {activeTab === 'client_types' && <ConfigurationListView title="TIPO CLIENTE" items={clientTypes} setItems={setClientTypes} prefix="TC" labelName="TIPO" labelValue="RECARGO" />}
-          {activeTab === 'client_dashboard' && <ClientDashboardView orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
+          {activeTab === 'promotions' && <PromotionsManagementView promotions={promotions} setPromotions={setPromotions} clientTypes={clientTypes} />}
+          {activeTab === 'client_dashboard' && <ClientDashboardView orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} promotions={promotions} currentUser={currentUser} clients={clients} />}
           {activeTab === 'client_new_order' && <ClientNewOrderView products={products} orders={orders} setOrders={setOrders} currentUser={currentUser} clients={clients} clientTypes={clientTypes} inventory={inventory} globalDiscountEngine={globalDiscountEngine} />}
           {activeTab === 'client_orders_history' && <OrdersManagementView orders={orders} setOrders={setOrders} role="CLIENTE" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
         </div>
