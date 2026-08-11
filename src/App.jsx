@@ -3194,7 +3194,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     { id: 'client_new_order', label: 'HACER PEDIDO', icon: <Plus size={20} /> },
     { id: 'client_orders_history', label: 'MIS PEDIDOS', icon: <History size={20} /> },
   ];
-
+const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -3206,7 +3206,16 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
 
   return (
     <div className="flex min-h-screen bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
-      <aside className={`fixed inset-y-0 left-0 z-[70] w-80 bg-[#134b60] text-[#e9f4f8] flex flex-col transition-transform duration-500 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 md:flex shadow-2xl print:hidden`}>
+      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-80'} bg-[#134b60] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 relative shadow-2xl`}>
+  
+  {/* Botón flotante para minimizar / expandir */}
+  <button 
+    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+    className="absolute -right-3.5 top-8 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
+    title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
+  >
+    {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+  </button>
         <div className="p-10 border-b border-[#0f3c4c] text-center uppercase tracking-widest">
           <label htmlFor="logo-upload" className={`w-16 h-16 bg-white rounded-3xl flex items-center justify-center p-1 mx-auto mb-6 shadow-xl hover:scale-105 transition-transform overflow-hidden relative group ${role === 'ADMIN' ? 'cursor-pointer' : ''}`}>
             {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
@@ -3221,18 +3230,34 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
            <div className={`w-full py-4 rounded-[20px] text-[10px] font-black border-2 border-[#0f3c4c] text-[#e9f4f8] flex items-center justify-center gap-3 shadow-inner bg-[#0f3c4c]/50`}><ShieldCheck size={16} className="text-[#2596be]"/> {role === 'ADMIN' ? 'ADMINISTRADOR' : 'CLIENTE'} AUTORIZADO</div>
         </div>
         <nav className="flex-1 p-8 space-y-3 overflow-y-auto scrollbar-hide">
-          {role === 'ADMIN' && (
-            <>
-              <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mb-2 opacity-50">MOD. ADMINISTRADOR</div>
-              {adminMenu.map((item) => (
-                <button key={item.id} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} className={`w-full flex items-center gap-5 p-5 rounded-[24px] transition-all font-black text-[11px] tracking-widest ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg shadow-[#0f3c4c]/50 scale-105' : 'hover:bg-[#0f3c4c] text-[#e9f4f8] hover:text-white'}`}>{item.icon}<span>{item.label}</span></button>
-              ))}
-              <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mt-8 mb-2 border-t border-[#0f3c4c] pt-6 opacity-50">MOD. CLIENTE</div>
-            </>
-          )}
-          {clientMenu.map((item) => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} className={`w-full flex items-center gap-5 p-5 rounded-[24px] transition-all font-black text-[11px] tracking-widest ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg shadow-[#0f3c4c]/50 scale-105' : 'hover:bg-[#0f3c4c] text-[#e9f4f8] hover:text-white'}`}>{item.icon}<span>{item.label}</span></button>
-          ))}
+         {role === 'ADMIN' && (
+  <>
+    <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mb-2 opacity-50">MOD. ADMINISTRADOR</div>
+    {adminMenu.map((item) => (
+      <button 
+        key={item.id} 
+        onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
+        title={item.label} 
+        className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3.5' : 'gap-4 px-4 py-3.5'} rounded-2xl transition-all ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg shadow-[#2596be]/30' : 'text-slate-300 hover:bg-white/5'}`}
+      >
+        <span className="shrink-0">{item.icon}</span>
+        {!sidebarCollapsed && <span className="text-[10px] font-black tracking-wider uppercase">{item.label}</span>}
+      </button>
+    ))}
+    <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mt-8 mb-2 border-t border-[#0f3c4c] pt-6 opacity-50">MOD. CLIENTE</div>
+  </>
+)}
+{clientMenu.map((item) => (
+  <button 
+    key={item.id} 
+    onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
+    title={item.label} 
+    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3.5' : 'gap-4 px-4 py-3.5'} rounded-2xl transition-all ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg shadow-[#2596be]/30' : 'text-slate-300 hover:bg-white/5'}`}
+  >
+    <span className="shrink-0">{item.icon}</span>
+    {!sidebarCollapsed && <span className="text-[10px] font-black tracking-wider uppercase">{item.label}</span>}
+  </button>
+))}
         </nav>
         <div className="p-8 border-t border-[#0f3c4c] text-center">
             <button onClick={onLogout} className="w-full flex items-center justify-center gap-4 p-5 text-[#e9f4f8] hover:text-rose-400 font-black text-[11px] transition-colors border-2 border-transparent hover:border-rose-400/20 hover:bg-rose-400/10 rounded-[24px]"><LogIn size={20} className="rotate-180" /><span>CERRAR SESIÓN</span></button>
@@ -3415,9 +3440,10 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [globalLogo, setGlobalLogo] = useState("logo pestaña.jpg");
-  const [users, setUsers] = useState([
+  const [users, setUsers] = useState([  
         { id: 'US000001', name: 'ADMINISTRADOR PRINCIPAL', email: '1@1', password: '1', role: 'ADMIN', relatedId: null }
   ]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleLogin = (email, password) => {
     const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
