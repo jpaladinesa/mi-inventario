@@ -2867,7 +2867,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
 
 // --- MÓDULO DE PROMOCIONES ---
 const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) => {
-  const initialForm = { name: '', targetClients: [], startDate: '', durationHours: '', screenTimeSeconds: '', text: '', image: '' };
+  const initialForm = { name: '', targetClients: [], startDateOnly: '', startTimeOnly: '', startDate: '', durationHours: '', screenTimeSeconds: '', text: '', image: '' };
   const [newPromo, setNewPromo] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -2901,10 +2901,26 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
     }
   };
 
+  const handleDateChange = (dateVal, timeVal) => {
+    const d = dateVal || newPromo.startDateOnly || '';
+    const t = timeVal || newPromo.startTimeOnly || '00:00';
+    setNewPromo({
+      ...newPromo,
+      startDateOnly: d,
+      startTimeOnly: t,
+      startDate: d && t ? `${d}T${t}` : ''
+    });
+  };
+
   const handleSave = (e) => {
     e.preventDefault();
     if (newPromo.targetClients.length === 0) {
       setErrorMsg("DEBES SELECCIONAR AL MENOS UN PÚBLICO OBJETIVO (TIPO DE CLIENTE).");
+      return;
+    }
+
+    if (!newPromo.startDate) {
+      setErrorMsg("DEBES SELECCIONAR LA FECHA Y HORA DE INICIO.");
       return;
     }
 
@@ -2957,13 +2973,32 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">INICIO (FECHA Y HORA)</label>
-                <input type="datetime-local" value={newPromo.startDate} onChange={e => setNewPromo({...newPromo, startDate: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" required />
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">FECHA DE INICIO</label>
+                <input 
+                  type="date" 
+                  value={newPromo.startDateOnly} 
+                  onChange={e => handleDateChange(e.target.value, null)} 
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
+                  required 
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HORA DE INICIO</label>
+                <input 
+                  type="time" 
+                  value={newPromo.startTimeOnly} 
+                  onChange={e => handleDateChange(null, e.target.value)} 
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
+                  required 
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VIGENCIA (HORAS)</label>
                 <input type="number" min="1" value={newPromo.durationHours} onChange={e => setNewPromo({...newPromo, durationHours: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="EJ: 24" />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EN PANTALLA (SEGUNDOS)</label>
                 <input type="number" min="1" max="60" value={newPromo.screenTimeSeconds} onChange={e => setNewPromo({...newPromo, screenTimeSeconds: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="EJ: 15" />
@@ -3046,10 +3081,19 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
                       <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-lg text-[9px] border border-indigo-100 font-black">{p.targetClients.length} TIPOS SEL.</span>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <span className="bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-lg text-[9px] border border-emerald-100 font-black">{p.status}</span>
+                      <span className={`px-4 py-1.5 rounded-lg text-[9px] border font-black ${p.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'}`}>
+                        {p.status}
+                      </span>
                     </td>
                     <td className="px-6 py-5 text-right flex justify-end">
-                      <button onClick={() => setPromotions(promotions.filter(promo => promo.id !== p.id))} className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center gap-2 text-[9px] font-black" title="Finalizar/Eliminar"><XCircle size={14}/> FINALIZAR</button>
+                      <button 
+                        onClick={() => setPromotions(promotions.map(promo => promo.id === p.id ? { ...promo, status: 'FINALIZADA' } : promo))} 
+                        disabled={p.status === 'FINALIZADA'}
+                        className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center gap-2 text-[9px] font-black disabled:opacity-40 disabled:cursor-not-allowed" 
+                        title="Finalizar Campaña"
+                      >
+                        <XCircle size={14}/> FINALIZAR
+                      </button>
                     </td>
                   </tr>
                 ))
