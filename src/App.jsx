@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { 
-  LogIn, Package, LayoutDashboard, ClipboardList, Users, Search, Plus, 
+  LogOut, LogIn, Package, LayoutDashboard, ClipboardList, Users, Search, Plus, 
   AlertTriangle, Percent, Edit, Trash2, Menu as MenuIcon, DollarSign, 
   UserCheck, Tag, Info, Scale, Barcode, ShoppingCart, Boxes, ArrowUpRight, 
   History, X, ChevronDown, Mail, Phone, PhoneCall, UserPlus, Fingerprint, 
-  Clock, User, CheckCircle2, Truck, FileText, ChevronRight, UserCircle, 
+  Clock, User, CheckCircle2, Truck, FileText, ChevronRight, ChevronLeft, UserCircle, 
   Receipt, Calculator, Eye, Download, Printer, XCircle, Activity, Calendar, 
   ShieldCheck, MapPin, MessageCircle, Smartphone, UploadCloud, FileSpreadsheet, Megaphone
 } from 'lucide-react';
@@ -3216,35 +3216,54 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   >
     {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
   </button>
-        <div className="p-10 border-b border-[#0f3c4c] text-center uppercase tracking-widest">
-          <label htmlFor="logo-upload" className={`w-16 h-16 bg-white rounded-3xl flex items-center justify-center p-1 mx-auto mb-6 shadow-xl hover:scale-105 transition-transform overflow-hidden relative group ${role === 'ADMIN' ? 'cursor-pointer' : ''}`}>
-            {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
-            <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }} />
-            <Package size={32} className="text-[#2596be] hidden" />
-            {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={24} className="text-[#134b60] drop-shadow-md"/></div>}
-          </label>
-          <span className="font-black text-xl text-white tracking-tighter">INVENTRACK</span>
-          <p className="text-[9px] text-[#e9f4f8] font-black mt-2 opacity-60 uppercase tracking-[0.2em]">DISTRIBUCIONES CASTILLA S.A.S.</p>
-        </div>
-        <div className="px-6 py-6 flex flex-col gap-3">
-           <div className={`w-full py-4 rounded-[20px] text-[10px] font-black border-2 border-[#0f3c4c] text-[#e9f4f8] flex items-center justify-center gap-3 shadow-inner bg-[#0f3c4c]/50`}><ShieldCheck size={16} className="text-[#2596be]"/> {role === 'ADMIN' ? 'ADMINISTRADOR' : 'CLIENTE'} AUTORIZADO</div>
-        </div>
+        <div className={`p-4 border-b border-[#0f3c4c] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all`}>
+  <label htmlFor="logo-upload" className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-4'} shadow-xl hover:scale-105 transition-all cursor-pointer group relative`}>
+    {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
+    <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+    <Package size={24} className="text-[#2596be] hidden" />
+    {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={20} className="text-[#134b60]" /></div>}
+  </label>
+  
+  {!sidebarCollapsed && (
+    <>
+      <span className="font-black text-sm text-white tracking-tight mt-2 block">INVENTRACK</span>
+      <p className="text-[8px] text-[#e9f4f8] font-black mt-1 opacity-60 uppercase tracking-[0.1em]">DISTRIBUCIONES CASTILLA S.A.S.</p>
+    </>
+  )}
+</div>
+        <div className="px-4 py-4 flex flex-col gap-3">
+  <div 
+    className={`w-full py-3 rounded-2xl text-[10px] font-black border-2 border-[#0f3c4c] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3'} shadow-inner transition-all`}
+    title={role === 'ADMIN' ? 'Administrador Autorizado' : 'Cliente'}
+  >
+    {role === 'ADMIN' ? (
+      <ShieldCheck size={16} className="text-[#2596be] shrink-0" />
+    ) : (
+      <User size={16} className="text-[#2596be] shrink-0" />
+    )}
+    {!sidebarCollapsed && (
+      <span className="truncate uppercase tracking-wider">
+        {role === 'ADMIN' ? 'ADMIN' : 'CLIENTE'}
+      </span>
+    )}
+  </div>
+</div>
         <nav className="flex-1 p-8 space-y-3 overflow-y-auto scrollbar-hide">
          {role === 'ADMIN' && (
   <>
-    <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mb-2 opacity-50">MOD. ADMINISTRADOR</div>
+    {!sidebarCollapsed && <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mb-2 opacity-50">MOD. ADMINISTRADOR</div>}
     {adminMenu.map((item) => (
       <button 
         key={item.id} 
         onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
         title={item.label} 
-        className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3.5' : 'gap-4 px-4 py-3.5'} rounded-2xl transition-all ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg shadow-[#2596be]/30' : 'text-slate-300 hover:bg-white/5'}`}
+        className={`flex items-center transition-all ${sidebarCollapsed ? 'w-12 h-12 mx-auto justify-center rounded-2xl' : 'w-full gap-4 px-4 py-3.5 rounded-2xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg' : 'text-[#e9f4f8] hover:bg-[#0f3c4c]'}`}
       >
         <span className="shrink-0">{item.icon}</span>
         {!sidebarCollapsed && <span className="text-[10px] font-black tracking-wider uppercase">{item.label}</span>}
       </button>
     ))}
-    <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mt-8 mb-2 border-t border-[#0f3c4c] pt-6 opacity-50">MOD. CLIENTE</div>
+    {!sidebarCollapsed && <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mt-8 mb-2 border-t border-[#0f3c4c] pt-6 opacity-50">MOD. CLIENTE</div>}
   </>
 )}
 {clientMenu.map((item) => (
@@ -3252,16 +3271,23 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     key={item.id} 
     onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
     title={item.label} 
-    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3.5' : 'gap-4 px-4 py-3.5'} rounded-2xl transition-all ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg shadow-[#2596be]/30' : 'text-slate-300 hover:bg-white/5'}`}
+    className={`flex items-center transition-all ${sidebarCollapsed ? 'w-12 h-12 mx-auto justify-center rounded-2xl' : 'w-full gap-4 px-4 py-3.5 rounded-2xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg' : 'text-[#e9f4f8] hover:bg-[#0f3c4c]'}`}
   >
     <span className="shrink-0">{item.icon}</span>
     {!sidebarCollapsed && <span className="text-[10px] font-black tracking-wider uppercase">{item.label}</span>}
   </button>
 ))}
         </nav>
-        <div className="p-8 border-t border-[#0f3c4c] text-center">
-            <button onClick={onLogout} className="w-full flex items-center justify-center gap-4 p-5 text-[#e9f4f8] hover:text-rose-400 font-black text-[11px] transition-colors border-2 border-transparent hover:border-rose-400/20 hover:bg-rose-400/10 rounded-[24px]"><LogIn size={20} className="rotate-180" /><span>CERRAR SESIÓN</span></button>
-        </div>
+        <div className="p-4 border-t border-[#0f3c4c]">
+  <button 
+    onClick={onLogout} 
+    title="Cerrar sesión"
+    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3.5' : 'gap-4 px-4 py-3.5'} rounded-2xl text-slate-300 hover:bg-rose-500/10 hover:text-rose-400 font-black text-[10px] uppercase tracking-wider transition-all`}
+  >
+    <span className="shrink-0"><LogOut size={18} /></span>
+    {!sidebarCollapsed && <span>Cerrar Sesión</span>}
+  </button>
+</div>
       </aside>
       <main className="flex-1 flex flex-col min-h-screen min-w-0">
         <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
