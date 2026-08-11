@@ -3248,7 +3248,7 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     )}
   </div>
 </div>
-        <nav className="flex-1 p-8 space-y-3 overflow-y-auto scrollbar-hide">
+        <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-8' : 'p-8'} space-y-3 overflow-y-auto scrollbar-hide`}>
          {role === 'ADMIN' && (
   <>
     {!sidebarCollapsed && <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mb-2 opacity-50">MOD. ADMINISTRADOR</div>}
