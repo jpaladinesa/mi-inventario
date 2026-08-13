@@ -7,7 +7,6 @@ import {
   Clock, User, CheckCircle2, Truck, FileText, ChevronRight, ChevronLeft, UserCircle, 
   Receipt, Calculator, Eye, Download, Printer, XCircle, Activity, Calendar, 
   ShieldCheck, MapPin, MessageCircle, Smartphone, UploadCloud, FileSpreadsheet, Megaphone,
-  Sun, Moon
 } from 'lucide-react';
 import { InventoryContext } from './InventoryContext';
 import { Footer, RealTimeClock, Login } from './components/CommonComponents';
@@ -2650,7 +2649,7 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
 };
 
 // --- PANEL DE CONTROL (ADMIN) ---
-const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, setFilterStatus, theme }) => {
+const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, setFilterStatus }) => {
   const stats = useMemo(() => {
     const totalInventoryValue = inventory.reduce((acc, item) => {
         const prod = products.find(p => p.id === item.productId);
@@ -2687,41 +2686,25 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
       <RealTimeClock />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-  <div className={`p-8 rounded-[32px] border-2 flex flex-col justify-between shadow-sm relative overflow-hidden group transition-colors duration-300 ${
-    theme === 'dark' 
-      ? 'bg-[#134b60] border-[#2596be]/40 text-white' 
-      : 'bg-[#e9f4f8] border-[#2596be]/20 text-[#134b60]'
-  }`}>
-      <p className={`text-[9px] font-black mb-1 uppercase tracking-widest ${theme === 'dark' ? 'text-[#2596be]' : 'text-[#2596be]'}`}>PRODUCTOS ACTIVOS</p>
-      <p className={`text-4xl font-black tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-[#134b60]'}`}>{stats.products}</p>
-      <div className="absolute top-4 right-4 text-[#2596be] opacity-50 group-hover:rotate-12 transition-transform"><Package size={28}/></div>
-  </div>
-        <div className={`p-8 rounded-[32px] border-2 flex flex-col justify-between shadow-sm relative overflow-hidden group transition-colors duration-300 ${
-  theme === 'dark' 
-    ? 'bg-[#134b60] border-emerald-500/40 text-white' 
-    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
-}`}>
-    <p className={`text-[9px] font-black mb-1 uppercase tracking-widest ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>VALOR INVENTARIO</p>
-    <p className={`text-2xl font-black tracking-tighter font-mono ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-900'}`}>{formatCurrency(stats.inventoryCost)}</p>
-    <div className={`absolute top-4 right-4 opacity-50 group-hover:scale-110 transition-transform ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-400'}`}><DollarSign size={28}/></div>
-</div>
-        <div className={`p-8 rounded-[32px] border-2 flex flex-col justify-between shadow-sm relative overflow-hidden group transition-colors duration-300 ${
-          theme === 'dark' 
-            ? 'bg-[#134b60] border-indigo-500/40 text-white' 
-            : 'bg-indigo-50 border-indigo-200 text-indigo-900'
-        }`}>
-            <p className={`text-[9px] font-black mb-1 uppercase tracking-widest ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-700'}`}>CLIENTES REGISTRADOS</p>
-            <p className={`text-4xl font-black tracking-tighter ${theme === 'dark' ? 'text-indigo-200' : 'text-indigo-900'}`}>{stats.clients}</p>
-            <div className={`absolute top-4 right-4 opacity-50 group-hover:scale-110 transition-transform ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-400'}`}><Users size={28}/></div>
+        <div className="bg-[#e9f4f8] p-8 rounded-[32px] border-2 border-[#2596be]/20 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+            <p className="text-[9px] text-[#2596be] font-black mb-1 uppercase tracking-widest">PRODUCTOS ACTIVOS</p>
+            <p className="text-4xl font-black text-[#134b60] tracking-tighter">{stats.products}</p>
+            <div className="absolute top-4 right-4 text-[#2596be] opacity-50 group-hover:rotate-12 transition-transform"><Package size={28}/></div>
         </div>
-        <div className={`p-8 rounded-[32px] border-2 flex flex-col justify-between shadow-sm relative overflow-hidden group transition-colors duration-300 ${
-          theme === 'dark' 
-            ? 'bg-[#134b60] border-rose-500/40 text-white' 
-            : 'bg-rose-50 border-rose-200 text-rose-900'
-        }`}>
-            <p className={`text-[9px] font-black mb-1 uppercase tracking-widest ${theme === 'dark' ? 'text-rose-400' : 'text-rose-700'}`}>TOTAL ANULADAS</p>
-            <p className={`text-4xl font-black tracking-tighter ${theme === 'dark' ? 'text-rose-200' : 'text-rose-900'}`}>{stats.orders.cancelled}</p>
-            <div className={`absolute top-4 right-4 opacity-50 group-hover:scale-110 transition-transform ${theme === 'dark' ? 'text-rose-400' : 'text-rose-400'}`}><XCircle size={28}/></div>
+        <div className="bg-emerald-50 p-8 rounded-[32px] border-2 border-emerald-200 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+            <p className="text-[9px] text-emerald-700 font-black mb-1 uppercase tracking-widest">VALOR INVENTARIO</p>
+            <p className="text-2xl font-black text-emerald-900 tracking-tighter font-mono">{formatCurrency(stats.inventoryCost)}</p>
+            <div className="absolute top-4 right-4 text-emerald-400 opacity-50 group-hover:scale-110 transition-transform"><DollarSign size={28}/></div>
+        </div>
+        <div className="bg-indigo-50 p-8 rounded-[32px] border-2 border-indigo-200 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+            <p className="text-[9px] text-indigo-700 font-black mb-1 uppercase tracking-widest">CLIENTES REGISTRADOS</p>
+            <p className="text-4xl font-black text-indigo-900 tracking-tighter">{stats.clients}</p>
+            <div className="absolute top-4 right-4 text-indigo-400 opacity-50 group-hover:scale-110 transition-transform"><Users size={28}/></div>
+        </div>
+        <div className="bg-rose-50 p-8 rounded-[32px] border-2 border-rose-200 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+            <p className="text-[9px] text-rose-700 font-black mb-1 uppercase tracking-widest">TOTAL ANULADAS</p>
+            <p className="text-4xl font-black text-rose-900 tracking-tighter">{stats.orders.cancelled}</p>
+            <div className="absolute top-4 right-4 text-rose-400 opacity-50 group-hover:scale-110 transition-transform"><XCircle size={28}/></div>
         </div>
       </div>
 
@@ -2730,44 +2713,26 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
             <button 
                 key={oc.id}
                 onClick={() => { setFilterStatus(oc.id); setActiveTab('admin_orders'); }}
-                className={`p-8 rounded-[32px] border-2 shadow-sm flex items-center gap-6 hover:shadow-md transition-all group active:scale-95 ${
-                  theme === 'dark' 
-                    ? 'bg-[#134b60] border-[#2596be]/40 text-white' 
-                    : `bg-white ${oc.border}`
-                }`}
+                className={`bg-white p-8 rounded-[32px] border-2 ${oc.border} shadow-sm flex items-center gap-6 hover:shadow-md transition-all group active:scale-95`}
             >
                 <div className={`p-4 rounded-2xl ${oc.bg} ${oc.color} group-hover:bg-white border border-transparent group-hover:${oc.border} transition-all`}>{oc.icon}</div>
                 <div className="text-left">
                     <p className={`text-[9px] font-black uppercase tracking-widest ${oc.color}`}>{oc.label}</p>
-                    <p className={`text-3xl font-black tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-[#134b60]'}`}>{oc.val}</p>
+                    <p className="text-3xl font-black text-[#134b60] tracking-tighter">{oc.val}</p>
                 </div>
             </button>
         ))}
       </div>
 
-      <div className={`p-10 rounded-[40px] border-2 flex items-center justify-between group cursor-pointer transition-all shadow-sm active:scale-[0.99] ${
-        theme === 'dark' 
-          ? 'bg-[#134b60] border-[#2596be]/40 text-white hover:bg-[#113f51]' 
-          : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60] hover:bg-[#2596be]'
-      }`} onClick={() => { setFilterStatus('TODOS'); setActiveTab('admin_orders'); }}>
+      <div className="bg-[#e9f4f8] p-10 rounded-[40px] border-2 border-[#2596be]/30 flex items-center justify-between group cursor-pointer hover:bg-[#2596be] transition-all shadow-sm active:scale-[0.99]" onClick={() => { setFilterStatus('TODOS'); setActiveTab('admin_orders'); }}>
           <div className="flex items-center gap-8">
-              <div className={`p-6 rounded-[28px] transition-all shadow-sm ${
-                theme === 'dark' 
-                  ? 'bg-[#0b1720] text-amber-400 group-hover:bg-white group-hover:text-[#134b60]' 
-                  : 'bg-white text-[#2596be] group-hover:text-[#134b60]'
-              } group-hover:rotate-12`}><History size={40} /></div>
+              <div className="bg-white p-6 rounded-[28px] text-[#2596be] group-hover:text-[#134b60] group-hover:rotate-12 transition-all shadow-sm"><History size={40} /></div>
               <div>
-                  <h4 className={`text-2xl font-black uppercase tracking-tighter transition-colors ${
-                    theme === 'dark' ? 'text-white group-hover:text-amber-300' : 'text-[#134b60] group-hover:text-white'
-                  }`}>GESTIÓN INTEGRAL DE SOLICITUDES</h4>
-                  <p className={`text-[10px] font-black uppercase tracking-[0.3em] mt-1 transition-colors ${
-                    theme === 'dark' ? 'text-[#2596be]' : 'text-[#2596be] group-hover:text-blue-100'
-                  }`}>CONTROL LOGÍSTICO Y SEGUIMIENTO DE RECORRIDO</p>
+                  <h4 className="text-2xl font-black text-[#134b60] group-hover:text-white uppercase tracking-tighter">GESTIÓN INTEGRAL DE SOLICITUDES</h4>
+                  <p className="text-[10px] text-[#2596be] group-hover:text-blue-100 font-black uppercase tracking-[0.3em] mt-1">CONTROL LOGÍSTICO Y SEGUIMIENTO DE RECORRIDO</p>
               </div>
           </div>
-          <ChevronRight size={48} className={`transition-all group-hover:translate-x-4 ${
-            theme === 'dark' ? 'text-[#2596be] group-hover:text-amber-400' : 'text-[#2596be] group-hover:text-white'
-          }`} />
+          <ChevronRight size={48} className="text-[#2596be] group-hover:text-white transition-all group-hover:translate-x-4" />
       </div>
 
       <Footer />
@@ -3142,20 +3107,7 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
 };
 
 // --- COMPONENTE PRINCIPAL (DASHBOARD WRAPPER) ---
-  const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlobalLogo }) => {
-
-  // --- ESTADO DEL TEMA Y PERSISTENCIA ---
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('inventrack_theme');
-    return saved ? saved : 'light';
-  });
-
-  useEffect(() => {
-    localStorage.setItem('inventrack_theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  // ----------------------------------------------  
+const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlobalLogo }) => {
   const role = currentUser.role; 
   const [activeTab, setActiveTab] = useState(role === 'ADMIN' ? 'dashboard' : 'client_dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -3253,8 +3205,8 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   };
 
   return (
-    <div className={`flex min-h-screen uppercase font-sans transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0b1720] text-slate-100' : 'bg-slate-50 text-slate-900'} print:bg-white`}>
-      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-80'} bg-[#134b60] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 relative shadow-2xl ${theme === 'dark' ? 'border-r border-[#2596be]/30' : 'border-r border-transparent'}`}>
+    <div className="flex min-h-screen bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
+      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-80'} bg-[#134b60] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 relative shadow-2xl`}>
   
   {/* Botón flotante para minimizar / expandir */}
   <button 
@@ -3338,11 +3290,7 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 </div>
       </aside>
       <main className="flex-1 flex flex-col min-h-screen min-w-0">
-        <header className={`border-b px-8 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden transition-colors duration-300 ${
-  theme === 'dark' 
-    ? 'bg-[#134b60] border-[#2596be]/30 text-white' 
-    : 'bg-white border-slate-200 text-slate-900'
-}`}>
+        <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
           <button onClick={() => setIsSidebarOpen(true)} className="p-3 text-[#134b60] md:hidden hover:bg-slate-100 rounded-2xl transition-all shadow-sm"><MenuIcon size={24} /></button>
 <div className="hidden sm:block relative w-96 uppercase tracking-widest z-50">
   <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -3492,27 +3440,13 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     </div>
   )}
 </div>
-          <div className="flex items-center gap-4 uppercase">
-            {/* --- BOTÓN DE UN SOLO CLIC --- */}
-            <button 
-              onClick={toggleTheme}
-              className={`p-3 rounded-2xl transition-all shadow-sm flex items-center justify-center cursor-pointer ${
-                theme === 'dark' 
-                  ? 'bg-[#134b60] text-amber-400 border border-[#2596be]/30' 
-                  : 'bg-[#e9f4f8] text-[#2596be] border border-[#2596be]/20'
-              }`}
-              title="Cambiar Modo Visual"
-            >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            {/* ------------------------------------------- */}
-
+          <div className="flex items-center gap-6 uppercase">
             <div className="text-right leading-tight"><p className="text-[10px] font-black text-[#134b60] uppercase tracking-tighter">{currentUser.name}</p><p className="text-[9px] text-[#2596be] font-black flex items-center justify-end gap-1.5"><span className="w-2 h-2 bg-[#2596be] rounded-full animate-pulse"></span> {role}</p></div>
             <div className="w-12 h-12 bg-[#e9f4f8] text-[#2596be] rounded-[20px] flex items-center justify-center shadow-inner border-2 border-[#2596be]/20"><UserCircle size={28} /></div>
           </div>
         </header>
         <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
-          {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} theme={theme} />}
+          {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
           {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
           {activeTab === 'inventory' && <InventoryView inventory={inventory} setInventory={setInventory} products={products} orders={orders} />}
           {activeTab === 'clients' && <ClientsView clients={clients} setClients={setClients} clientTypes={clientTypes} globalDiscountEngine={globalDiscountEngine} setGlobalDiscountEngine={setGlobalDiscountEngine} />}
