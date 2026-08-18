@@ -1599,16 +1599,16 @@ const handleAddToOrder = (e) => {
             <div className={`p-3 rounded-xl ${cartFinancials >= 300000 ? 'bg-emerald-500 text-white' : 'bg-[#2596be] text-white'}`}>
               <Truck size={20} />
             </div>
-            <div>
-              <p className="text-xs font-black tracking-wider uppercase">
-                {cartFinancials >= 300000 
-                  ? '¡Felicitaciones! Tu pedido tiene ENVÍO GRATIS 🎉' 
-                  : `Te faltan ${formatCurrency(300000 - cartFinancials)} para obtener ENVÍO GRATIS`}
-              </p>
-              <p className="text-[10px] font-bold opacity-70 mt-0.5 uppercase">
-                {cartFinancials >= 300000 ? 'Meta alcanzada (Mínimo $300.000)' : 'Envío si es menor: POR CONFIRMAR'}
-              </p>
-            </div>
+           <div>
+  <p className="text-[10px] font-black uppercase text-[#134b60]">
+    {cartFinancials >= 300000 ? '🎉 META ALCANZADA: ENVÍO GRATIS' : `TE FALTAN ${formatCurrency(300000 - cartFinancials)} PARA OBTENER ENVÍO GRATIS`}
+  </p>
+  {cartFinancials < 300000 && (
+    <p className="text-[10px] font-medium text-[#134b60] opacity-75 mt-0.5 uppercase">
+      Si no supera el tope, el envío es: Por confirmar
+    </p>
+  )}
+</div>
           </div>
           
           {/* Barra de progreso */}
@@ -2024,11 +2024,10 @@ const handleAddToOrder = (e) => {
                     {role === 'ADMIN' && <td className="px-6 py-5 text-[#134b60] font-black">{o.clientName}</td>}
                     <td className="px-6 py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
                     <td className="px-6 py-5 text-center">{o.totalItems}</td>
-                    <td className="px-6 py-5 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
                     <td className="px-6 py-5 text-right">
                   <div className="font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</div>
-                  <div className={`text-[9px] font-bold uppercase mt-0.5 ${o.shippingStatus === 'ENVÍO GRATIS' ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {o.shippingStatus || 'ENVÍO: POR CONFIRMAR'}
+                  <div className={`text-[9px] font-bold uppercase mt-0.5 ${(o.shippingStatus === 'ENVÍO GRATIS' || o.totalValue >= 300000) ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    {o.shippingStatus || (o.totalValue >= 300000 ? 'ENVÍO GRATIS' : 'ENVÍO: POR CONFIRMAR')}
                   </div>
                 </td>
                     <td className="px-6 py-5 text-center"><StatusBadge status={o.status} /></td>
