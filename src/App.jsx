@@ -2366,11 +2366,9 @@ const handleAddToOrder = (e) => {
                 </tbody>
               </table>
             </div>
-
-            {role === 'ADMIN' && (
+{role === 'ADMIN' && ['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
               <div className="pt-4">
                 <button 
-                  disabled={selectedOrder.status === 'CANCELADA' || selectedOrder.status === 'ANULADA'}
                   onClick={() => {
                     const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
                       deliveredQuantity: item.deliveredQuantity ?? item.quantity,
@@ -2390,13 +2388,12 @@ const handleAddToOrder = (e) => {
                     setEditingItems({ ...editingItems, [selectedOrder.id]: null });
                     setSelectedOrder(null);
                   }}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2"
                 >
-                  <CheckCircle2 size={18} /> {selectedOrder.status === 'CANCELADA' || selectedOrder.status === 'ANULADA' ? 'PEDIDO ANULADO - NO SE PUEDE MODIFICAR' : 'GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES'}
+                  <CheckCircle2 size={18} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
                 </button>
               </div>
             )}
-
             {selectedOrder.generalObservation && (
               <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
                 <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
