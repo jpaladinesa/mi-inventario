@@ -3247,7 +3247,7 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
-      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-80'} bg-[#134b60] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 relative shadow-2xl`}>
+<aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-80'} bg-[#134b60] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative shadow-2xl`}>
   
   {/* Botón flotante para minimizar / expandir */}
   <button 
@@ -3331,7 +3331,7 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 </div>
       </aside>
       <main className="flex-1 flex flex-col min-h-screen min-w-0">
-        <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
+        <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
           <button onClick={() => setIsSidebarOpen(true)} className="p-3 text-[#134b60] md:hidden hover:bg-slate-100 rounded-2xl transition-all shadow-sm"><MenuIcon size={24} /></button>
 <div className="hidden sm:block relative w-96 uppercase tracking-widest z-50">
   <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
