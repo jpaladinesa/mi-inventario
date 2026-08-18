@@ -1538,6 +1538,7 @@ const handleAddToOrder = (e) => {
     const finalCalculatedTotal = subtotalAfterGlobal + taxesAmount;
 
     const newOrder = { 
+        shippingStatus: finalCalculatedTotal >= 300000 ? 'ENVÍO GRATIS' : 'ENVÍO: POR CONFIRMAR',
         id: nextID, 
         clientName: clientNameToSave, 
         clientDocType,
@@ -1760,6 +1761,9 @@ const handleAddToOrder = (e) => {
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
             <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} /></div>
             <h3 className="font-black text-xl mb-4 tracking-tighter leading-tight">¿DESEA CREAR LA SOLICITUD?</h3>
+            <p className="text-xs font-black uppercase tracking-wider text-[#2596be] mt-2 mb-4">
+              {cartFinancials >= 300000 ? '🎉 INCLUYE ENVÍO GRATIS' : '📦 ESTADO DE ENVÍO: POR CONFIRMAR'}
+            </p>
             <p className="text-[10px] text-slate-400 font-black mb-8">TOTAL ESTIMADO: <span className="text-[#2596be]">{formatCurrency(cartFinancials)}</span></p>
             <div className="flex gap-4">
               <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl font-black text-xs uppercase">VOLVER</button>
