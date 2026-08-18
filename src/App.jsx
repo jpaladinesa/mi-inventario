@@ -2025,6 +2025,12 @@ const handleAddToOrder = (e) => {
                     <td className="px-6 py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
                     <td className="px-6 py-5 text-center">{o.totalItems}</td>
                     <td className="px-6 py-5 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
+                    <td className="px-6 py-5 text-right">
+                  <div className="font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</div>
+                  <div className={`text-[9px] font-bold uppercase mt-0.5 ${o.shippingStatus === 'ENVÍO GRATIS' ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    {o.shippingStatus || 'ENVÍO: POR CONFIRMAR'}
+                  </div>
+                </td>
                     <td className="px-6 py-5 text-center"><StatusBadge status={o.status} /></td>
 <td className="px-6 py-5 text-right">
   <div className="flex justify-end gap-2 items-center">
