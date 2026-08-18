@@ -2236,18 +2236,42 @@ const handleAddToOrder = (e) => {
 {selectedOrder && (
   <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:bg-white print:backdrop-blur-none print:p-0">
     <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full flex flex-col max-h-[90vh] ${viewMode === 'pdf' ? 'max-w-full md:max-w-[816px] overflow-x-auto print:shadow-none print:rounded-none print:max-h-none' : 'max-w-sm md:max-w-4xl lg:max-w-6xl animate-in zoom-in-95 duration-300'}`}>
-       {viewMode === 'list' && (
-        <div className="p-6 border-b-2 border-[#e9f4f8] flex justify-between items-center bg-white shrink-0 print:hidden">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#e9f4f8] p-2.5 rounded-xl text-[#2596be] shadow-sm border border-[#2596be]/20"><FileText size={20} /></div>
-            <div>
-              <h3 className="font-black text-sm tracking-tighter text-[#134b60]">{selectedOrder.id} - RESUMEN DE SOLICITUD</h3>
-              <p className="text-[9px] text-slate-400 font-black">{selectedOrder.date}</p>
-            </div>
-          </div>
-          <button onClick={() => setSelectedOrder(null)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"><X size={24}/></button>
+      {viewMode === 'list' && (
+  <div className="p-5 md:p-6 border-b-2 border-[#e9f4f8] flex flex-col md:flex-row justify-between items-start md:items-center bg-white shrink-0 print:hidden gap-4">
+    
+    {/* IZQUIERDA: Título, ID de solicitud al lado y fecha debajo del ID */}
+    <div className="flex items-center gap-4">
+      <div className="bg-[#e9f4f8] p-3.5 rounded-2xl text-[#2596be] shadow-sm border border-[#2596be]/20 flex items-center justify-center shrink-0">
+        <FileText size={28}/>
+      </div>
+      <div className="flex items-center gap-4 flex-wrap">
+        <span className="text-xs md:text-sm font-black text-[#134b60] uppercase tracking-wider">RESUMEN DE SOLICITUD</span>
+        <div className="flex flex-col">
+          <span className="text-lg md:text-xl font-black px-3 py-1 bg-[#134b60] text-white rounded-xl font-mono tracking-tight shadow-md w-fit">{selectedOrder.id}</span>
+          <p className="text-[10px] text-slate-400 font-semibold mt-1">{selectedOrder.date}</p>
         </div>
-      )}
+      </div>
+    </div>
+
+    {/* DERECHA: Datos del Cliente */}
+    <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+      <div className="text-left md:text-right">
+        <p className="text-sm font-black text-[#134b60] tracking-tight">{selectedOrder.clientName || 'CLIENTE GENERAL'}</p>
+        <div className="flex flex-wrap md:justify-end gap-x-2 text-[10px] text-slate-500 font-semibold mt-0.5">
+          <span>{selectedOrder.clientDocType || 'NIT'}: {selectedOrder.clientDocNumber || 'N/A'}</span>
+          <span>•</span>
+          <span>{selectedOrder.clientAddress || 'SIN DIRECCIÓN'}</span>
+        </div>
+      </div>
+      <button 
+        onClick={() => setSelectedOrder(null)} 
+        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0"
+      >
+        <X size={24}/>
+      </button>
+    </div>
+  </div>
+)}
 
       <div className={`flex-1 overflow-y-auto ${viewMode === 'pdf' ? "overflow-x-auto" : "p-8"}`}>
         {viewMode === 'list' ? (
