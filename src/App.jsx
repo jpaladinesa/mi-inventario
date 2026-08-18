@@ -2291,19 +2291,21 @@ const handleAddToOrder = (e) => {
                   </div>
                 </div>
 
-                <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl">
-                  <p className="text-[9px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN FINANCIERA</p>
-                  <button
-                    disabled={selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA'}
-                    onClick={() => {
-                      setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
-                      setModalType('editDiscounts');
-                    }}
-                    className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl text-[10px] font-black shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-                  >
-                    <Tag size={18}/> {(selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA') ? 'PEDIDO ANULADO (BLOQUEADO)' : 'APLICAR DESCUENTOS AL PEDIDO'}
-                  </button>
-                </div>
+                {['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
+      <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl">
+        <p className="text-[10px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN FINANCIERA</p>
+        <button
+          disabled={selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA'}
+          onClick={() => {
+            setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
+            setModalType('editDiscount');
+          }}
+          className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl text-[10px] font-black shadow-xl transition-all flex items-center justify-center gap-2"
+        >
+          <Tag size={18} /> {selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA' ? 'PEDIDO ANULADO (BLOQUEADO)' : 'APLICAR DESCUENTOS AL PEDIDO'}
+        </button>
+      </div>
+    )}
               </div>
             )}
 
