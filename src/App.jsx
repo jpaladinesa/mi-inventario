@@ -1591,7 +1591,40 @@ const handleAddToOrder = (e) => {
             <p className="text-[8px] text-[#2596be] font-black mb-1">TOTAL ACUMULADO</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(cartFinancials)}</p>
         </div>
       </div>
-
+{/* --- BANNER DE ENVÍO GRATIS Y PROGRESO --- */}
+      <div className={`p-5 rounded-2xl border-2 transition-all shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60]'}`}>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className={`p-3 rounded-xl ${cartFinancials >= 300000 ? 'bg-emerald-500 text-white' : 'bg-[#2596be] text-white'}`}>
+              <Truck size={20} />
+            </div>
+            <div>
+              <p className="text-xs font-black tracking-wider uppercase">
+                {cartFinancials >= 300000 
+                  ? '¡Felicitaciones! Tu pedido tiene ENVÍO GRATIS 🎉' 
+                  : `Te faltan ${formatCurrency(300000 - cartFinancials)} para obtener ENVÍO GRATIS`}
+              </p>
+              <p className="text-[10px] font-bold opacity-70 mt-0.5 uppercase">
+                {cartFinancials >= 300000 ? 'Meta alcanzada (Mínimo $300.000)' : 'Envío si es menor: POR CONFIRMAR'}
+              </p>
+            </div>
+          </div>
+          
+          {/* Barra de progreso */}
+          <div className="w-full md:w-56 space-y-1">
+            <div className="flex justify-between text-[10px] font-black">
+              <span>Progreso Envío Gratis</span>
+              <span>{Math.min(100, Math.round((cartFinancials / 300000) * 100))}%</span>
+            </div>
+            <div className="w-full bg-white/80 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-200/50 shadow-inner">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${cartFinancials >= 300000 ? 'bg-emerald-500' : 'bg-[#2596be]'}`} 
+                style={{ width: `${Math.min(100, (cartFinancials / 300000) * 100)}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full relative">
         {isSearchDisabled && <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl"><p className="bg-[#134b60] text-white px-6 py-3 rounded-full font-black text-xs uppercase shadow-xl animate-pulse">SELECCIONE UN CLIENTE ARRIBA PARA COMENZAR</p></div>}
         <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><ShoppingCart size={18} className="text-[#2596be]" /> BÚSQUEDA TÉCNICA</h3>
