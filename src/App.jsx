@@ -2251,64 +2251,62 @@ const handleAddToOrder = (e) => {
 
       <div className={`flex-1 overflow-y-auto ${viewMode === 'pdf' ? "overflow-x-auto" : "p-8"}`}>
         {viewMode === 'list' ? (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-200 col-span-2 sm:col-span-1 shadow-sm">
-                <p className="text-[8px] text-emerald-600 font-black mb-1 tracking-widest uppercase">VALOR TOTAL DE LA ORDEN</p>
-                <p className="text-2xl font-black text-emerald-800 font-mono tracking-tighter">{formatCurrency(selectedOrder.totalValue)}</p>
-              </div>
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm">
-                <p className="text-[8px] text-slate-400 font-black mb-2 uppercase">ESTADO ACTUAL</p>
-                <StatusBadge status={selectedOrder.status} />
-              </div>
-            </div>
-
-            {role === 'ADMIN' && (
-              <div className="space-y-4">
-                <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl">
-                  <p className="text-[9px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN DE PROCESO LOGÍSTICO</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {getNextStatusOptions(selectedOrder.status).map(statusOption => {
-                      const isAnulada = statusOption === 'ANULADA' || statusOption === 'CANCELADA';
-                      return (
-                        <button
-                          key={statusOption}
-                          onClick={() => setPendingChange({ id: selectedOrder.id, newStatus: statusOption })}
-                          className={`w-full py-4 text-white rounded-2xl text-[10px] font-black shadow-xl transition-all flex items-center justify-center gap-3 ${
-                            isAnulada 
-                              ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
-                              : 'bg-[#2596be] hover:bg-[#134b60]'
-                          }`}
-                        >
-                          {isAnulada ? <XCircle size={18}/> : <ArrowUpRight size={18}/>}
-                          MARCAR COMO: {statusOption}
-                        </button>
-                      );
-                    })}
-                    {getNextStatusOptions(selectedOrder.status).length === 0 && (
-                      <p className="text-center text-[9px] font-black text-slate-400 uppercase sm:col-span-2">SOLICITUD FINALIZADA / SIN CAMBIOS PENDIENTES</p>
-                    )}
-                  </div>
-                </div>
-
-                {['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
-      <div className="p-5 bg-[#e9f4f8] border-2 border-[#2596be]/20 rounded-3xl">
-        <p className="text-[10px] font-black text-[#2596be] mb-4 text-center tracking-[0.2em] uppercase">GESTIÓN FINANCIERA</p>
-        <button
-          disabled={selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA'}
-          onClick={() => {
-            setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
-            setModalType('editDiscount');
-          }}
-          className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl text-[10px] font-black shadow-xl transition-all flex items-center justify-center gap-2"
-        >
-          <Tag size={18} /> {selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA' ? 'PEDIDO ANULADO (BLOQUEADO)' : 'APLICAR DESCUENTOS AL PEDIDO'}
-        </button>
+  <div className="space-y-6">
+    {/* BARRA SUPERIOR UNIFICADA Y COMPACTA */}
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm gap-4 mb-4">
+      
+      {/* IZQUIERDA: Valor Total y Estado Actual en una sola línea compacta */}
+      <div className="flex items-center gap-6 divide-x-2 divide-slate-200 w-full lg:w-auto">
+        <div className="pr-2">
+          <p className="text-[8px] text-emerald-600 font-black mb-0.5 uppercase tracking-widest">VALOR TOTAL DE LA ORDEN</p>
+          <p className="text-xl font-black text-emerald-800 font-mono tracking-tighter leading-none">{formatCurrency(selectedOrder.totalValue)}</p>
+        </div>
+        <div className="pl-6 flex items-center gap-3">
+          <p className="text-[8px] text-slate-400 font-black uppercase mb-0">ESTADO:</p>
+          <StatusBadge status={selectedOrder.status} />
+        </div>
       </div>
-    )}
-              </div>
-            )}
 
+      {/* DERECHA: Botones de Acción (Logística y Descuentos) */}
+      {role === 'ADMIN' && (
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
+          {getNextStatusOptions(selectedOrder.status).map(statusOption => {
+            const isAnulada = statusOption === 'ANULADA' || statusOption === 'CANCELADA';
+            return (
+              <button
+                key={statusOption}
+                onClick={() => setPendingChange({ id: selectedOrder.id, newStatus: statusOption })}
+                className={`px-4 py-2.5 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 ${
+                  isAnulada 
+                    ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
+                    : 'bg-[#2596be] hover:bg-[#134b60]'
+                }`}
+              >
+                {isAnulada ? <XCircle size={14}/> : <ArrowUpRight size={14}/>}
+                MARCAR: {statusOption}
+              </button>
+            );
+          })}
+          
+          {getNextStatusOptions(selectedOrder.status).length === 0 && (
+             <p className="text-[9px] font-black text-slate-400 uppercase mr-2">SIN CAMBIOS PENDIENTES</p>
+          )}
+
+          {['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
+            <button
+              disabled={selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA'}
+              onClick={() => {
+                setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
+                setModalType('editDiscount');
+              }}
+              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
+            >
+              <Tag size={14} /> DESCUENTOS
+            </button>
+          )}
+        </div>
+      )}
+    </div>
             <div className="border-2 border-slate-100 rounded-2xl overflow-x-auto bg-white">
               <table className="w-full text-left min-w-[750px]">
                 <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
@@ -2367,33 +2365,33 @@ const handleAddToOrder = (e) => {
               </table>
             </div>
 {role === 'ADMIN' && ['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
-              <div className="pt-4">
-                <button 
-                  onClick={() => {
-                    const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
-                      deliveredQuantity: item.deliveredQuantity ?? item.quantity,
-                      pendingQuantity: item.pendingQuantity ?? 0,
-                      deliveryObservation: item.deliveryObservation || ''
-                    }));
+  <div className="flex justify-end pt-2 mb-4">
+    <button
+      onClick={() => {
+        const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
+          deliveredQuantity: item.deliveredQuantity ?? item.quantity,
+          pendingQuantity: item.pendingQuantity ?? 0,
+          deliveryObservation: item.deliveryObservation || ''
+        }));
 
-                    const updatedItems = selectedOrder.items.map((item, idx) => ({
-                      ...item,
-                      deliveredQuantity: Math.round(Number(currentEdits[idx]?.deliveredQuantity ?? item.quantity)),
-                      pendingQuantity: Math.round(Number(currentEdits[idx]?.pendingQuantity ?? 0)),
-                      deliveryObservation: currentEdits[idx]?.deliveryObservation || ''
-                    }));
+        const updatedItems = selectedOrder.items.map((item, idx) => ({
+          ...item,
+          deliveredQuantity: Math.round(Number(currentEdits[idx]?.deliveredQuantity ?? item.quantity)),
+          pendingQuantity: Math.round(Number(currentEdits[idx]?.pendingQuantity ?? 0)),
+          deliveryObservation: currentEdits[idx]?.deliveryObservation || ''
+        }));
 
-                    const updatedOrder = { ...selectedOrder, items: updatedItems };
-                    setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
-                    setEditingItems({ ...editingItems, [selectedOrder.id]: null });
-                    setSelectedOrder(null);
-                  }}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all flex items-center justify-center gap-2"
-                >
-                  <CheckCircle2 size={18} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
-                </button>
-              </div>
-            )}
+        const updatedOrder = { ...selectedOrder, items: updatedItems };
+        setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+        setEditingItems({ ...editingItems, [selectedOrder.id]: null });
+        setSelectedOrder(null);
+      }}
+      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase shadow-sm transition-all flex items-center gap-2 active:scale-95"
+    >
+      <CheckCircle2 size={16} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
+    </button>
+  </div>
+)}
             {selectedOrder.generalObservation && (
               <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
                 <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
@@ -2520,19 +2518,39 @@ const handleAddToOrder = (e) => {
         )}
       </div>
 
-      <div className="p-6 border-t border-slate-100 bg-white flex gap-4 shrink-0 print:hidden">
-        {viewMode === 'list' ? (
-          <>
-            <button onClick={() => setViewMode('pdf')} className="flex-1 bg-[#134b60] text-white py-5 rounded-[24px] font-black text-[11px] flex items-center justify-center gap-3 hover:bg-[#0f3c4c] shadow-xl transition-all active:scale-95 uppercase"><FileText size={18}/> GENERAR PDF</button>
-            <button onClick={() => setSelectedOrder(null)} className="flex-1 border-2 border-slate-200 text-slate-500 py-5 rounded-[24px] font-black text-[11px] hover:bg-slate-50 transition-all uppercase">SALIR</button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => window.print()} className="flex-1 bg-[#2596be] text-white py-5 rounded-[24px] font-black text-[11px] flex items-center justify-center gap-3 hover:bg-[#1e7a9b] shadow-xl transition-all active:scale-95 uppercase"><Download size={18}/> DESCARGAR / IMPRIMIR PDF</button>
-            <button onClick={() => setViewMode('list')} className="flex-1 bg-slate-100 text-[#134b60] py-5 rounded-[24px] font-black text-[11px] flex items-center justify-center gap-3 hover:bg-slate-200 transition-all uppercase"><ChevronDown size={18} className="rotate-90"/> VOLVER AL RESUMEN</button>
-          </>
-        )}
-      </div>
+      <div className="p-4 border-t border-slate-100 bg-white flex gap-3 shrink-0 print:hidden">
+  {viewMode === 'list' ? (
+    <>
+      <button 
+        onClick={() => setViewMode('pdf')} 
+        className="flex-1 bg-[#134b60] hover:bg-[#0f3c4c] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+      >
+        <FileText size={16}/> GENERAR PDF
+      </button>
+      <button 
+        onClick={() => setSelectedOrder(null)} 
+        className="flex-1 border border-slate-200 text-slate-600 hover:bg-slate-50 py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
+      >
+        SALIR
+      </button>
+    </>
+  ) : (
+    <>
+      <button 
+        onClick={() => window.print()} 
+        className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+      >
+        <Download size={16}/> DESCARGAR / IMPRIMIR PDF
+      </button>
+      <button 
+        onClick={() => setViewMode('list')} 
+        className="flex-1 bg-slate-100 hover:bg-slate-200 text-[#134b60] py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
+      >
+        <ChevronDown size={16} className="rotate-90"/> VOLVER AL RESUMEN
+      </button>
+    </>
+  )}
+</div>
     </div>
   </div>
 )}
