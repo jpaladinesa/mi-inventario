@@ -6,7 +6,7 @@ import {
   History, X, ChevronDown, Mail, Phone, PhoneCall, UserPlus, Fingerprint, 
   Clock, User, CheckCircle2, Truck, FileText, ChevronRight, ChevronLeft, UserCircle, 
   Receipt, Calculator, Eye, Download, Printer, XCircle, Activity, Calendar, 
-  ShieldCheck, MapPin, MessageCircle, Smartphone, UploadCloud, FileSpreadsheet, Megaphone,
+  ShieldCheck, MapPin, MessageCircle, Smartphone, UploadCloud, FileSpreadsheet, Megaphone, TrendingUp,
 } from 'lucide-react';
 import { InventoryContext } from './InventoryContext';
 import { Footer, RealTimeClock, Login } from './components/CommonComponents';
@@ -3188,34 +3188,65 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
     </div>
   );
 };
-// --- MÓDULO CRM (COMPLETO: DISEÑO ORIGINAL RESTAURADO + 4 PESTAÑAS FUNCIONALES) ---
+
+// --- MÓDULO CRM (100% COMPLETO Y CORREGIDO: DISEÑO ORIGINAL, FECHAS Y PESTAÑAS) ---
 const CRMView = ({ products, clients, inventory, orders }) => {
   const [activeSubTab, setActiveSubTab] = useState('metrics');
+  const [timeRange, setTimeRange] = useState('all');
 
-  const validOrders = orders.filter(o => o.status !== 'ANULADA' && o.status !== 'CANCELADA');
-  
-  const totalVentas = validOrders.reduce((acc, o) => acc + (o.totalValue || 0), 0);
-  const totalPedidos = orders.length;
-  const totalClientes = clients.length;
-  const totalProductos = products.length;
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
 
+  // Función robusta para leer fechas correctamente incluso con formato "17/8/2026, 11:06"
   const parseDate = (dateStr) => {
     if (!dateStr || dateStr === 'N/A' || dateStr === 'SIN PEDIDOS') return null;
-    const parts = dateStr.split(' ')[0].split('/'); 
-    if (parts.length !== 3) return null;
-    return new Date(parts[2], parts[1] - 1, parts[0]);
+    try {
+      let cleanDate = dateStr.split(',')[0].trim();
+      cleanDate = cleanDate.split(' ')[0].trim();
+      if (cleanDate.includes('/')) {
+        const parts = cleanDate.split('/');
+        if (parts.length === 3) {
+          return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        }
+      }
+      return new Date(dateStr);
+    } catch (e) {
+      return null;
+    }
   };
+
+  // Filtro Maestro de Tiempo
+  const filteredOrders = useMemo(() => {
+    if (timeRange === 'all') return orders;
+    return orders.filter(o => {
+      const d = parseDate(o.date);
+      if (!d) return false;
+      const month = d.getMonth();
+      const year = d.getFullYear();
+      if (timeRange === 'current') return month === currentMonth && year === currentYear;
+      if (timeRange === 'last') return month === (currentMonth === 0 ? 11 : currentMonth - 1) && year === (currentMonth === 0 ? currentYear - 1 : currentYear);
+      return true;
+    });
+  }, [orders, timeRange, currentMonth, currentYear]);
+
+  const validOrders = filteredOrders.filter(o => o.status !== 'ANULADA' && o.status !== 'CANCELADA');
+  
+  const totalVentas = validOrders.reduce((acc, o) => acc + (o.totalValue || 0), 0);
+  const totalPedidos = filteredOrders.length;
+  const totalClientes = clients.length; // Siempre muestra el total de clientes en cartera
+  const totalProductos = products.length;
 
   const orderStatusCounts = useMemo(() => {
     const counts = { NUEVA: 0, 'EN ALISTAMIENTO': 0, 'EN CAMINO': 0, ENTREGADA: 0, ANULADA: 0 };
-    orders.forEach(o => {
+    filteredOrders.forEach(o => {
       let st = o.status || 'NUEVA';
       if (st === 'CANCELADA') st = 'ANULADA';
       if (counts[st] !== undefined) counts[st] += 1;
       else counts[st] = (counts[st] || 0) + 1;
     });
     return counts;
-  }, [orders]);
+  }, [filteredOrders]);
 
   const clientRanking = useMemo(() => {
     const map = {};
@@ -3245,10 +3276,12 @@ const CRMView = ({ products, clients, inventory, orders }) => {
 
   const clientActivitySummary = useMemo(() => {
     return clients.map(client => {
-      const clientOrders = orders.filter(o => o.clientName === client.name);
+      const clientOrders = filteredOrders.filter(o => o.clientName === client.name);
       const validClientOrders = clientOrders.filter(o => o.status !== 'ANULADA' && o.status !== 'CANCELADA');
       const totalSpent = validClientOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
-      const lastOrder = clientOrders.length > 0 ? clientOrders[0].date : 'SIN PEDIDOS';
+      
+      const sorted = [...clientOrders].sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+      const lastOrder = sorted.length > 0 ? sorted[0].date : 'SIN PEDIDOS';
       
       return {
         id: client.id,
@@ -3260,43 +3293,29 @@ const CRMView = ({ products, clients, inventory, orders }) => {
         lastOrder
       };
     }).sort((a, b) => b.totalOrders - a.totalOrders);
-  }, [clients, orders]);
+  }, [clients, filteredOrders]);
 
   const clientSegmentation = useMemo(() => {
-    const now = new Date();
     return clients.map(client => {
-      const clientOrders = orders.filter(o => o.clientName === client.name);
-      const validClientOrders = clientOrders.filter(o => o.status !== 'ANULADA' && o.status !== 'CANCELADA');
-      const totalSpent = validClientOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
+      const clientOrders = filteredOrders.filter(o => o.clientName === client.name);
+      const sorted = [...clientOrders].sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+      const lastOrderStr = sorted.length > 0 ? sorted[0].date : 'N/A';
+      const parsedLast = parseDate(lastOrderStr);
       
-      let lastOrderDateStr = null;
       let days = 9999;
-      
-      if (clientOrders.length > 0) {
-        const sortedOrders = [...clientOrders].sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
-        lastOrderDateStr = sortedOrders[0].date;
-        const parsedDate = parseDate(lastOrderDateStr);
-        if (parsedDate) {
-          days = Math.ceil(Math.abs(now - parsedDate) / (1000 * 60 * 60 * 24));
-        }
+      if (parsedLast) {
+        days = Math.ceil(Math.abs(now - parsedLast) / (1000 * 60 * 60 * 24));
       }
-
-      let status = 'INACTIVO';
-      let badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
-      let emoji = '🔴';
-
+      
+      const totalSpent = clientOrders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
+      let status = 'INACTIVO', badgeClass = 'bg-rose-50 text-rose-700 border-rose-200', emoji = '🔴';
+      
       if (clientOrders.length === 0) {
-        status = 'SIN COMPRAS';
-        badgeClass = 'bg-slate-100 text-slate-500 border-slate-200';
-        emoji = '⚪';
+        status = 'SIN COMPRAS'; badgeClass = 'bg-slate-100 text-slate-500 border-slate-200'; emoji = '⚪';
       } else if (days <= 30) {
-        status = 'ACTIVO';
-        badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-        emoji = '🟢';
+        status = 'ACTIVO'; badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'; emoji = '🟢';
       } else if (days <= 60) {
-        status = 'EN RIESGO';
-        badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
-        emoji = '🟡';
+        status = 'EN RIESGO'; badgeClass = 'bg-amber-50 text-amber-700 border-amber-200'; emoji = '🟡';
       }
 
       return {
@@ -3305,13 +3324,11 @@ const CRMView = ({ products, clients, inventory, orders }) => {
         cleanPhone: (client.mobile || client.phone || '').replace(/\D/g, ''),
         totalOrders: clientOrders.length,
         totalSpent,
-        lastOrder: lastOrderDateStr || 'N/A',
-        status,
-        badgeClass,
-        emoji
+        lastOrder: lastOrderStr,
+        status, badgeClass, emoji
       };
     }).sort((a, b) => b.totalOrders - a.totalOrders);
-  }, [clients, orders]);
+  }, [clients, filteredOrders]);
 
   const downloadCSV = (data, filename, headers, rowMapper) => {
     if (!data || data.length === 0) { alert("No hay datos disponibles para exportar."); return; }
@@ -3324,54 +3341,34 @@ const CRMView = ({ products, clients, inventory, orders }) => {
     link.click();
   };
 
-  const exportOrdersReport = () => {
-    downloadCSV(orders, "Reporte_General_Pedidos.csv", ["ID", "CLIENTE", "FECHA", "ESTADO", "TOTAL_ITEMS", "VALOR_TOTAL"], 
-      (o) => [o.id, `"${o.clientName || 'N/A'}"`, o.date, o.status, o.totalItems, o.totalValue]);
-  };
-
-  const exportClientsReport = () => {
-    downloadCSV(clients, "Reporte_CRM_Clientes.csv", ["ID", "NOMBRE", "DOCUMENTO", "TELÉFONO", "CORREO", "DIRECCIÓN"], 
-      (c) => [c.id, `"${c.name}"`, `${c.docType} ${c.docNumber}`, c.mobile || c.phone, c.email, `"${c.address}"`]);
-  };
-
-  const exportInventoryReport = () => {
-    downloadCSV(inventory, "Reporte_Movimientos_Inventario.csv", ["ID_MOV", "COD_PRODUCTO", "PRODUCTO", "CANTIDAD", "FECHA", "USUARIO"], 
-      (i) => [i.id, i.productId, `"${i.productName}"`, i.quantity, `"${i.date}"`, i.user]);
-  };
+  const exportOrdersReport = () => downloadCSV(filteredOrders, "Reporte_Pedidos.csv", ["ID", "CLIENTE", "FECHA", "ESTADO", "TOTAL_ITEMS", "VALOR_TOTAL"], o => [o.id, `"${o.clientName || 'N/A'}"`, o.date, o.status, o.totalItems, o.totalValue]);
+  const exportClientsReport = () => downloadCSV(clients, "Reporte_Clientes.csv", ["ID", "NOMBRE", "DOCUMENTO", "TELÉFONO", "CORREO"], c => [c.id, `"${c.name}"`, `${c.docType} ${c.docNumber}`, c.mobile || c.phone, c.email]);
+  const exportInventoryReport = () => downloadCSV(inventory, "Reporte_Inventario.csv", ["ID_MOV", "COD_PRODUCTO", "PRODUCTO", "CANTIDAD", "FECHA"], i => [i.id, i.productId, `"${i.productName}"`, i.quantity, `"${i.date}"`]);
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8 w-full">
-      {/* HEADER Y PESTAÑAS */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b-4 border-[#2596be] pb-4 w-full">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">
-          CENTRO CRM Y MÉTRICAS
-        </h2>
+    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8 w-full p-4">
+      
+      {/* HEADER Y FILTROS */}
+      <div className="flex flex-col gap-6 border-b-4 border-[#2596be] pb-6">
+        <h2 className="text-2xl font-black text-[#134b60] uppercase tracking-tighter">CENTRO CRM Y MÉTRICAS</h2>
         
-        <div className="flex flex-wrap gap-2 bg-white p-2 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
-          <button 
-            onClick={() => setActiveSubTab('metrics')}
-            className={`px-5 py-2.5 font-black text-[10px] uppercase rounded-xl transition-all ${activeSubTab === 'metrics' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}
-          >
-            Métricas
-          </button>
-          <button 
-            onClick={() => setActiveSubTab('rankings')}
-            className={`px-5 py-2.5 font-black text-[10px] uppercase rounded-xl transition-all ${activeSubTab === 'rankings' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}
-          >
-            Rankings
-          </button>
-          <button 
-            onClick={() => setActiveSubTab('segmentation')}
-            className={`px-5 py-2.5 font-black text-[10px] uppercase rounded-xl transition-all ${activeSubTab === 'segmentation' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}
-          >
-            Seguimiento
-          </button>
-          <button 
-            onClick={() => setActiveSubTab('reports')}
-            className={`px-5 py-2.5 font-black text-[10px] uppercase rounded-xl transition-all ${activeSubTab === 'reports' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}
-          >
-            Reportes
-          </button>
+        <div className="flex flex-wrap gap-4 items-center">
+          {/* Botones de Tiempo */}
+          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+            <button onClick={() => setTimeRange('all')} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all ${timeRange === 'all' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}>HISTÓRICO</button>
+            <button onClick={() => setTimeRange('current')} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all ${timeRange === 'current' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}>MES ACTUAL</button>
+            <button onClick={() => setTimeRange('last')} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all ${timeRange === 'last' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}>MES ANTERIOR</button>
+          </div>
+          
+          <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
+
+          {/* Botones de Pestañas */}
+          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+            <button onClick={() => setActiveSubTab('metrics')} className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all ${activeSubTab === 'metrics' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}>MÉTRICAS</button>
+            <button onClick={() => setActiveSubTab('rankings')} className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all ${activeSubTab === 'rankings' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}>RANKINGS</button>
+            <button onClick={() => setActiveSubTab('segmentation')} className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all ${activeSubTab === 'segmentation' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}>SEGUIMIENTO</button>
+            <button onClick={() => setActiveSubTab('reports')} className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all ${activeSubTab === 'reports' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}>REPORTES</button>
+          </div>
         </div>
       </div>
 
@@ -3382,17 +3379,17 @@ const CRMView = ({ products, clients, inventory, orders }) => {
             <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between">
               <p className="text-[9px] text-slate-400 font-black mb-1 tracking-widest">VENTAS ACUMULADAS</p>
               <p className="text-2xl font-black text-emerald-600 font-mono">{formatCurrency(totalVentas)}</p>
-              <span className="text-[8px] text-slate-400 font-bold mt-2">Órdenes válidas</span>
+              <span className="text-[8px] text-slate-400 font-bold mt-2">En el período seleccionado</span>
             </div>
             <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between">
               <p className="text-[9px] text-slate-400 font-black mb-1 tracking-widest">TOTAL SOLICITUDES</p>
               <p className="text-3xl font-black text-[#134b60] font-mono">{totalPedidos}</p>
-              <span className="text-[8px] text-slate-400 font-bold mt-2">Órdenes registradas</span>
+              <span className="text-[8px] text-slate-400 font-bold mt-2">Órdenes procesadas</span>
             </div>
             <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between">
               <p className="text-[9px] text-slate-400 font-black mb-1 tracking-widest">CARTERA DE CLIENTES</p>
               <p className="text-3xl font-black text-indigo-600 font-mono">{totalClientes}</p>
-              <span className="text-[8px] text-slate-400 font-bold mt-2">Clientes en CRM</span>
+              <span className="text-[8px] text-slate-400 font-bold mt-2">Total en el sistema</span>
             </div>
             <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between">
               <p className="text-[9px] text-slate-400 font-black mb-1 tracking-widest">CATÁLOGO PRODUCTOS</p>
@@ -3436,7 +3433,7 @@ const CRMView = ({ products, clients, inventory, orders }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full animate-in fade-in duration-300">
           <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm space-y-6">
             <h3 className="font-black text-xs text-[#134b60] tracking-wider uppercase flex items-center gap-2">
-              <Users size={16} className="text-[#2596be]" /> TOP 5 CLIENTES CON MÁS COMPRAS
+              <Users size={16} className="text-[#2596be]" /> TOP 5 CLIENTES (PERÍODO ACTUAL)
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -3449,13 +3446,13 @@ const CRMView = ({ products, clients, inventory, orders }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-[11px] font-bold text-[#134b60]">
                   {clientRanking.length === 0 ? (
-                    <tr><td colSpan="3" className="px-4 py-6 text-center text-slate-300 font-black">SIN DATOS AÚN</td></tr>
+                    <tr><td colSpan="3" className="px-4 py-6 text-center text-slate-300 font-black">SIN DATOS</td></tr>
                   ) : (
                     clientRanking.map((c, i) => (
                       <tr key={i} className="hover:bg-[#e9f4f8]/30">
-                        <td className="px-4 py-3 font-black">{c.name}</td>
-                        <td className="px-4 py-3 text-center font-mono">{c.ordersCount}</td>
-                        <td className="px-4 py-3 text-right font-mono text-emerald-600">{formatCurrency(c.totalSpent)}</td>
+                        <td className="px-4 py-4 font-black">{c.name}</td>
+                        <td className="px-4 py-4 text-center font-mono">{c.ordersCount}</td>
+                        <td className="px-4 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(c.totalSpent)}</td>
                       </tr>
                     ))
                   )}
@@ -3466,7 +3463,7 @@ const CRMView = ({ products, clients, inventory, orders }) => {
 
           <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm space-y-6">
             <h3 className="font-black text-xs text-[#134b60] tracking-wider uppercase flex items-center gap-2">
-              <Package size={16} className="text-[#2596be]" /> TOP 5 PRODUCTOS CON MAYOR SALIDA
+              <Package size={16} className="text-[#2596be]" /> TOP 5 PRODUCTOS (PERÍODO ACTUAL)
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -3479,13 +3476,13 @@ const CRMView = ({ products, clients, inventory, orders }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-[11px] font-bold text-[#134b60]">
                   {productRanking.length === 0 ? (
-                    <tr><td colSpan="3" className="px-4 py-6 text-center text-slate-300 font-black">SIN DATOS AÚN</td></tr>
+                    <tr><td colSpan="3" className="px-4 py-6 text-center text-slate-300 font-black">SIN DATOS</td></tr>
                   ) : (
                     productRanking.map((p, i) => (
                       <tr key={i} className="hover:bg-[#e9f4f8]/30">
-                        <td className="px-4 py-3"><p className="font-black">{p.name}</p><p className="text-[8px] text-slate-400">{p.unit}</p></td>
-                        <td className="px-4 py-3 text-center font-mono text-[#2596be]">{p.totalQty}</td>
-                        <td className="px-4 py-3 text-right font-mono text-emerald-600">{formatCurrency(p.totalRevenue)}</td>
+                        <td className="px-4 py-4"><p className="font-black">{p.name}</p><p className="text-[8px] text-slate-400">{p.unit}</p></td>
+                        <td className="px-4 py-4 text-center font-mono text-[#2596be] font-black">{p.totalQty}</td>
+                        <td className="px-4 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(p.totalRevenue)}</td>
                       </tr>
                     ))
                   )}
@@ -3496,15 +3493,15 @@ const CRMView = ({ products, clients, inventory, orders }) => {
         </div>
       )}
 
-      {/* PESTAÑA 3: SEGUIMIENTO (CON DISEÑO Y WHATSAPP) */}
+      {/* PESTAÑA 3: SEGUIMIENTO / SEGMENTACIÓN */}
       {activeSubTab === 'segmentation' && (
         <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm space-y-6 w-full animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
               <h3 className="font-black text-xs text-[#134b60] tracking-wider uppercase flex items-center gap-2">
-                <Users size={16} className="text-[#2596be]" /> SEGMENTACIÓN DE CLIENTES Y ALERTA DE RIESGO
+                <Users size={16} className="text-[#2596be]" /> ALERTA DE RIESGO Y ESTADO COMERCIAL
               </h3>
-              <p className="text-[9px] text-slate-400 font-bold mt-1">CLASIFICACIÓN SEGÚN FRECUENCIA DE COMPRA Y ACCIÓN COMERCIAL</p>
+              <p className="text-[9px] text-slate-400 font-bold mt-1">CLASIFICACIÓN EN BASE A ÓRDENES DEL PERÍODO</p>
             </div>
           </div>
 
@@ -3522,7 +3519,7 @@ const CRMView = ({ products, clients, inventory, orders }) => {
               </thead>
               <tbody className="divide-y divide-slate-50 text-[11px] font-bold text-[#134b60]">
                 {clientSegmentation.length === 0 ? (
-                  <tr><td colSpan="6" className="px-4 py-6 text-center text-slate-300 font-black">SIN CLIENTES REGISTRADOS</td></tr>
+                  <tr><td colSpan="6" className="px-4 py-6 text-center text-slate-300 font-black">SIN DATOS</td></tr>
                 ) : (
                   clientSegmentation.map((c, i) => (
                     <tr key={i} className="hover:bg-[#e9f4f8]/30">
@@ -3540,12 +3537,7 @@ const CRMView = ({ products, clients, inventory, orders }) => {
                       <td className="px-4 py-4 text-center font-mono text-slate-500 text-[10px]">{c.lastOrder}</td>
                       <td className="px-4 py-4 text-center">
                         {c.cleanPhone ? (
-                          <a 
-                            href={`https://wa.me/${c.cleanPhone}?text=Hola%20${encodeURIComponent(c.name)},%20te%20escribimos%20de%20parte%20de%20Inventrack%20para%20saludarte%20y%20revisar%20si%20necesitas%20algún%20pedido%20nuevo.`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase shadow-sm inline-flex items-center gap-1.5 transition-all active:scale-95"
-                          >
+                          <a href={`https://wa.me/${c.cleanPhone}?text=Hola%20${encodeURIComponent(c.name)},%20te%20escribimos%20de%20parte%20de%20Inventrack%20para%20saludarte.`} target="_blank" rel="noopener noreferrer" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase shadow-sm inline-flex items-center gap-1.5 transition-all">
                             💬 WHATSAPP
                           </a>
                         ) : (
@@ -3561,12 +3553,12 @@ const CRMView = ({ products, clients, inventory, orders }) => {
         </div>
       )}
 
-      {/* PESTAÑA 4: REPORTES (RESTAURADA CON TABLA Y BOTONES CSV) */}
+      {/* PESTAÑA 4: REPORTES (RESTAURADA CON SU DISEÑO COMPLETO DE TABLA Y BOTONES DE DESCARGA) */}
       {activeSubTab === 'reports' && (
         <div className="flex flex-col gap-8 w-full animate-in fade-in duration-300">
           <div className="bg-white p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm space-y-6 w-full">
             <h3 className="font-black text-xs text-[#134b60] tracking-wider uppercase flex items-center gap-2">
-              <UserCheck size={16} className="text-[#2596be]" /> SEGUIMIENTO Y ACTIVIDAD GENERAL DE CLIENTES
+              <UserCheck size={16} className="text-[#2596be]" /> HISTÓRICO Y SEGUIMIENTO GENERAL DE CLIENTES
             </h3>
             <div className="overflow-x-auto max-h-[350px]">
               <table className="w-full text-left">
@@ -3581,7 +3573,7 @@ const CRMView = ({ products, clients, inventory, orders }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-[11px] font-bold text-[#134b60]">
                   {clientActivitySummary.length === 0 ? (
-                    <tr><td colSpan="5" className="px-4 py-6 text-center text-slate-300 font-black">SIN CLIENTES REGISTRADOS</td></tr>
+                    <tr><td colSpan="5" className="px-4 py-6 text-center text-slate-300 font-black">SIN CLIENTES EN EL PERÍODO</td></tr>
                   ) : (
                     clientActivitySummary.map((c, i) => (
                       <tr key={i} className="hover:bg-[#e9f4f8]/30">
@@ -3603,27 +3595,18 @@ const CRMView = ({ products, clients, inventory, orders }) => {
               <div className="p-3 bg-[#e9f4f8] text-[#2596be] rounded-2xl"><Download size={22}/></div>
               <div>
                 <h3 className="font-black text-base text-[#134b60] tracking-tight">CENTRO DE DESCARGAS E INFORMES</h3>
-                <p className="text-[10px] text-slate-400 font-bold">EXPORTA LOS DATOS DEL SISTEMA EN FORMATO CSV PARA EXCEL</p>
+                <p className="text-[10px] text-slate-400 font-bold">EXPORTA LOS DATOS DEL PERÍODO ACTUAL EN FORMATO CSV PARA EXCEL</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button 
-                onClick={exportOrdersReport}
-                className="bg-[#134b60] hover:bg-[#0f3c4c] text-white p-4 rounded-2xl font-black text-[10px] uppercase shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
-              >
+              <button onClick={exportOrdersReport} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white p-4 rounded-2xl font-black text-[10px] uppercase shadow-md flex items-center justify-center gap-2 transition-all active:scale-95">
                 <Download size={14}/> CSV PEDIDOS
               </button>
-              <button 
-                onClick={exportClientsReport}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-2xl font-black text-[10px] uppercase shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
-              >
+              <button onClick={exportClientsReport} className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-2xl font-black text-[10px] uppercase shadow-md flex items-center justify-center gap-2 transition-all active:scale-95">
                 <Download size={14}/> CSV CLIENTES (CRM)
               </button>
-              <button 
-                onClick={exportInventoryReport}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-2xl font-black text-[10px] uppercase shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
-              >
+              <button onClick={exportInventoryReport} className="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-2xl font-black text-[10px] uppercase shadow-md flex items-center justify-center gap-2 transition-all active:scale-95">
                 <Download size={14}/> CSV INVENTARIO
               </button>
             </div>
@@ -3712,7 +3695,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={20} /> },
     { id: 'admin_orders', label: 'PEDIDOS', icon: <Activity size={20} /> },
     { id: 'access', label: 'ACCESOS', icon: <Fingerprint size={20} /> },
-    { id: 'crm', label: 'CRM', icon: <Users size={20} /> },
+    { id: 'crm', label: 'CRM', icon: <TrendingUp size={20} /> },
     { id: 'clients', label: 'CLIENTES', icon: <Users size={20} /> },
     { id: 'client_types', label: 'TIPO CLIENTE', icon: <UserCheck size={20} /> },
     { id: 'inventory', label: 'INVENTARIO', icon: <Boxes size={20} /> },
