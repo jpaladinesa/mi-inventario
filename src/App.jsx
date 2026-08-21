@@ -3265,6 +3265,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={20} /> },
     { id: 'admin_orders', label: 'PEDIDOS', icon: <Activity size={20} /> },
     { id: 'access', label: 'ACCESOS', icon: <Fingerprint size={20} /> },
+    { id: 'crm', label: 'CRM', icon: <Users size={20} /> },
     { id: 'clients', label: 'CLIENTES', icon: <Users size={20} /> },
     { id: 'client_types', label: 'TIPO CLIENTE', icon: <UserCheck size={20} /> },
     { id: 'inventory', label: 'INVENTARIO', icon: <Boxes size={20} /> },
