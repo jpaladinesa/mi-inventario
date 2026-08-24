@@ -423,11 +423,11 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
 
             <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
-              <input type="number" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required />
+              <input type="number" min="0" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value === '' ? '' : Math.max(0, parseFloat(e.target.value) || 0)})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required />
             </div>
             <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
-              <input type="number" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required />
+              <input type="number" min="0" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value === '' ? '' : Math.max(0, parseFloat(e.target.value) || 0)})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required />
             </div>
             <button type="submit" className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl transition-all">REGISTRAR</button>
           </div>
@@ -770,7 +770,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
             </div>
             <div className="space-y-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CANTIDAD</label>
-              <input type="number" step="0.01" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="0.00" />
+              <input type="number" step="0" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="0" />
             </div>
           </div>
 
@@ -1650,7 +1650,7 @@ const handleAddToOrder = (e) => {
     <label className="text-[9px] font-black uppercase tracking-widest text-[#2596be]">CANTIDAD</label>
     <div className="relative">
       <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-      <input type="number" step="0.01" disabled={!selectedProd || isSearchDisabled} value={quantity} onChange={e => setQuantity(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" placeholder="0.00" required />
+      <input type="number" step="1" min="1" disabled={!selectedProd || isSearchDisabled} value={quantity} onChange={e => setQuantity(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10) || 1))} className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" placeholder="1" required />
     </div>
   </div>
   
