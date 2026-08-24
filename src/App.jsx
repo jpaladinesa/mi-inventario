@@ -1650,7 +1650,7 @@ const handleAddToOrder = (e) => {
     <label className="text-[9px] font-black uppercase tracking-widest text-[#2596be]">CANTIDAD</label>
     <div className="relative">
       <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-      <input type="number" step="1" min="1" disabled={!selectedProd || isSearchDisabled} value={quantity} onChange={e => setQuantity(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10) || 1))} className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" placeholder="1" required />
+      <input type="number" step="1" min="1" disabled={!selectedProd || isSearchDisabled} value={quantity} onChange={e => setQuantity(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" placeholder="0" required />
     </div>
   </div>
   
