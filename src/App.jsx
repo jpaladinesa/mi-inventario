@@ -1600,14 +1600,14 @@ const handleAddToOrder = (e) => {
               <Truck size={20} />
             </div>
            <div>
-  <p className="text-[10px] font-black uppercase text-[#134b60]">
-    {cartFinancials >= 300000 ? '🎉 META ALCANZADA: ENVÍO GRATIS' : `TE FALTAN ${formatCurrency(300000 - cartFinancials)} PARA OBTENER ENVÍO GRATIS`}
+  <p className="text-[10px] font-black tracking-wide uppercase text-[#134b60]">
+  {cartFinancials >= 300000 ? '🎉 META ALCANZADA: ENVÍO GRATIS' : `TE FALTAN ${formatCurrency(300000 - cartFinancials)} PARA OBTENER ENVÍO GRATIS`}
+</p>
+{cartFinancials < 300000 && (
+  <p className="text-[9px] font-medium text-[#134b60]/75 mt-1.5 tracking-normal uppercase">
+    Si no supera el tope, el envío es: Por confirmar
   </p>
-  {cartFinancials < 300000 && (
-    <p className="text-[10px] font-medium text-[#134b60] opacity-75 mt-0.5 uppercase">
-      Si no supera el tope, el envío es: Por confirmar
-    </p>
-  )}
+)}
 </div>
           </div>
           
