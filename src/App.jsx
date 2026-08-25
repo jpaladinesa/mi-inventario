@@ -99,7 +99,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
               <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value.toUpperCase()})} placeholder="NOMBRE" className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-[#2596be] outline-none font-bold text-sm uppercase text-[#134b60]" required />
             </div>
             <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">{labelValue}</label>
-              <input type="number" value={newItem.value} onChange={(e) => setNewItem({...newItem, value: e.target.value})} placeholder="0" className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-[#2596be] outline-none font-bold text-sm text-[#134b60]" required />
+              <input type="text" inputMode="numeric" value={newItem.value} onChange={(e) => setNewItem({...newItem, value: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-[#2596be] outline-none font-bold text-sm text-[#134b60]" required />
             </div>
             <button className="w-full bg-[#134b60] hover:bg-[#0f3c4c] text-white py-4 rounded-xl font-black uppercase text-[10px] transition-all">GUARDAR</button>
           </form>
