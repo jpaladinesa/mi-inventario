@@ -2732,7 +2732,7 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
   );
 };
 
-// --- PANEL DE CONTROL (ADMIN) ---
+/// --- PANEL DE CONTROL (ADMIN) OPTIMIZADO ---
 const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, setFilterStatus }) => {
   const stats = useMemo(() => {
     const totalInventoryValue = inventory.reduce((acc, item) => {
@@ -2757,66 +2757,106 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
   }, [products, clients, inventory, orders]);
 
   const orderCards = [
-    { id: 'NUEVA', label: 'NUEVAS', val: stats.orders.new, color: 'text-[#2596be]', bg: 'bg-[#e9f4f8]', border: 'border-[#2596be]/20', icon: <FileText size={16}/> },
-    { id: 'EN ALISTAMIENTO', label: 'ALISTAMIENTO', val: stats.orders.prep, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: <Clock size={16}/> },
-    { id: 'EN CAMINO', label: 'EN CAMINO', val: stats.orders.shipped, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: <Truck size={16}/> },
-    { id: 'ENTREGADA', label: 'ENTREGADAS', val: stats.orders.delivered, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: <CheckCircle2 size={16}/> },
+    { id: 'NUEVA', label: 'SOLICITUDES NUEVAS', val: stats.orders.new, color: 'text-[#2596be]', bg: 'bg-[#e9f4f8]', border: 'border-[#2596be]/20', icon: <FileText size={18}/>, liveTag: 'Foto en vivo' },
+    { id: 'EN ALISTAMIENTO', label: 'EN ALISTAMIENTO', val: stats.orders.prep, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: <Clock size={18}/>, liveTag: 'En proceso' },
+    { id: 'EN CAMINO', label: 'PEDIDOS EN CAMINO', val: stats.orders.shipped, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: <Truck size={18}/>, liveTag: 'Logística' },
+    { id: 'ENTREGADA', label: 'PEDIDOS ENTREGADOS', val: stats.orders.delivered, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: <CheckCircle2 size={18}/>, liveTag: 'Completados' },
   ];
 
   return (
     <div className="flex flex-col min-h-full space-y-8 animate-in fade-in duration-500 uppercase">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">PANEL DE ADMINISTRACIÓN GENERAL</h2></div>
       
-      <RealTimeClock />
+      {/* Cabecera / Barra de Estado Superior */}
+      <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <span className="px-3.5 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full text-[10px] font-black flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OPERATIVO
+          </span>
+          <div>
+            <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-tight">Centro de control IT</h2>
+            <p className="text-[10px] text-slate-400 font-bold mt-0.5">Resumen general de operaciones y stock</p>
+          </div>
+        </div>
+        <RealTimeClock />
+      </div>
 
+      {/* Tarjetas de Métricas Principales (KPIs) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-[#e9f4f8] p-8 rounded-[32px] border-2 border-[#2596be]/20 flex flex-col justify-between shadow-sm relative overflow-hidden group">
-            <p className="text-[9px] text-[#2596be] font-black mb-1 uppercase tracking-widest">PRODUCTOS ACTIVOS</p>
-            <p className="text-4xl font-black text-[#134b60] tracking-tighter">{stats.products}</p>
-            <div className="absolute top-4 right-4 text-[#2596be] opacity-50 group-hover:rotate-12 transition-transform"><Package size={28}/></div>
+        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">PRODUCTOS ACTIVOS</p>
+                <p className="text-3xl font-black text-[#134b60] tracking-tighter mt-1">{stats.products}</p>
+              </div>
+              <div className="p-3 bg-[#e9f4f8] text-[#2596be] rounded-2xl"><Package size={20}/></div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
+              <span>Catálogo general</span>
+              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Activo</span>
+            </div>
         </div>
-        <div className="bg-emerald-50 p-8 rounded-[32px] border-2 border-emerald-200 flex flex-col justify-between shadow-sm relative overflow-hidden group">
-            <p className="text-[9px] text-emerald-700 font-black mb-1 uppercase tracking-widest">VALOR INVENTARIO</p>
-            <p className="text-2xl font-black text-emerald-900 tracking-tighter font-mono">{formatCurrency(stats.inventoryCost)}</p>
-            <div className="absolute top-4 right-4 text-emerald-400 opacity-50 group-hover:scale-110 transition-transform"><DollarSign size={28}/></div>
+
+        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">VALOR INVENTARIO</p>
+                <p className="text-xl font-black text-emerald-600 tracking-tighter font-mono mt-1">{formatCurrency(stats.inventoryCost)}</p>
+              </div>
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><DollarSign size={20}/></div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
+              <span>Costo en stock</span>
+              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Al día</span>
+            </div>
         </div>
-        <div className="bg-indigo-50 p-8 rounded-[32px] border-2 border-indigo-200 flex flex-col justify-between shadow-sm relative overflow-hidden group">
-            <p className="text-[9px] text-indigo-700 font-black mb-1 uppercase tracking-widest">CLIENTES REGISTRADOS</p>
-            <p className="text-4xl font-black text-indigo-900 tracking-tighter">{stats.clients}</p>
-            <div className="absolute top-4 right-4 text-indigo-400 opacity-50 group-hover:scale-110 transition-transform"><Users size={28}/></div>
+
+        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">CLIENTES</p>
+                <p className="text-3xl font-black text-[#134b60] tracking-tighter mt-1">{stats.clients}</p>
+              </div>
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><Users size={20}/></div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
+              <span>Cartera activa</span>
+              <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Registrados</span>
+            </div>
         </div>
-        <div className="bg-rose-50 p-8 rounded-[32px] border-2 border-rose-200 flex flex-col justify-between shadow-sm relative overflow-hidden group">
-            <p className="text-[9px] text-rose-700 font-black mb-1 uppercase tracking-widest">TOTAL ANULADAS</p>
-            <p className="text-4xl font-black text-rose-900 tracking-tighter">{stats.orders.cancelled}</p>
-            <div className="absolute top-4 right-4 text-rose-400 opacity-50 group-hover:scale-110 transition-transform"><XCircle size={28}/></div>
+
+        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">ANULADAS</p>
+                <p className="text-3xl font-black text-rose-500 tracking-tighter mt-1">{stats.orders.cancelled}</p>
+              </div>
+              <div className="p-3 bg-rose-50 text-rose-500 rounded-2xl"><XCircle size={20}/></div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
+              <span>Histórico</span>
+              <span className="text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md">Control</span>
+            </div>
         </div>
       </div>
 
+      {/* Tarjetas de Estados de Pedidos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {orderCards.map(oc => (
             <button 
                 key={oc.id}
                 onClick={() => { setFilterStatus(oc.id); setActiveTab('admin_orders'); }}
-                className={`bg-white p-8 rounded-[32px] border-2 ${oc.border} shadow-sm flex items-center gap-6 hover:shadow-md transition-all group active:scale-95`}
+                className={`bg-white p-6 rounded-3xl border-2 ${oc.border} shadow-sm flex items-center justify-between hover:border-[#2596be] transition-all group active:scale-95 text-left`}
             >
-                <div className={`p-4 rounded-2xl ${oc.bg} ${oc.color} group-hover:bg-white border border-transparent group-hover:${oc.border} transition-all`}>{oc.icon}</div>
-                <div className="text-left">
-                    <p className={`text-[9px] font-black uppercase tracking-widest ${oc.color}`}>{oc.label}</p>
-                    <p className="text-3xl font-black text-[#134b60] tracking-tighter">{oc.val}</p>
+                <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{oc.label}</p>
+                    <p className="text-3xl font-black text-[#134b60] tracking-tighter mt-1">{oc.val}</p>
+                    <span className="inline-block mt-2 text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      ● {oc.liveTag}
+                    </span>
                 </div>
+                <div className={`p-4 rounded-2xl ${oc.bg} ${oc.color} shadow-sm`}>{oc.icon}</div>
             </button>
         ))}
-      </div>
-
-      <div className="bg-[#e9f4f8] p-10 rounded-[40px] border-2 border-[#2596be]/30 flex items-center justify-between group cursor-pointer hover:bg-[#2596be] transition-all shadow-sm active:scale-[0.99]" onClick={() => { setFilterStatus('TODOS'); setActiveTab('admin_orders'); }}>
-          <div className="flex items-center gap-8">
-              <div className="bg-white p-6 rounded-[28px] text-[#2596be] group-hover:text-[#134b60] group-hover:rotate-12 transition-all shadow-sm"><History size={40} /></div>
-              <div>
-                  <h4 className="text-2xl font-black text-[#134b60] group-hover:text-white uppercase tracking-tighter">GESTIÓN INTEGRAL DE SOLICITUDES</h4>
-                  <p className="text-[10px] text-[#2596be] group-hover:text-blue-100 font-black uppercase tracking-[0.3em] mt-1">CONTROL LOGÍSTICO Y SEGUIMIENTO DE RECORRIDO</p>
-              </div>
-          </div>
-          <ChevronRight size={48} className="text-[#2596be] group-hover:text-white transition-all group-hover:translate-x-4" />
       </div>
 
       <Footer />
@@ -3721,89 +3761,97 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
-<aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-80'} bg-[#134b60] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative shadow-2xl`}>
+<aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-72'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative shadow-2xl border-r border-[#194052]`}>
   
   {/* Botón flotante para minimizar / expandir */}
   <button 
     onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-    className="absolute -right-3.5 top-8 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
+    className="absolute -right-3.5 top-7 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
     title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
   >
     {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
   </button>
-        <div className={`p-4 border-b border-[#0f3c4c] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all`}>
-  <label htmlFor="logo-upload" className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-4'} shadow-xl hover:scale-105 transition-all cursor-pointer group relative`}>
-    {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
-    <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-    <Package size={24} className="text-[#2596be] hidden" />
-    {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={20} className="text-[#134b60]" /></div>}
-  </label>
-  
-  {!sidebarCollapsed && (
-    <>
-      <span className="font-black text-sm text-white tracking-tight mt-2 block">INVENTRACK</span>
-      <p className="text-[8px] text-[#e9f4f8] font-black mt-1 opacity-60 uppercase tracking-[0.1em]">DISTRIBUCIONES CASTILLA S.A.S.</p>
-    </>
-  )}
-</div>
-        <div className="px-4 py-4 flex flex-col gap-3">
-  <div 
-    className={`w-full py-3 rounded-2xl text-[10px] font-black border-2 border-[#0f3c4c] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3'} shadow-inner transition-all`}
-    title={role === 'ADMIN' ? 'Administrador Autorizado' : 'Cliente'}
-  >
-    {role === 'ADMIN' ? (
-      <ShieldCheck size={16} className="text-[#2596be] shrink-0" />
-    ) : (
-      <User size={16} className="text-[#2596be] shrink-0" />
-    )}
+
+  {/* Cabecera del Logo */}
+  <div className={`p-5 border-b border-[#194052] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all`}>
+    <label htmlFor="logo-upload" className={`w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-3'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}>
+      {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
+      <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+      <Package size={22} className="text-[#2596be] hidden" />
+      {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={16} className="text-[#134b60]" /></div>}
+    </label>
+    
     {!sidebarCollapsed && (
-      <span className="truncate uppercase tracking-wider">
-        {role === 'ADMIN' ? 'ADMIN' : 'CLIENTE'}
-      </span>
+      <>
+        <span className="font-black text-xs text-white tracking-tight mt-1.5 block">INVENTRACK</span>
+        <span className="text-[7px] text-[#e9f4f8] font-bold mt-0.5 opacity-50 uppercase tracking-[0.15em]">DISTRIBUCIONES CASTILLA</span>
+      </>
     )}
   </div>
-</div>
-        <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-8' : 'p-8'} space-y-3 overflow-y-auto scrollbar-hide`}>
-         {role === 'ADMIN' && (
-  <>
-    {!sidebarCollapsed && <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mb-2 opacity-50">MOD. ADMINISTRADOR</div>}
-    {adminMenu.map((item) => (
+
+  {/* Badge de Rol Compacto */}
+  <div className="px-4 py-3">
+    <div 
+      className={`w-full py-2.5 rounded-xl text-[9px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3'} shadow-inner transition-all`}
+    >
+      {role === 'ADMIN' ? (
+        <ShieldCheck size={15} className="text-[#2596be] shrink-0" />
+      ) : (
+        <User size={15} className="text-[#2596be] shrink-0" />
+      )}
+      {!sidebarCollapsed && (
+        <span className="truncate uppercase tracking-wider">
+          {role === 'ADMIN' ? 'ADMINISTRADOR' : 'CLIENTE'}
+        </span>
+      )}
+    </div>
+  </div>
+
+  {/* Menú de Navegación */}
+  <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-4' : 'px-4 py-2'} space-y-1.5 overflow-y-auto scrollbar-hide`}>
+    {role === 'ADMIN' && (
+      <>
+        {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mb-1.5 opacity-60">Gestión General</div>}
+        {adminMenu.map((item) => (
+          <button 
+            key={item.id} 
+            onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
+            title={item.label} 
+            className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
+          >
+            <span className="shrink-0">{item.icon}</span>
+            {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
+          </button>
+        ))}
+        {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mt-6 mb-1.5 border-t border-[#194052] pt-4 opacity-60">Portal Cliente</div>}
+      </>
+    )}
+
+    {clientMenu.map((item) => (
       <button 
         key={item.id} 
-        onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
+        onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
         title={item.label} 
-        className={`flex items-center transition-all ${sidebarCollapsed ? 'w-12 h-12 mx-auto justify-center rounded-2xl' : 'w-full gap-4 px-4 py-3.5 rounded-2xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg' : 'text-[#e9f4f8] hover:bg-[#0f3c4c]'}`}
+        className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
       >
         <span className="shrink-0">{item.icon}</span>
-        {!sidebarCollapsed && <span className="text-[10px] font-black tracking-wider uppercase">{item.label}</span>}
+        {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
       </button>
     ))}
-    {!sidebarCollapsed && <div className="text-[8px] text-[#e9f4f8] font-black uppercase tracking-widest pl-2 mt-8 mb-2 border-t border-[#0f3c4c] pt-6 opacity-50">MOD. CLIENTE</div>}
-  </>
-)}
-{clientMenu.map((item) => (
-  <button 
-    key={item.id} 
-    onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
-    title={item.label} 
-    className={`flex items-center transition-all ${sidebarCollapsed ? 'w-12 h-12 mx-auto justify-center rounded-2xl' : 'w-full gap-4 px-4 py-3.5 rounded-2xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-lg' : 'text-[#e9f4f8] hover:bg-[#0f3c4c]'}`}
-  >
-    <span className="shrink-0">{item.icon}</span>
-    {!sidebarCollapsed && <span className="text-[10px] font-black tracking-wider uppercase">{item.label}</span>}
-  </button>
-))}
-        </nav>
-        <div className="p-4 border-t border-[#0f3c4c]">
-  <button 
-    onClick={onLogout} 
-    title="Cerrar sesión"
-    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3.5' : 'gap-4 px-4 py-3.5'} rounded-2xl text-slate-300 hover:bg-rose-500/10 hover:text-rose-400 font-black text-[10px] uppercase tracking-wider transition-all`}
-  >
-    <span className="shrink-0"><LogOut size={18} /></span>
-    {!sidebarCollapsed && <span>Cerrar Sesión</span>}
-  </button>
-</div>
-      </aside>
+  </nav>
+
+  {/* Botón de Cerrar Sesión en el Footer del Sidebar */}
+  <div className="p-4 border-t border-[#194052]">
+    <button 
+      onClick={onLogout} 
+      title="Cerrar sesión"
+      className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-3'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[9px] uppercase tracking-wider transition-all`}
+    >
+      <span className="shrink-0"><LogOut size={16} /></span>
+      {!sidebarCollapsed && <span>Cerrar Sesión</span>}
+    </button>
+  </div>
+</aside>
       <main className="flex-1 flex flex-col min-h-screen min-w-0">
         <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
           <button onClick={() => setIsSidebarOpen(true)} className="p-3 text-[#134b60] md:hidden hover:bg-slate-100 rounded-2xl transition-all shadow-sm"><MenuIcon size={24} /></button>
