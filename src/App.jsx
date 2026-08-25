@@ -3078,14 +3078,14 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VIGENCIA (HORAS)</label>
-                <input type="number" min="1" value={newPromo.durationHours} onChange={e => setNewPromo({...newPromo, durationHours: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="EJ: 24" />
+                <input type="number" min="1" value={newPromo.durationHours} onChange={e => setNewPromo({...newPromo, durationHours: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EN PANTALLA (SEGUNDOS)</label>
-                <input type="number" min="1" max="60" value={newPromo.screenTimeSeconds} onChange={e => setNewPromo({...newPromo, screenTimeSeconds: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="EJ: 15" />
+                <input type="number" min="1" max="60" value={newPromo.screenTimeSeconds} onChange={e => setNewPromo({...newPromo, screenTimeSeconds: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
               </div>
             </div>
 
