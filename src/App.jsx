@@ -770,7 +770,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
             </div>
             <div className="space-y-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CANTIDAD</label>
-              <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="" />
+              <input type="text" inputMode="numeric" value={quantity} onChange={e => setQuantity(e.target.value.replace(/\D/g, ''))} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="" />
 
             </div>
           </div>
