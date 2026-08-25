@@ -422,13 +422,13 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
             </div>
 
             <div className="space-y-1 lg:col-span-2">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
-              <input type="number" min="0" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value === '' ? '' : Math.max(0, parseFloat(e.target.value) || 0)})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required />
-            </div>
-            <div className="space-y-1 lg:col-span-2">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
-              <input type="number" min="0" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value === '' ? '' : Math.max(0, parseFloat(e.target.value) || 0)})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required />
-            </div>
+  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
+  <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
+</div>
+<div className="space-y-1 lg:col-span-2">
+  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
+  <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
+</div>
             <button type="submit" className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl transition-all">REGISTRAR</button>
           </div>
         </form>
