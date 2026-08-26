@@ -675,7 +675,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   };
 
   // --- CSV CARGUE MASIVO INVENTARIO ---
- const handleFileUpload = (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -732,17 +732,17 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
         }
 
         const nextIndex = inventory.length + validRows.length + 1;
-                    const movementId = `IV${String(nextIndex).padStart(6, '0')}`;
+        const movementId = `IV${String(nextIndex).padStart(6, '0')}`;
 
-                    validRows.push({
-                      id: movementId,
-                      productId: prod.id,
-                      productName: prod.name,
-                      unitName: prod.unitName,
-                      quantity: parsedQty,
-                      date: new Date().toLocaleString(),
-                      user: 'ADMINISTRADOR'
-                    });
+        validRows.push({
+          id: movementId,
+          productId: prod.id,
+          productName: prod.name,
+          unitName: prod.unitName,
+          quantity: parsedQty,
+          date: new Date().toLocaleString(),
+          user: 'ADMINISTRADOR'
+        });
       }
 
       setCsvPreview({
@@ -788,7 +788,6 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
             <div className="space-y-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CANTIDAD</label>
               <input type="text" inputMode="numeric" value={quantity} onChange={e => setQuantity(e.target.value.replace(/\D/g, ''))} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="" />
-
             </div>
           </div>
 
@@ -797,6 +796,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
               {filteredOptions.map(p => (
                 <button 
                   key={p.id} 
+                  type="button"
                   onClick={() => {setSelectedProd(p); setFilters({id: p.id, name: p.name});}} 
                   className="w-full text-left px-5 py-3 hover:bg-[#e9f4f8] border-b border-slate-50 flex justify-between items-center group transition-colors"
                 >
@@ -819,15 +819,44 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
         </button>
       </div>
 
+      {/* TABLA DE INVENTARIO OPTIMIZADA */}
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="flex-1 overflow-y-auto overflow-x-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1300px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest"><tr><th className="px-6 py-6">ID MOV.</th><th className="px-6 py-6">CÓDIGO ID</th><th className="px-6 py-6">PRODUCTO</th><th className="px-6 py-6 text-center">CANTIDAD</th><th className="px-6 py-6 text-center">FECHA / HORA</th><th className="px-6 py-6 text-center">USUARIO</th><th className="px-6 py-6 text-right">GESTIÓN</th></tr></thead>
+            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest">
+              <tr>
+                <th className="px-6 py-5">ID MOV.</th>
+                <th className="px-6 py-5">CÓDIGO ID</th>
+                <th className="px-6 py-5">PRODUCTO</th>
+                <th className="px-6 py-5 text-center">CANTIDAD</th>
+                <th className="px-6 py-5 text-center">FECHA / HORA</th>
+                <th className="px-6 py-5 text-center">USUARIO</th>
+                <th className="px-6 py-5 text-right">GESTIÓN</th>
+              </tr>
+            </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
               {inventory.length === 0 ? (
-                <tr><td colSpan="7" className="px-6 py-10 text-center text-slate-300 font-black">HISTORIAL VACÍO</td></tr>
+                <tr><td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">HISTORIAL VACÍO</td></tr>
               ) : (
-                inventory.map(ev => (<tr key={ev.id} className="hover:bg-[#e9f4f8]/50 transition-colors"><td className="px-6 py-5 font-mono text-slate-400">{ev.id}</td><td className="px-6 py-5 font-mono text-[#2596be] font-black">{ev.productId}</td><td className="px-6 py-5"><p className="font-black text-[#134b60]">{ev.productName}</p><p className="text-[9px] text-slate-400">{ev.unitName}</p></td><td className="px-6 py-5 text-center font-mono text-emerald-600">{ev.quantity}</td><td className="px-6 py-5 text-center text-slate-400 text-[10px]">{ev.date}</td><td className="px-6 py-5 text-center text-[9px] font-black text-slate-500">{ev.user}</td><td className="px-6 py-5 text-right flex justify-end gap-2"><button onClick={() => { setSelectedItem(ev); setEditData({ quantity: ev.quantity }); setModalType('edit'); }} className="p-3 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={16}/></button><button onClick={() => { setSelectedItem(ev); setModalType('deleteFirst'); }} className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={16}/></button></td></tr>))
+                inventory.map(ev => (
+                  <tr key={ev.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                    <td className="px-6 py-4 font-mono text-slate-400">{ev.id}</td>
+                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{ev.productId}</td>
+                    <td className="px-6 py-4">
+                      <p className="font-black text-[#134b60]">{ev.productName}</p>
+                      <p className="text-[9px] text-slate-400">{ev.unitName}</p>
+                    </td>
+                    <td className="px-6 py-4 text-center font-mono text-emerald-600 font-black">{ev.quantity}</td>
+                    <td className="px-6 py-4 text-center text-slate-400 text-[10px] font-mono">{ev.date}</td>
+                    <td className="px-6 py-4 text-center text-[9px] font-black text-slate-500">{ev.user}</td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => { setSelectedItem(ev); setEditData({ quantity: ev.quantity }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14}/></button>
+                        <button onClick={() => { setSelectedItem(ev); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -938,6 +967,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
           </div>
         </div>
       )}
+
       {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
@@ -958,7 +988,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                   </div>
                 )}
                 {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ AL STOCK GENERAL.</p></div>}
-                {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ AL STOCK Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DEL REGISTRO {selectedItem?.id}.</p></div>}
+                {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-100 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ AL STOCK Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DEL REGISTRO {selectedItem?.id}.</p></div>}
               </div>
               <div className="flex gap-4 mt-10">
                 <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
