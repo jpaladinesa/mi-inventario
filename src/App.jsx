@@ -2986,20 +2986,23 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
   return (
     <div className="flex flex-col min-h-full space-y-8 animate-in fade-in duration-500 uppercase">
       
-      {/* Cabecera / Barra de Estado Superior */}
-      <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <span className="px-3.5 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full text-[10px] font-black flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OPERATIVO
-          </span>
-          <div>
-            <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-tight">Centro de control IT</h2>
-            <p className="text-[10px] text-slate-400 font-bold mt-0.5">Resumen general de operaciones y stock</p>
-          </div>
-        </div>
-        <RealTimeClock />
-      </div>
-
+     {/* Cabecera / Barra de Estado Superior */}
+<div className="bg-white p-6 md:p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+  
+  {/* Lado Izquierdo: Estado y Títulos */}
+  <div className="flex items-center gap-4">
+    <span className="px-3.5 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full text-[10px] font-black flex items-center gap-2">
+      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OPERATIVO
+    </span>
+    <div>
+      <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-tight uppercase">Centro de control IT</h2>
+      <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase">Resumen general de operaciones y stock</p>
+    </div>
+  </div>
+  
+  {/* Lado Derecho: EL RELOJ ORIGINAL (Sin cajas ni fondos extra) */}
+  <RealTimeClock />
+</div>
       {/* Tarjetas de Métricas Principales (KPIs) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
