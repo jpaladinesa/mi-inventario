@@ -87,67 +87,133 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase">
-      <div className="mb-6 md:mb-8 border-b-4 border-[#2596be] w-fit pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-[0.1em] md:tracking-[0.2em] uppercase">{title}</h2>
+    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
+      <div className="border-b-4 border-[#2596be] w-fit pb-2">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">{title}</h2>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm h-fit">
-          <h3 className="font-black text-[#134b60] mb-6 flex items-center gap-2 text-xs uppercase"><Plus size={18} className="text-[#2596be]" /> NUEVO REGISTRO</h3>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* FORMULARIO NUEVO REGISTRO */}
+        <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm h-fit space-y-6">
+          <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase">
+            <Plus size={18} className="text-[#2596be]" /> NUEVO REGISTRO
+          </h3>
           <form className="space-y-5" onSubmit={handleAdd}>
-            <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">{labelName}</label>
-              <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value.toUpperCase()})} placeholder="NOMBRE" className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-[#2596be] outline-none font-bold text-sm uppercase text-[#134b60]" required />
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{labelName}</label>
+              <input 
+                type="text" 
+                value={newItem.name} 
+                onChange={(e) => setNewItem({...newItem, name: e.target.value.toUpperCase()})} 
+                placeholder="NOMBRE" 
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
+                required 
+              />
             </div>
-            <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">{labelValue}</label>
-              <input type="text" inputMode="numeric" value={newItem.value} onChange={(e) => setNewItem({...newItem, value: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-[#2596be] outline-none font-bold text-sm text-[#134b60]" required />
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{labelValue}</label>
+              <input 
+                type="text" 
+                inputMode="numeric" 
+                value={newItem.value} 
+                onChange={(e) => setNewItem({...newItem, value: e.target.value.replace(/\D/g, '')})} 
+                placeholder="0" 
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" 
+                required 
+              />
             </div>
-            <button className="w-full bg-[#134b60] hover:bg-[#0f3c4c] text-white py-4 rounded-xl font-black uppercase text-[10px] transition-all">GUARDAR</button>
+            <button 
+              type="submit"
+              className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2596be]/20 transition-all active:scale-95 cursor-pointer"
+            >
+              GUARDAR REGISTRO
+            </button>
           </form>
         </div>
-        <div className="lg:col-span-2 bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest">
-              <tr><th className="px-6 py-5">ID</th><th className="px-6 py-5">NOMBRE</th><th className="px-6 py-5 text-center">VALOR %</th><th className="px-6 py-5 text-right">GESTIÓN</th></tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs font-bold text-[#134b60]">
-              {items.length === 0 ? (
-                <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-300 font-black">SIN REGISTROS</td></tr>
-              ) : (
-                items.map((item) => (
-                  <tr key={item.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{item.id}</td>
-                    <td className="px-6 py-4">{item.name}</td>
-                    <td className="px-6 py-4 text-center">{item.value}%</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedItem(item); setEditData({name: item.name, value: item.value}); setModalType('edit'); }} className="p-2 bg-[#e9f4f8] text-[#2596be] rounded-lg transition-all hover:bg-[#2596be] hover:text-white"><Edit size={14} /></button>
-                        <button onClick={() => { setSelectedItem(item); setModalType('deleteFirst'); }} className="p-2 bg-rose-50 text-rose-500 rounded-lg transition-all hover:bg-rose-500 hover:text-white"><Trash2 size={14} /></button>
-                      </div>
-                    </td>
+
+        {/* TABLA DE LISTADO */}
+        <div className="lg:col-span-2 bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left uppercase">
+              <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest">
+                <tr>
+                  <th className="px-6 py-5">ID</th>
+                  <th className="px-6 py-5">NOMBRE</th>
+                  <th className="px-6 py-5 text-center">VALOR %</th>
+                  <th className="px-6 py-5 text-right">GESTIÓN</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-12 text-center text-slate-300 font-black">SIN REGISTROS DISPONIBLES</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  items.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                      <td className="px-6 py-4 font-mono text-[#2596be] font-black">{item.id}</td>
+                      <td className="px-6 py-4 font-black text-[#134b60]">{item.name}</td>
+                      <td className="px-6 py-4 text-center font-mono">{item.value}%</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => { setSelectedItem(item); setEditData({name: item.name, value: item.value}); setModalType('edit'); }} 
+                            className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl transition-all hover:bg-[#2596be] hover:text-white shadow-sm cursor-pointer"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button 
+                            onClick={() => { setSelectedItem(item); setModalType('deleteFirst'); }} 
+                            className="p-2.5 bg-rose-50 text-rose-500 rounded-xl transition-all hover:bg-rose-500 hover:text-white shadow-sm cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-     {modalType && (
+
+      {/* MODALES DE CONFIRMACIÓN Y EDICIÓN */}
+      {modalType && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
             <div className="p-8 text-[#134b60]">
               <div className="flex flex-col items-center text-center gap-4 mb-8">
                 <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' || modalType === 'createConfirm' ? <Info size={40} /> : modalType === 'duplicateWarning' ? <AlertTriangle size={40} /> : <AlertTriangle size={40} />}
+                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' || modalType === 'createConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
                 </div>
                 <h3 className="font-black text-xl uppercase tracking-tighter">
                   {modalType === 'edit' ? 'EDITAR REGISTRO' : modalType === 'createConfirm' ? 'CONFIRMAR CREACIÓN' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : modalType === 'duplicateWarning' ? 'AVISO DE DUPLICADO' : 'ELIMINAR REGISTRO'}
                 </h3>
               </div>
+              
               <div className="space-y-4">
                 {modalType === 'edit' && (
                   <div className="space-y-4">
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase">NOMBRE</label><input type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black uppercase text-sm outline-none focus:border-[#2596be] transition-all text-[#134b60]" /></div>
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase">VALOR %</label><input type="number" value={editData.value} onChange={(e) => setEditData({...editData, value: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] transition-all text-[#134b60]" /></div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE</label>
+                      <input 
+                        type="text" 
+                        value={editData.name} 
+                        onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} 
+                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl font-black uppercase text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VALOR %</label>
+                      <input 
+                        type="number" 
+                        value={editData.value} 
+                        onChange={(e) => setEditData({...editData, value: e.target.value})} 
+                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
+                      />
+                    </div>
                   </div>
                 )}
                 {modalType === 'createConfirm' && (
@@ -157,23 +223,36 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                     </p>
                   </div>
                 )}
-                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
-                {modalType === 'duplicateWarning' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">{duplicateMessage}</p></div>}
-                {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN TOTAL DE {selectedItem?.id}.</p></div>}
+                {modalType === 'updateConfirm' && (
+                  <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl">
+                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p>
+                  </div>
+                )}
+                {modalType === 'duplicateWarning' && (
+                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl">
+                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">{duplicateMessage}</p>
+                  </div>
+                )}
+                {modalType === 'deleteSecond' && (
+                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl">
+                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN TOTAL DE {selectedItem?.id}.</p>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-4 mt-10">
+
+              <div className="flex gap-4 mt-8">
                 {modalType === 'duplicateWarning' ? (
-                  <button onClick={() => setModalType(null)} className="w-full py-4 bg-[#134b60] text-white rounded-2xl font-black text-xs uppercase hover:bg-[#0f3c4c] transition-colors">SALIR / CANCELAR</button>
+                  <button onClick={() => setModalType(null)} className="w-full py-4 bg-[#134b60] text-white rounded-2xl font-black text-xs uppercase hover:bg-[#0f3c4c] transition-colors cursor-pointer">SALIR / CANCELAR</button>
                 ) : (
                   <>
-                    <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
+                    <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
                     <button onClick={() => {
                        if (modalType === 'createConfirm') executeCreate();
                        else if (modalType === 'edit') setModalType('updateConfirm');
                        else if (modalType === 'updateConfirm') executeUpdate();
                        else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                        else if (modalType === 'deleteSecond') { setItems(items.filter(i => i.id !== selectedItem.id)); setModalType(null); }
-                    }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                    }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
                   </>
                 )}
               </div>
@@ -185,7 +264,6 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
     </div>
   );
 };
-
 // --- MÓDULO DE PRODUCTOS ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
@@ -1445,7 +1523,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
   );
 };
 // --- MÓDULO DE SOLICITUD DE PEDIDO ---
-  const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
+const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('repeatOrderItems');
@@ -1505,17 +1583,15 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
     setSelectedProd(prod);
   };
 
-const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity(''); setSelectedProd(null); setObservation(''); };
+  const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity(''); setSelectedProd(null); setObservation(''); };
 
-const handleAddToOrder = (e) => {
+  const handleAddToOrder = (e) => {
     e.preventDefault();
     if (!selectedProd || !quantity || parseFloat(quantity) <= 0) return;
 
-    // 1. Preparamos el texto de advertencia si supera el stock
     const warningText = "SUJETO A DISPONIBILIDAD CON ASESOR";
     let currentObs = observation.toUpperCase();
     
-    // Si la cantidad ingresada supera el stock disponible, inyectamos la advertencia
     if (parseFloat(quantity) > availableStock) {
         currentObs = currentObs ? `${currentObs} | ${warningText}` : warningText;
     }
@@ -1543,7 +1619,7 @@ const handleAddToOrder = (e) => {
     resetSearchState();
   };
 
- const saveOrder = () => {
+  const saveOrder = () => {
     const nextID = `SO${String(orders.length + 1).padStart(6, '0')}`;
     const clientNameToSave = activeClientRecord ? activeClientRecord.name : currentUser.name;
     const clientDocType = activeClientRecord ? activeClientRecord.docType : 'NIT';
@@ -1552,7 +1628,6 @@ const handleAddToOrder = (e) => {
     const clientPhone = activeClientRecord ? activeClientRecord.mobile || activeClientRecord.phone : 'NO REGISTRADO';
     const clientEmail = activeClientRecord ? activeClientRecord.email : currentUser.email;
 
-    // EVALUACIÓN DE DESCUENTO AUTOMÁTICO DEL CLIENTE (Si el motor global está activo)
     let appliedGlobalDiscount = 0;
     if (globalDiscountEngine && activeClientRecord && activeClientRecord.autoDiscountActive) {
       const currentMonth = new Date().getMonth();
@@ -1600,12 +1675,12 @@ const handleAddToOrder = (e) => {
         status: 'NUEVA', 
         globalDiscount: appliedGlobalDiscount, 
         items: cart.map(item => ({ 
-    ...item, 
-    discount: 0,
-    deliveredQuantity: item.quantity,
-    pendingQuantity: 0,
-    deliveryObservation: ''
-})),
+          ...item, 
+          discount: 0,
+          deliveredQuantity: item.quantity,
+          pendingQuantity: 0,
+          deliveryObservation: ''
+        })),
         totalItems: cart.length, 
         totalValue: finalCalculatedTotal,
         generalObservation: generalObservation
@@ -1620,12 +1695,20 @@ const handleAddToOrder = (e) => {
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">HACER PEDIDO</h2></div>
+      <div className="border-b-4 border-[#2596be] w-fit pb-2">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">HACER PEDIDO</h2>
+      </div>
       
       {currentUser.role === 'ADMIN' && (
         <div className="bg-[#e9f4f8] p-6 rounded-3xl border-2 border-[#2596be]/20 shadow-sm w-full">
-          <h3 className="font-black text-[#134b60] mb-4 flex items-center gap-2 text-[11px] uppercase"><UserCircle size={18} className="text-[#2596be]" /> SELECCIONAR CLIENTE A FACTURAR (SOLO MODO ADMIN)</h3>
-          <select value={adminOrderClient} onChange={e => setAdminOrderClient(e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]">
+          <h3 className="font-black text-[#134b60] mb-4 flex items-center gap-2 text-[11px] uppercase">
+            <UserCircle size={18} className="text-[#2596be]" /> SELECCIONAR CLIENTE A FACTURAR (SOLO MODO ADMIN)
+          </h3>
+          <select 
+            value={adminOrderClient} 
+            onChange={e => setAdminOrderClient(e.target.value)} 
+            className="w-full px-4 py-3 bg-white border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer"
+          >
              <option value="">SELECCIONE UN CLIENTE PRIMERO...</option>
              {clients.map(c => <option key={c.id} value={c.id}>{c.docNumber} - {c.name}</option>)}
           </select>
@@ -1641,26 +1724,26 @@ const handleAddToOrder = (e) => {
             <p className="text-[8px] text-[#2596be] font-black mb-1">TOTAL ACUMULADO</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(cartFinancials)}</p>
         </div>
       </div>
-{/* --- BANNER DE ENVÍO GRATIS Y PROGRESO --- */}
-      <div className={`p-5 rounded-2xl border-2 transition-all shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60]'}`}>
+
+      {/* --- BANNER DE ENVÍO GRATIS Y PROGRESO --- */}
+      <div className={`p-5 rounded-3xl border-2 transition-all shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60]'}`}>
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className={`p-3 rounded-xl ${cartFinancials >= 300000 ? 'bg-emerald-500 text-white' : 'bg-[#2596be] text-white'}`}>
+            <div className={`p-3 rounded-2xl ${cartFinancials >= 300000 ? 'bg-emerald-500 text-white' : 'bg-[#2596be] text-white'}`}>
               <Truck size={20} />
             </div>
            <div>
-  <p className="text-[10px] font-black tracking-wide uppercase text-[#134b60]">
-  {cartFinancials >= 300000 ? '🎉 META ALCANZADA: ENVÍO GRATIS' : `TE FALTAN ${formatCurrency(300000 - cartFinancials)} PARA OBTENER ENVÍO GRATIS`}
-</p>
-{cartFinancials < 300000 && (
-  <p className="text-[9px] font-medium text-[#134b60]/75 mt-1.5 tracking-normal uppercase">
-    Si no supera el tope, el envío es: Por confirmar
-  </p>
-)}
-</div>
+              <p className="text-[10px] font-black tracking-wide uppercase text-[#134b60]">
+                {cartFinancials >= 300000 ? '🎉 META ALCANZADA: ENVÍO GRATIS' : `TE FALTAN ${formatCurrency(300000 - cartFinancials)} PARA OBTENER ENVÍO GRATIS`}
+              </p>
+              {cartFinancials < 300000 && (
+                <p className="text-[9px] font-medium text-[#134b60]/75 mt-1.5 tracking-normal uppercase">
+                  Si no supera el tope, el envío es: Por confirmar
+                </p>
+              )}
+            </div>
           </div>
           
-          {/* Barra de progreso */}
           <div className="w-full md:w-56 space-y-1">
             <div className="flex justify-between text-[10px] font-black">
               <span>Progreso Envío Gratis</span>
@@ -1675,56 +1758,121 @@ const handleAddToOrder = (e) => {
           </div>
         </div>
       </div>
+
       <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full relative">
-        {isSearchDisabled && <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl"><p className="bg-[#134b60] text-white px-6 py-3 rounded-full font-black text-xs uppercase shadow-xl animate-pulse">SELECCIONE UN CLIENTE ARRIBA PARA COMENZAR</p></div>}
-        <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><ShoppingCart size={18} className="text-[#2596be]" /> BÚSQUEDA TÉCNICA</h3>
+        {isSearchDisabled && (
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+            <p className="bg-[#134b60] text-white px-6 py-3 rounded-full font-black text-xs uppercase shadow-xl animate-pulse">
+              SELECCIONE UN CLIENTE ARRIBA PARA COMENZAR
+            </p>
+          </div>
+        )}
+        <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase">
+          <ShoppingCart size={18} className="text-[#2596be]" /> BÚSQUEDA TÉCNICA
+        </h3>
         <form className="space-y-6" onSubmit={handleAddToOrder}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1"><label className="text-[9px] font-black text-[#2596be] uppercase tracking-widest">CÓDIGO (ID)</label>
-              <div className="relative"><Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input type="text" value={searchID} disabled={isSearchDisabled} onChange={e => {setSearchID(e.target.value); setSelectedProd(null);}} className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50" placeholder="EJ: 00001" />
-                {filteredIDs.length > 0 && !selectedProd && (<div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">{filteredIDs.map(p => <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60]">{p.id} - {p.name}</button>)}</div>)}
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-[#2596be] uppercase tracking-widest">CÓDIGO (ID)</label>
+              <div className="relative">
+                <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input 
+                  type="text" 
+                  value={searchID} 
+                  disabled={isSearchDisabled} 
+                  onChange={e => {setSearchID(e.target.value); setSelectedProd(null);}} 
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50" 
+                  placeholder="EJ: 00001" 
+                />
+                {filteredIDs.length > 0 && !selectedProd && (
+                  <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
+                    {filteredIDs.map(p => (
+                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60]">
+                        {p.id} - {p.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             
-            <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PRODUCTO (NOMBRE)</label>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PRODUCTO (NOMBRE)</label>
               <div className="relative">
-                <input type="text" value={searchName} disabled={isSearchDisabled} onChange={e => {setSearchName(e.target.value); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-50" placeholder="BUSCAR POR NOMBRE..." />
-                {filteredProducts.length > 0 && !selectedProd && (<div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">{filteredProducts.map(p => <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60]">{p.name}</button>)}</div>)}
+                <input 
+                  type="text" 
+                  value={searchName} 
+                  disabled={isSearchDisabled} 
+                  onChange={e => {setSearchName(e.target.value); setSelectedProd(null);}} 
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-50" 
+                  placeholder="BUSCAR POR NOMBRE..." 
+                />
+                {filteredProducts.length > 0 && !selectedProd && (
+                  <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
+                    {filteredProducts.map(p => (
+                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60]">
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-50">
-  <div className="space-y-1">
-    <label className="text-[9px] font-black uppercase tracking-widest text-[#2596be]">CANTIDAD</label>
-    <div className="relative">
-      <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-      <input type="number" step="1" min="1" disabled={!selectedProd || isSearchDisabled} value={quantity} onChange={e => setQuantity(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" placeholder="0" required />
-    </div>
-  </div>
-  
-  <div className="space-y-1 relative">
-    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OBSERVACIÓN (OPCIONAL)</label>
-    <div className="relative">
-      <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-      <input type="text" maxLength={50} disabled={!selectedProd || isSearchDisabled} value={observation} onChange={e => setObservation(e.target.value)} className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-30 transition-all" placeholder="EJ: EMPAQUE DOBLE..." />
-    </div>
-    {observation.length >= 50 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse uppercase">Límite 50 alcanzado</span>}
-  </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black uppercase tracking-widest text-[#2596be]">CANTIDAD</label>
+              <div className="relative">
+                <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="number" 
+                  step="1" 
+                  min="1" 
+                  disabled={!selectedProd || isSearchDisabled} 
+                  value={quantity} 
+                  onChange={e => setQuantity(e.target.value)} 
+                  className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" 
+                  placeholder="0" 
+                  required 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OBSERVACIÓN (OPCIONAL)</label>
+              <div className="relative">
+                <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  maxLength={50} 
+                  disabled={!selectedProd || isSearchDisabled} 
+                  value={observation} 
+                  onChange={e => setObservation(e.target.value)} 
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-30 transition-all" 
+                  placeholder="EJ: EMPAQUE DOBLE..." 
+                />
+              </div>
+              {observation.length >= 50 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse uppercase">Límite 50 alcanzado</span>}
+            </div>
 
-  <button type="submit" disabled={!selectedProd || !quantity || isSearchDisabled} className="w-full bg-[#2596be] text-white font-black rounded-xl hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] self-end">
-    <Plus size={20} /> AGREGAR
-  </button>
+            <button 
+              type="submit" 
+              disabled={!selectedProd || !quantity || isSearchDisabled} 
+              className="w-full bg-[#2596be] text-white font-black rounded-xl hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] self-end cursor-pointer"
+            >
+              <Plus size={20} /> AGREGAR
+            </button>
 
-  {isOverStock && (
-    <div className="md:col-span-3 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
-      <AlertTriangle size={20} className="animate-pulse" />
-      <span className="text-[10px] font-black uppercase tracking-widest">
-        AVISO: CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR
-      </span>
-    </div>
-  )}
-</div>
+            {isOverStock && (
+              <div className="md:col-span-3 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
+                <AlertTriangle size={20} className="animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  AVISO: CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR
+                </span>
+              </div>
+            )}
+          </div>
         </form>
       </div>
 
@@ -1732,9 +1880,9 @@ const handleAddToOrder = (e) => {
         <div className="p-6 border-b border-[#e9f4f8] flex justify-between items-center bg-[#e9f4f8]/30">
           <h4 className="text-[10px] font-black text-[#2596be] uppercase tracking-tighter">PRE-RESUMEN DE SOLICITUD</h4>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest">
               <tr>
                 <th className="px-6 py-5">CÓDIGO (ID)</th>
                 <th className="px-6 py-5">PRODUCTO</th>
@@ -1761,8 +1909,8 @@ const handleAddToOrder = (e) => {
                     <td className="px-6 py-4 text-right text-slate-500 font-mono">{formatCurrency(item.totalPricePerUnit)}</td>
                     <td className="px-6 py-4 text-right text-emerald-600 font-black font-mono">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
                     <td className="px-6 py-4 text-right flex justify-end gap-2">
-                      <button onClick={() => { setEditItem(item); setModalType('editCart'); }} className="p-2 bg-[#e9f4f8] text-[#2596be] rounded-lg hover:bg-[#2596be] hover:text-white transition-all"><Edit size={14} /></button>
-                      <button onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} className="p-2 bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={14} /></button>
+                      <button onClick={() => { setEditItem(item); setModalType('editCart'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14} /></button>
+                      <button onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
                     </td>
                   </tr>
                 ))
@@ -1795,17 +1943,18 @@ const handleAddToOrder = (e) => {
           </div>
         )}
       </div>
+
       {modalType === 'editCart' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-8 text-[#134b60]">
             <h3 className="font-black text-xl text-center mb-6 uppercase tracking-tighter">AJUSTAR CANTIDAD</h3>
             <input type="number" step="0.01" value={editItem?.quantity} onChange={e => setEditItem({...editItem, quantity: parseFloat(e.target.value)})} className="w-full p-6 bg-slate-50 border-2 border-slate-200 text-[#134b60] rounded-xl text-center font-black text-3xl outline-none focus:border-[#2596be]" />
-            <div className="flex gap-4 pt-6"><button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button><button onClick={() => { setCart(cart.map(c => c.tempId === editItem.tempId ? editItem : c)); setModalType(null); }} className="flex-1 py-4 bg-[#2596be] text-white rounded-xl font-black text-xs uppercase shadow-xl hover:bg-[#1e7a9b]">ACEPTAR</button></div>
+            <div className="flex gap-4 pt-6"><button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button><button onClick={() => { setCart(cart.map(c => c.tempId === editItem.tempId ? editItem : c)); setModalType(null); }} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-[#1e7a9b]">ACEPTAR</button></div>
           </div>
         </div>
       )}
 
-     {modalType === 'confirmSaveOrder' && (
+      {modalType === 'confirmSaveOrder' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
             <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} /></div>
@@ -1815,16 +1964,14 @@ const handleAddToOrder = (e) => {
             </p>
             <p className="text-[10px] text-slate-400 font-black mb-8">TOTAL ESTIMADO: <span className="text-[#2596be]">{formatCurrency(cartFinancials)}</span></p>
             <div className="flex gap-4">
-              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl font-black text-xs uppercase">VOLVER</button>
-              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-xs shadow-xl uppercase">CREAR SOLICITUD</button>
+              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-2xl font-black text-xs uppercase">VOLVER</button>
+              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl uppercase">CREAR SOLICITUD</button>
             </div>
           </div>
         </div>
       )}
 
-
-
-{modalType === 'orderSuccess' && lastSavedOrder && (
+      {modalType === 'orderSuccess' && lastSavedOrder && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
             <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -1839,13 +1986,14 @@ const handleAddToOrder = (e) => {
             </div>
             <button 
               onClick={() => { setModalType(null); setLastSavedOrder(null); }} 
-              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-xs shadow-xl uppercase transition-all"
+              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl uppercase transition-all"
             >
               CERRAR
             </button>
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 };
