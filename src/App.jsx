@@ -1026,6 +1026,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
   const [modalType, setModalType] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [editData, setEditData] = useState(initialForm);
+
   // ESCUCHADOR DEL BUSCADOR GLOBAL PARA CLIENTES
   useEffect(() => {
     const abrirCliente = (e) => {
@@ -1039,6 +1040,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
     window.addEventListener('abrirClienteGlobal', abrirCliente);
     return () => window.removeEventListener('abrirClienteGlobal', abrirCliente);
   }, [clients]);
+
   const getNextID = () => `CL${String(clients.length + 1).padStart(6, '0')}`;
 
   const handleAdd = (e) => {
@@ -1251,16 +1253,16 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
       </div>
 
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-        <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
+        <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1000px] uppercase">
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-6">ID</th>
-                <th className="px-6 py-6">CLIENTE</th>
-                <th className="px-6 py-6">DOCUMENTO</th>
-                <th className="px-6 py-6">CONTACTO</th>
-                <th className="px-6 py-6 text-center">TIPO</th>
-                <th className="px-6 py-6 text-right">GESTIÓN</th>
+                <th className="px-6 py-5">ID</th>
+                <th className="px-6 py-5">CLIENTE</th>
+                <th className="px-6 py-5">DOCUMENTO</th>
+                <th className="px-6 py-5">CONTACTO</th>
+                <th className="px-6 py-5 text-center">TIPO</th>
+                <th className="px-6 py-5 text-right">GESTIÓN</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
@@ -1269,21 +1271,21 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
               ) : (
                 clients.map(c => (
                   <tr key={c.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-5 font-mono text-[#2596be]">{c.id}</td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4 font-mono text-[#2596be]">{c.id}</td>
+                    <td className="px-6 py-4">
                       <p className="font-black text-[#134b60]">{c.name}</p>
                       <p className="text-[9px] text-slate-400 lowercase">{c.email}</p>
                     </td>
-                    <td className="px-6 py-5 font-mono">{c.docNumber} <span className="text-[9px] text-slate-400 font-sans">({c.docType})</span></td>
-                    <td className="px-6 py-5 font-mono">
+                    <td className="px-6 py-4 font-mono">{c.docNumber} <span className="text-[9px] text-slate-400 font-sans">({c.docType})</span></td>
+                    <td className="px-6 py-4 font-mono">
                       <p className="text-slate-600"><span className="text-[9px] text-slate-400 font-sans">CEL:</span> {c.mobile}</p>
                       <p className="text-[10px] text-slate-400"><span className="text-[9px] text-slate-400 font-sans">TEL:</span> {c.phone} {c.extension && `EXT: ${c.extension}`}</p>
                     </td>
-                    <td className="px-6 py-5 text-center"><span className="bg-[#e9f4f8] text-[#2596be] px-3 py-1.5 rounded-lg text-[9px] border border-[#2596be]/20">{c.typeName}</span></td>
-                    <td className="px-6 py-5 text-right">
+                    <td className="px-6 py-4 text-center"><span className="bg-[#e9f4f8] text-[#2596be] px-3 py-1.5 rounded-lg text-[9px] border border-[#2596be]/25 inline-block">{c.typeName}</span></td>
+                    <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} className="p-3 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={16}/></button>
-                        <button onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={16}/></button>
+                        <button onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14}/></button>
+                        <button onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14}/></button>
                       </div>
                     </td>
                   </tr>
@@ -1442,7 +1444,6 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
     </div>
   );
 };
-
 // --- MÓDULO DE SOLICITUD DE PEDIDO ---
   const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
@@ -1849,14 +1850,15 @@ const handleAddToOrder = (e) => {
   );
 };
 // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
-  const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus, setActiveTab }) => {
+const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus, setActiveTab }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const [pendingChange, setPendingChange] = useState(null); 
   const [editingItems, setEditingItems] = useState({});
   const [cancelReason, setCancelReason] = useState('');
   const [cancelOtherText, setCancelOtherText] = useState('');
-  // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
+  const [discountData, setDiscountData] = useState({ global: 0, items: [] });
+  const [modalType, setModalType] = useState(null); 
 
   // ESCUCHADOR DEL BUSCADOR GLOBAL PARA PEDIDOS
   useEffect(() => {
@@ -1871,7 +1873,6 @@ const handleAddToOrder = (e) => {
     return () => window.removeEventListener('abrirPedidoGlobal', abrirPedido);
   }, [orders]);
   
-  const [discountData, setDiscountData] = useState({ global: 0, items: [] });
   // Función para manejar cambios en la cantidad entregada o la observación de un ítem
   const handleItemDeliveryChange = (index, field, value) => {
     const item = selectedOrder.items[index];
@@ -1903,10 +1904,9 @@ const handleAddToOrder = (e) => {
       [selectedOrder.id]: currentEdits
     });
   };
-  const [modalType, setModalType] = useState(null); 
 
   // Función maestra para calcular totales con descuentos aplicados
- const getCalculatedTotals = (order) => {
+  const getCalculatedTotals = (order) => {
     if (!order || !order.items) return { rawSubtotal: 0, totalItemDiscounts: 0, globalDiscountAmount: 0, taxesAmount: 0, total: 0 };
     
     let rawSubtotal = 0;
@@ -1949,24 +1949,25 @@ const handleAddToOrder = (e) => {
       total
     };
   };
-  const executeDiscountUpdate = () => {
-  const calculated = getCalculatedTotals({
-    ...selectedOrder,
-    globalDiscount: discountData.global,
-    items: discountData.items
-  });
-  const updatedOrder = {
-    ...selectedOrder,
-    globalDiscount: discountData.global,
-    items: discountData.items,
-    totalValue: calculated.total
-  };
-  setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
-  setSelectedOrder(updatedOrder);
-  setModalType(null);
-};
 
-    const filteredOrders = useMemo(() => {
+  const executeDiscountUpdate = () => {
+    const calculated = getCalculatedTotals({
+      ...selectedOrder,
+      globalDiscount: discountData.global,
+      items: discountData.items
+    });
+    const updatedOrder = {
+      ...selectedOrder,
+      globalDiscount: discountData.global,
+      items: discountData.items,
+      totalValue: calculated.total
+    };
+    setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+    setSelectedOrder(updatedOrder);
+    setModalType(null);
+  };
+
+  const filteredOrders = useMemo(() => {
     if (!filterStatus || filterStatus === 'TODOS') return orders;
     return orders.filter(o => o.status === filterStatus);
   }, [orders, filterStatus]);
@@ -1977,28 +1978,28 @@ const handleAddToOrder = (e) => {
     prep: orders.filter(o => o.status === 'EN ALISTAMIENTO').length,
     shipped: orders.filter(o => o.status === 'EN CAMINO').length,
     delivered: orders.filter(o => o.status === 'ENTREGADA').length,
-    cancelled: orders.filter(o => o.status === 'CANCELADA').length
+    cancelled: orders.filter(o => o.status === 'CANCELADA' || o.status === 'ANULADA').length
   }), [orders]);
 
   const confirmUpdateStatus = () => {
     const { id, newStatus } = pendingChange;
     
     let finalCancelReason = '';
-    if (newStatus === 'CANCELADA') {
+    if (newStatus === 'ANULADA' || newStatus === 'CANCELADA') {
       finalCancelReason = cancelReason === 'OTROS' ? cancelOtherText : cancelReason;
     }
 
     setOrders(orders.map(o => o.id === id ? { 
       ...o, 
       status: newStatus, 
-      ...(newStatus === 'CANCELADA' ? { cancelReason: finalCancelReason } : {}) 
+      ...((newStatus === 'ANULADA' || newStatus === 'CANCELADA') ? { cancelReason: finalCancelReason } : {}) 
     } : o));
 
     if(selectedOrder?.id === id) {
       setSelectedOrder({
         ...selectedOrder, 
         status: newStatus,
-        ...(newStatus === 'CANCELADA' ? { cancelReason: finalCancelReason } : {})
+        ...((newStatus === 'ANULADA' || newStatus === 'CANCELADA') ? { cancelReason: finalCancelReason } : {})
       });
     }
 
@@ -2023,7 +2024,8 @@ const handleAddToOrder = (e) => {
       'EN ALISTAMIENTO': 'bg-amber-50 text-amber-600 border-amber-100',
       'EN CAMINO': 'bg-indigo-50 text-indigo-600 border-indigo-100',
       'ENTREGADA': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-      'ANULADA': 'bg-rose-50 text-rose-500 border-rose-100'
+      'ANULADA': 'bg-rose-50 text-rose-500 border-rose-100',
+      'CANCELADA': 'bg-rose-50 text-rose-500 border-rose-100'
     };
     return <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border ${colors[status] || 'bg-slate-50 text-slate-400'}`}>{status}</span>;
   };
@@ -2049,7 +2051,7 @@ const handleAddToOrder = (e) => {
       </div>
 
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="flex-1 overflow-y-auto overflow-x-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1100px]">
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest uppercase">
               <tr>
@@ -2073,31 +2075,31 @@ const handleAddToOrder = (e) => {
                     <td className="px-6 py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
                     <td className="px-6 py-5 text-center">{o.totalItems}</td>
                     <td className="px-6 py-5 text-right">
-                  <div className="font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</div>
-                  <div className={`text-[9px] font-bold uppercase mt-0.5 ${(o.shippingStatus === 'ENVÍO GRATIS' || o.totalValue >= 300000) ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {o.shippingStatus || (o.totalValue >= 300000 ? 'ENVÍO GRATIS' : 'ENVÍO: POR CONFIRMAR')}
-                  </div>
-                </td>
+                      <div className="font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</div>
+                      <div className={`text-[9px] font-bold uppercase mt-0.5 ${(o.shippingStatus === 'ENVÍO GRATIS' || o.totalValue >= 300000) ? 'text-emerald-600' : 'text-slate-500'}`}>
+                        {o.shippingStatus || (o.totalValue >= 300000 ? 'ENVÍO GRATIS' : 'ENVÍO: POR CONFIRMAR')}
+                      </div>
+                    </td>
                     <td className="px-6 py-5 text-center"><StatusBadge status={o.status} /></td>
-<td className="px-6 py-5 text-right">
-  <div className="flex justify-end gap-2 items-center">
-  <button 
-    onClick={() => {
-      localStorage.setItem('repeatOrderItems', JSON.stringify(o.items));
-      setActiveTab('client_new_order');
-    }}
-    className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 transition-all shadow-sm"
-  >
-    <History size={14} /> REPETIR
-  </button>
-  <button 
-    onClick={() => { setSelectedOrder(o); setViewMode('list'); }} 
-    className="bg-[#e9f4f8] text-[#2596be] hover:text-white px-5 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 hover:bg-[#2596be] active:scale-95 transition-all"
-  >
-    <Eye size={14} /> VER DETALLE
-  </button>
-</div>
-</td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex justify-end gap-2 items-center">
+                        <button 
+                          onClick={() => {
+                            localStorage.setItem('repeatOrderItems', JSON.stringify(o.items));
+                            setActiveTab('client_new_order');
+                          }}
+                          className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 transition-all shadow-sm"
+                        >
+                          <History size={14} /> REPETIR
+                        </button>
+                        <button 
+                          onClick={() => { setSelectedOrder(o); setViewMode('list'); }} 
+                          className="bg-[#e9f4f8] text-[#2596be] hover:text-white px-5 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 hover:bg-[#2596be] active:scale-95 transition-all"
+                        >
+                          <Eye size={14} /> VER DETALLE
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -2179,7 +2181,8 @@ const handleAddToOrder = (e) => {
             </div>
         </div>
       )}
-{modalType === 'editDiscounts' && (
+
+      {modalType === 'editDiscounts' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[150] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-3xl flex flex-col max-h-[90vh]">
             <div className="p-8 border-b-2 border-slate-100 flex justify-between items-center bg-[#e9f4f8]/30">
@@ -2189,7 +2192,7 @@ const handleAddToOrder = (e) => {
                 </div>
             </div>
             
-            <div className="p-8 overflow-y-auto flex-1">
+            <div className="p-8 overflow-y-auto flex-1 scrollbar-hide">
                 {(() => {
                     const hasItemDiscounts = discountData.items.some(i => (i.discount || 0) > 0);
                     const hasGlobalDiscount = (discountData.global || 0) > 0;
@@ -2254,383 +2257,378 @@ const handleAddToOrder = (e) => {
 
             <div className="p-8 border-t-2 border-slate-100 bg-white flex gap-4">
                 <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button>
-<button 
-  onClick={() => setModalType('confirmSaveDiscounts')}
-  className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"
->
-  <CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS
-</button>
-</div>
-  </div>
-</div>
-)}
-
-{modalType === 'confirmSaveDiscounts' && (
-  <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center border-t-8 border-amber-500">
-          <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-              <AlertTriangle size={40} />
+                <button 
+                  onClick={() => setModalType('confirmSaveDiscounts')}
+                  className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"
+                >
+                  <CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS
+                </button>
+            </div>
           </div>
-          <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO DE APLICAR ESTE DESCUENTO?</h3>
-          <p className="text-[10px] text-slate-400 font-bold mb-8">ESTA ACCIÓN MODIFICARÁ LOS VALORES FINANCIEROS DE LA SOLICITUD.</p>
-          <div className="flex gap-4">
-              <button onClick={() => setModalType('editDiscounts')} className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500">VOLVER</button>
-              <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-amber-600">CONFIRMAR</button>
-          </div>
-      </div>
-  </div>
-)}
-
-{selectedOrder && (
-  <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:bg-white print:backdrop-blur-none print:p-0">
-    <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full flex flex-col max-h-[90vh] ${viewMode === 'pdf' ? 'max-w-full md:max-w-[816px] overflow-x-auto print:shadow-none print:rounded-none print:max-h-none' : 'max-w-sm md:max-w-4xl lg:max-w-6xl animate-in zoom-in-95 duration-300'}`}>
-      {viewMode === 'list' && (
-  <div className="p-5 md:p-6 border-b-2 border-[#e9f4f8] flex flex-col md:flex-row justify-between items-start md:items-center bg-white shrink-0 print:hidden gap-4">
-    
-    {/* IZQUIERDA: Título, ID de solicitud al lado y fecha debajo del ID */}
-    <div className="flex items-center gap-4">
-      <div className="bg-[#e9f4f8] p-3.5 rounded-2xl text-[#2596be] shadow-sm border border-[#2596be]/20 flex items-center justify-center shrink-0">
-        <FileText size={28}/>
-      </div>
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="text-xs md:text-sm font-black text-[#134b60] uppercase tracking-wider">RESUMEN DE SOLICITUD</span>
-        <div className="flex flex-col">
-          <span className="text-lg md:text-xl font-black px-3 py-1 bg-[#134b60] text-white rounded-xl font-mono tracking-tight shadow-md w-fit">{selectedOrder.id}</span>
-          <p className="text-[10px] text-slate-400 font-semibold mt-1">{selectedOrder.date}</p>
-        </div>
-      </div>
-    </div>
-
-    {/* DERECHA: Datos del Cliente */}
-    <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
-      <div className="text-left md:text-right">
-        <p className="text-sm font-black text-[#134b60] tracking-tight">{selectedOrder.clientName || 'CLIENTE GENERAL'}</p>
-        <div className="flex flex-wrap md:justify-end gap-x-2 text-[10px] text-slate-500 font-semibold mt-0.5">
-          <span>{selectedOrder.clientDocType || 'NIT'}: {selectedOrder.clientDocNumber || 'N/A'}</span>
-          <span>•</span>
-          <span>{selectedOrder.clientAddress || 'SIN DIRECCIÓN'}</span>
-        </div>
-      </div>
-      <button 
-        onClick={() => setSelectedOrder(null)} 
-        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0"
-      >
-        <X size={24}/>
-      </button>
-    </div>
-  </div>
-)}
-
-      <div className={`flex-1 overflow-y-auto ${viewMode === 'pdf' ? "overflow-x-auto" : "p-8"}`}>
-        {viewMode === 'list' ? (
-  <div className="space-y-6">
-    {/* BARRA SUPERIOR UNIFICADA Y COMPACTA */}
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm gap-4 mb-4">
-      
-      {/* IZQUIERDA: Valor Total y Estado Actual en una sola línea compacta */}
-      <div className="flex items-center gap-6 divide-x-2 divide-slate-200 w-full lg:w-auto">
-        <div className="pr-2">
-          <p className="text-[8px] text-emerald-600 font-black mb-0.5 uppercase tracking-widest">VALOR TOTAL DE LA ORDEN</p>
-          <p className="text-xl font-black text-emerald-800 font-mono tracking-tighter leading-none">{formatCurrency(selectedOrder.totalValue)}</p>
-        </div>
-        <div className="pl-6 flex items-center gap-3">
-          <p className="text-[8px] text-slate-400 font-black uppercase mb-0">ESTADO:</p>
-          <StatusBadge status={selectedOrder.status} />
-        </div>
-      </div>
-
-      {/* DERECHA: Botones de Acción (Logística y Descuentos) */}
-      {role === 'ADMIN' && (
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
-          {getNextStatusOptions(selectedOrder.status).map(statusOption => {
-            const isAnulada = statusOption === 'ANULADA' || statusOption === 'CANCELADA';
-            return (
-              <button
-                key={statusOption}
-                onClick={() => setPendingChange({ id: selectedOrder.id, newStatus: statusOption })}
-                className={`px-4 py-2.5 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 ${
-                  isAnulada 
-                    ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
-                    : 'bg-[#2596be] hover:bg-[#134b60]'
-                }`}
-              >
-                {isAnulada ? <XCircle size={14}/> : <ArrowUpRight size={14}/>}
-                MARCAR: {statusOption}
-              </button>
-            );
-          })}
-          
-          {getNextStatusOptions(selectedOrder.status).length === 0 && (
-             <p className="text-[9px] font-black text-slate-400 uppercase mr-2">SIN CAMBIOS PENDIENTES</p>
-          )}
-
-          {['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
-            <button
-              disabled={selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA'}
-              onClick={() => {
-                setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
-                setModalType('editDiscount');
-              }}
-              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
-            >
-              <Tag size={14} /> DESCUENTOS
-            </button>
-          )}
         </div>
       )}
-    </div>
-            <div className="border-2 border-slate-100 rounded-2xl overflow-x-auto bg-white">
-              <table className="w-full text-left min-w-[750px]">
-                <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
-                  <tr>
-                    <th className="px-5 py-4">PRODUCTO</th>
-                    <th className="px-5 py-4 text-center">SOLICITADA</th>
-                    <th className="px-5 py-4 text-center">ENTREGADOS (OK)</th>
-                    <th className="px-5 py-4 text-center">PENDIENTE</th>
-                    <th className="px-5 py-4">OBSERVACIÓN</th>
-                    <th className="px-5 py-4 text-right">TOTAL</th>
-                  </tr>
-                </thead>
-                <tbody className="text-[10px] font-bold text-[#134b60] divide-y divide-slate-50">
-                  {selectedOrder.items.map((item, idx) => {
-                     const currentEdits = editingItems[selectedOrder.id]?.[idx] || {
-                       deliveredQuantity: item.deliveredQuantity ?? item.quantity,
-                       pendingQuantity: item.pendingQuantity ?? 0,
-                       deliveryObservation: item.deliveryObservation || ''
-                     };
-                     const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
-                     const finalTotal = (baseUnit * (1 - ((item.discount || 0) / 100))) * (1 + (item.taxValue / 100)) * item.quantity;
-                     return (
-                    <tr key={idx}>
-                      <td className="px-5 py-4">
-                        <p className="text-[#134b60] font-black">{item.name}</p>
-                        <p className="text-[8px] text-slate-400 uppercase">{item.unit}</p>
-                        {item.observation && <p className="text-[8px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
-                      </td>
-                      <td className="px-5 py-4 text-center font-mono">{item.quantity}</td>
-                      <td className="px-5 py-4 text-center font-mono">
-                        <input 
-                          type="number" 
-                          min="0" 
-                          max={item.quantity} 
-                          step="1"
-                          value={currentEdits.deliveredQuantity}
-                          onChange={(e) => handleItemDeliveryChange(idx, 'deliveredQuantity', parseInt(e.target.value) || 0)}
-                          className="w-20 px-2 py-1.5 bg-[#e9f4f8] border border-[#2596be]/30 rounded-lg text-center font-black text-emerald-600 outline-none focus:border-[#2596be]"
-                        />
-                      </td>
-                      <td className="px-5 py-4 text-center font-mono text-rose-500 font-black">{currentEdits.pendingQuantity}</td>
-                      <td className="px-5 py-4">
-                        <input 
-                          type="text" 
-                          maxLength={50}
-                          placeholder="OBSERVACIÓN..."
-                          value={currentEdits.deliveryObservation}
-                          onChange={(e) => handleItemDeliveryChange(idx, 'deliveryObservation', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-600 outline-none focus:border-[#2596be] uppercase text-[10px]"
-                        />
-                      </td>
-                      <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(finalTotal)}</td>
-                    </tr>
-                  )})}
-                </tbody>
-              </table>
+
+      {modalType === 'confirmSaveDiscounts' && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center border-t-8 border-amber-500">
+                <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <AlertTriangle size={40} />
+                </div>
+                <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO DE APLICAR ESTE DESCUENTO?</h3>
+                <p className="text-[10px] text-slate-400 font-bold mb-8">ESTA ACCIÓN MODIFICARÁ LOS VALORES FINANCIEROS DE LA SOLICITUD.</p>
+                <div className="flex gap-4">
+                    <button onClick={() => setModalType('editDiscounts')} className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500">VOLVER</button>
+                    <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-amber-600">CONFIRMAR</button>
+                </div>
             </div>
-{role === 'ADMIN' && ['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
-  <div className="flex justify-end pt-2 mb-4">
-    <button
-      onClick={() => {
-        const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
-          deliveredQuantity: item.deliveredQuantity ?? item.quantity,
-          pendingQuantity: item.pendingQuantity ?? 0,
-          deliveryObservation: item.deliveryObservation || ''
-        }));
+        </div>
+      )}
 
-        const updatedItems = selectedOrder.items.map((item, idx) => ({
-          ...item,
-          deliveredQuantity: Math.round(Number(currentEdits[idx]?.deliveredQuantity ?? item.quantity)),
-          pendingQuantity: Math.round(Number(currentEdits[idx]?.pendingQuantity ?? 0)),
-          deliveryObservation: currentEdits[idx]?.deliveryObservation || ''
-        }));
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:bg-white print:backdrop-blur-none print:p-0">
+          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full flex flex-col max-h-[90vh] ${viewMode === 'pdf' ? 'max-w-full md:max-w-[816px] overflow-x-auto print:shadow-none print:rounded-none print:max-h-none' : 'max-w-sm md:max-w-4xl lg:max-w-6xl animate-in zoom-in-95 duration-300'}`}>
+            
+            {viewMode === 'list' && (
+              <div className="p-5 md:p-6 border-b-2 border-[#e9f4f8] flex flex-col md:flex-row justify-between items-start md:items-center bg-white shrink-0 print:hidden gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#e9f4f8] p-3.5 rounded-2xl text-[#2596be] shadow-sm border border-[#2596be]/20 flex items-center justify-center shrink-0">
+                    <FileText size={28}/>
+                  </div>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className="text-xs md:text-sm font-black text-[#134b60] uppercase tracking-wider">RESUMEN DE SOLICITUD</span>
+                    <div className="flex flex-col">
+                      <span className="text-lg md:text-xl font-black px-3 py-1 bg-[#134b60] text-white rounded-xl font-mono tracking-tight shadow-md w-fit">{selectedOrder.id}</span>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">{selectedOrder.date}</p>
+                    </div>
+                  </div>
+                </div>
 
-        const updatedOrder = { ...selectedOrder, items: updatedItems };
-        setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
-        setEditingItems({ ...editingItems, [selectedOrder.id]: null });
-        setSelectedOrder(null);
-      }}
-      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase shadow-sm transition-all flex items-center gap-2 active:scale-95"
-    >
-      <CheckCircle2 size={16} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
-    </button>
-  </div>
-)}
-            {selectedOrder.generalObservation && (
-              <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
-                <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
-                <p className="text-xs font-bold text-amber-900 break-all">{selectedOrder.generalObservation}</p>
+                <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+                  <div className="text-left md:text-right">
+                    <p className="text-sm font-black text-[#134b60] tracking-tight">{selectedOrder.clientName || 'CLIENTE GENERAL'}</p>
+                    <div className="flex flex-wrap md:justify-end gap-x-2 text-[10px] text-slate-500 font-semibold mt-0.5">
+                      <span>{selectedOrder.clientDocType || 'NIT'}: {selectedOrder.clientDocNumber || 'N/A'}</span>
+                      <span>•</span>
+                      <span>{selectedOrder.clientAddress || 'SIN DIRECCIÓN'}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedOrder(null)} 
+                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0"
+                  >
+                    <X size={24}/>
+                  </button>
+                </div>
               </div>
             )}
-          </div>
-        ) : (
-          <div className="bg-white p-6 md:p-14 w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60] overflow-x-auto relative">
-            
-            {/* SELLO GIGANTE DE ANULADO O CANCELADO */}
-            {(selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA') && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 overflow-hidden">
-                <div className="border-8 border-rose-500/30 text-rose-500/30 font-black text-6xl md:text-8xl tracking-widest px-12 py-6 rounded-3xl transform -rotate-12 select-none uppercase text-center">
-                  {selectedOrder.status}
-                  {selectedOrder.cancelReason && (
-                    <span className="block text-xl md:text-2xl mt-2 tracking-normal font-bold">
-                      MOTIVO: {selectedOrder.cancelReason}
-                    </span>
+
+            <div className={`flex-1 overflow-y-auto scrollbar-hide ${viewMode === 'pdf' ? "overflow-x-auto" : "p-8"}`}>
+              {viewMode === 'list' ? (
+                <div className="space-y-6">
+                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm gap-4 mb-4">
+                    <div className="flex items-center gap-6 divide-x-2 divide-slate-200 w-full lg:w-auto">
+                      <div className="pr-2">
+                        <p className="text-[8px] text-emerald-600 font-black mb-0.5 uppercase tracking-widest">VALOR TOTAL DE LA ORDEN</p>
+                        <p className="text-xl font-black text-emerald-800 font-mono tracking-tighter leading-none">{formatCurrency(selectedOrder.totalValue)}</p>
+                      </div>
+                      <div className="pl-6 flex items-center gap-3">
+                        <p className="text-[8px] text-slate-400 font-black uppercase mb-0">ESTADO:</p>
+                        <StatusBadge status={selectedOrder.status} />
+                      </div>
+                    </div>
+
+                    {role === 'ADMIN' && (
+                      <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
+                        {getNextStatusOptions(selectedOrder.status).map(statusOption => {
+                          const isAnulada = statusOption === 'ANULADA' || statusOption === 'CANCELADA';
+                          return (
+                            <button
+                              key={statusOption}
+                              onClick={() => setPendingChange({ id: selectedOrder.id, newStatus: statusOption })}
+                              className={`px-4 py-2.5 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 ${
+                                isAnulada 
+                                  ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
+                                  : 'bg-[#2596be] hover:bg-[#134b60]'
+                              }`}
+                            >
+                              {isAnulada ? <XCircle size={14}/> : <ArrowUpRight size={14}/>}
+                              MARCAR: {statusOption}
+                            </button>
+                          );
+                        })}
+                        
+                        {getNextStatusOptions(selectedOrder.status).length === 0 && (
+                           <p className="text-[9px] font-black text-slate-400 uppercase mr-2">SIN CAMBIOS PENDIENTES</p>
+                        )}
+
+                        {['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
+                          <button
+                            disabled={selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA'}
+                            onClick={() => {
+                              setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
+                              setModalType('editDiscounts');
+                            }}
+                            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                          >
+                            <Tag size={14} /> DESCUENTOS
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-2 border-slate-100 rounded-2xl overflow-x-auto bg-white">
+                    <table className="w-full text-left min-w-[750px]">
+                      <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
+                        <tr>
+                          <th className="px-5 py-4">PRODUCTO</th>
+                          <th className="px-5 py-4 text-center">SOLICITADA</th>
+                          <th className="px-5 py-4 text-center">ENTREGADOS (OK)</th>
+                          <th className="px-5 py-4 text-center">PENDIENTE</th>
+                          <th className="px-5 py-4">OBSERVACIÓN</th>
+                          <th className="px-5 py-4 text-right">TOTAL</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-[10px] font-bold text-[#134b60] divide-y divide-slate-50">
+                        {selectedOrder.items.map((item, idx) => {
+                           const currentEdits = editingItems[selectedOrder.id]?.[idx] || {
+                            deliveredQuantity: item.deliveredQuantity ?? item.quantity,
+                            pendingQuantity: item.pendingQuantity ?? 0,
+                            deliveryObservation: item.deliveryObservation || ''
+                           };
+                           const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
+                           const finalTotal = (baseUnit * (1 - ((item.discount || 0) / 100))) * (1 + (item.taxValue / 100)) * item.quantity;
+                           return (
+                            <tr key={idx}>
+                              <td className="px-5 py-4">
+                                <p className="text-[#134b60] font-black">{item.name}</p>
+                                <p className="text-[8px] text-slate-400 uppercase">{item.unit}</p>
+                                {item.observation && <p className="text-[8px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
+                              </td>
+                              <td className="px-5 py-4 text-center font-mono">{item.quantity}</td>
+                              <td className="px-5 py-4 text-center font-mono">
+                                <input 
+                                  type="number" 
+                                  min="0" 
+                                  max={item.quantity} 
+                                  step="1"
+                                  value={currentEdits.deliveredQuantity}
+                                  onChange={(e) => handleItemDeliveryChange(idx, 'deliveredQuantity', parseInt(e.target.value) || 0)}
+                                  className="w-20 px-2 py-1.5 bg-[#e9f4f8] border border-[#2596be]/30 rounded-lg text-center font-black text-emerald-600 outline-none focus:border-[#2596be]"
+                                />
+                              </td>
+                              <td className="px-5 py-4 text-center font-mono text-rose-500 font-black">{currentEdits.pendingQuantity}</td>
+                              <td className="px-5 py-4">
+                                <input 
+                                  type="text" 
+                                  maxLength={50}
+                                  placeholder="OBSERVACIÓN..."
+                                  value={currentEdits.deliveryObservation}
+                                  onChange={(e) => handleItemDeliveryChange(idx, 'deliveryObservation', e.target.value)}
+                                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-600 outline-none focus:border-[#2596be] uppercase text-[10px]"
+                                />
+                              </td>
+                              <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(finalTotal)}</td>
+                            </tr>
+                          )})}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {role === 'ADMIN' && ['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
+                    <div className="flex justify-end pt-2 mb-4">
+                      <button
+                        onClick={() => {
+                          const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
+                            deliveredQuantity: item.deliveredQuantity ?? item.quantity,
+                            pendingQuantity: item.pendingQuantity ?? 0,
+                            deliveryObservation: item.deliveryObservation || ''
+                          }));
+
+                          const updatedItems = selectedOrder.items.map((item, idx) => ({
+                            ...item,
+                            deliveredQuantity: Math.round(Number(currentEdits[idx]?.deliveredQuantity ?? item.quantity)),
+                            pendingQuantity: Math.round(Number(currentEdits[idx]?.pendingQuantity ?? 0)),
+                            deliveryObservation: currentEdits[idx]?.deliveryObservation || ''
+                          }));
+
+                          const updatedOrder = { ...selectedOrder, items: updatedItems };
+                          setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+                          setEditingItems({ ...editingItems, [selectedOrder.id]: null });
+                          setSelectedOrder(null);
+                        }}
+                        className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase shadow-sm transition-all flex items-center gap-2 active:scale-95"
+                      >
+                        <CheckCircle2 size={16} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
+                      </button>
+                    </div>
+                  )}
+
+                  {selectedOrder.generalObservation && (
+                    <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
+                      <p className="text-xs font-bold text-amber-900 break-all">{selectedOrder.generalObservation}</p>
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="bg-white p-6 md:p-14 w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60] overflow-x-auto relative">
+                  
+                  {(selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA') && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 overflow-hidden">
+                      <div className="border-8 border-rose-500/30 text-rose-500/30 font-black text-6xl md:text-8xl tracking-widest px-12 py-6 rounded-3xl transform -rotate-12 select-none uppercase text-center">
+                        {selectedOrder.status}
+                        {selectedOrder.cancelReason && (
+                          <span className="block text-xl md:text-2xl mt-2 tracking-normal font-bold">
+                            MOTIVO: {selectedOrder.cancelReason}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-            <div className="flex justify-between items-start border-b-4 border-[#134b60] pb-6 mb-8">
-              <div>
-                <h2 className="text-3xl font-black text-[#134b60] tracking-tighter leading-none">DISTRIBUCIONES<br/>CASTILLA S.A.S.</h2>
-                <div className="space-y-1.5 mt-3">
-                  <p className="text-[10px] text-slate-500 font-bold flex items-center gap-2"><ShieldCheck size={14} className="text-[#2596be]" /> NIT: 123.456.789-0 • RÉGIMEN COMÚN</p>
-                  <p className="text-[10px] text-slate-500 font-bold flex items-center gap-2"><MapPin size={14} className="text-[#2596be]" /> SEDE CENTRAL • COLOMBIA</p>
+                  <div className="flex justify-between items-start border-b-4 border-[#134b60] pb-6 mb-8">
+                    <div>
+                      <h2 className="text-3xl font-black text-[#134b60] tracking-tighter leading-none">DISTRIBUCIONES<br/>CASTILLA S.A.S.</h2>
+                      <div className="space-y-1.5 mt-3">
+                        <p className="text-[10px] text-slate-500 font-bold flex items-center gap-2"><ShieldCheck size={14} className="text-[#2596be]" /> NIT: 123.456.789-0 • RÉGIMEN COMÚN</p>
+                        <p className="text-[10px] text-slate-500 font-bold flex items-center gap-2"><MapPin size={14} className="text-[#2596be]" /> SEDE CENTRAL • COLOMBIA</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-[#134b60] bg-[#e9f4f8] border border-[#2596be]/30 px-4 py-1.5 rounded-full inline-block mb-3 tracking-widest">DOCUMENTO TÉCNICO</p>
+                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">SOLICITUD Nº</p>
+                      <p className="text-4xl font-black text-[#134b60] leading-none tracking-tighter">{selectedOrder.id}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
+                    <p className="font-black text-slate-400 mb-4 border-b border-slate-200 pb-2 text-[9px] tracking-[0.2em] uppercase">DATOS DEL CLIENTE</p>
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-xs">
+                      <div><p className="text-[9px] text-slate-400 font-bold">NOMBRE</p><p className="font-black text-[#134b60]">{selectedOrder.clientName}</p></div>
+                      <div><p className="text-[9px] text-slate-400 font-bold">DOCUMENTO</p><p className="font-black text-[#134b60]">{selectedOrder.clientDocType || 'NIT'} {selectedOrder.clientDocNumber || 'N/A'}</p></div>
+                      <div><p className="text-[9px] text-slate-400 font-bold">DIRECCIÓN</p><p className="font-black text-[#134b60]">{selectedOrder.clientAddress || 'NO REGISTRADA'}</p></div>
+                      <div><p className="text-[9px] text-slate-400 font-bold">TELÉFONO</p><p className="font-black text-[#134b60]">{selectedOrder.clientPhone || 'NO REGISTRADO'}</p></div>
+                    </div>
+                  </div>
+
+                  <div className="mb-8">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest">
+                          <th className="px-5 py-4 rounded-tl-2xl">PRODUCTO</th>
+                          <th className="px-5 py-4 text-center">CANTIDAD</th>
+                          <th className="px-5 py-4 text-right">VALOR UNIT.</th>
+                          <th className="px-5 py-4 text-right">IVA (%)</th>
+                          <th className="px-5 py-4 text-right rounded-tr-2xl">SUBTOTAL</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-[11px] font-bold text-[#134b60] divide-y divide-slate-100 border-b border-slate-200">
+                        {selectedOrder.items.map((item, idx) => {
+                          const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-5 py-5">
+                                <p className="text-[#134b60] font-black text-sm">{item.name}</p>
+                                <p className="text-slate-500 text-[10px] font-bold">{item.unit}</p>
+                                {item.observation && <p className="text-[9px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
+                              </td>
+                              <td className="px-5 py-5 text-center font-mono text-[#134b60] text-sm">{item.quantity}</td>
+                              <td className="px-5 py-5 text-right font-mono text-slate-500">{formatCurrency(baseUnit)}</td>
+                              <td className="px-5 py-5 text-right font-mono text-[#2596be]">{item.taxValue}%</td>
+                              <td className="px-5 py-5 text-right font-black text-[#134b60] text-sm">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {selectedOrder.generalObservation && (
+                    <div className="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">OBSERVACIONES GENERALES DEL PEDIDO:</p>
+                      <p className="text-xs font-bold text-[#134b60]">{selectedOrder.generalObservation}</p>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end mb-12">
+                    <div className="w-80 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-2xl">
+                      {(() => {
+                          const calc = getCalculatedTotals(selectedOrder);
+                          return (
+                              <>
+                                <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span>{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
+                                {calc.totalItemDiscounts > 0 && (
+                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span>- {formatCurrency(calc.totalItemDiscounts)}</span></div>
+                                )}
+                                {calc.globalDiscountAmount > 0 && (
+                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span>- {formatCurrency(calc.globalDiscountAmount)}</span></div>
+                                )}
+                                <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span>{formatCurrency(calc?.taxesAmount || 0)}</span></div>
+                                <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span>{formatCurrency(calc?.total || 0)}</span></div>
+                              </>
+                          )
+                      })()}
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-6 border-t-2 border-[#134b60] flex flex-col gap-6">
+                    <div className="bg-amber-50 p-4 border-l-4 border-amber-400 rounded-r-xl">
+                        <p className="text-[9px] font-black text-amber-700 uppercase tracking-[0.3em] mb-1 flex items-center gap-2"><AlertTriangle size={14}/> NOTA LEGAL IMPORTANTE</p>
+                        <p className="text-[9px] text-amber-900 font-bold leading-relaxed">ESTE DOCUMENTO CONSTITUYE UNA SOLICITUD DE PEDIDO INTERNA OPERATIVA. NO TIENE VALIDEZ COMO FACTURA ELECTRÓNICA DE VENTA NI COMO TÍTULO VALOR SEGÚN LA NORMATIVA VIGENTE. SUJETO A REVISIÓN DE BODEGA.</p>
+                    </div>
+                    <div className="flex flex-col gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <span className="flex items-center gap-2"><Activity size={14} className="text-[#2596be]"/> WWW.DISTRIBUCIONESCASTILLA.COM</span>
+                        <span className="flex items-center gap-2 text-emerald-600"><Smartphone size={14}/> WHATSAPP SOPORTE: 315000123123</span>
+                    </div>
+                    <div className="text-center mt-4">
+                        <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.4em]">Creado con Inventrack de Distribuciones Castilla. Derechos reservados © 2026.</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black text-[#134b60] bg-[#e9f4f8] border border-[#2596be]/30 px-4 py-1.5 rounded-full inline-block mb-3 tracking-widest">DOCUMENTO TÉCNICO</p>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">SOLICITUD Nº</p>
-                <p className="text-4xl font-black text-[#134b60] leading-none tracking-tighter">{selectedOrder.id}</p>
-              </div>
-            </div>
-            
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
-              <p className="font-black text-slate-400 mb-4 border-b border-slate-200 pb-2 text-[9px] tracking-[0.2em] uppercase">DATOS DEL CLIENTE</p>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-xs">
-                <div><p className="text-[9px] text-slate-400 font-bold">NOMBRE</p><p className="font-black text-[#134b60]">{selectedOrder.clientName}</p></div>
-                <div><p className="text-[9px] text-slate-400 font-bold">DOCUMENTO</p><p className="font-black text-[#134b60]">{selectedOrder.clientDocType || 'NIT'} {selectedOrder.clientDocNumber || 'N/A'}</p></div>
-                <div><p className="text-[9px] text-slate-400 font-bold">DIRECCIÓN</p><p className="font-black text-[#134b60]">{selectedOrder.clientAddress || 'NO REGISTRADA'}</p></div>
-                <div><p className="text-[9px] text-slate-400 font-bold">TELÉFONO</p><p className="font-black text-[#134b60]">{selectedOrder.clientPhone || 'NO REGISTRADO'}</p></div>
-              </div>
+              )}
             </div>
 
-            <div className="mb-8">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest">
-                    <th className="px-5 py-4 rounded-tl-2xl">PRODUCTO</th>
-                    <th className="px-5 py-4 text-center">CANTIDAD</th>
-                    <th className="px-5 py-4 text-right">VALOR UNIT.</th>
-                    <th className="px-5 py-4 text-right">IVA (%)</th>
-                    <th className="px-5 py-4 text-right rounded-tr-2xl">SUBTOTAL</th>
-                  </tr>
-                </thead>
-                <tbody className="text-[11px] font-bold text-[#134b60] divide-y divide-slate-100 border-b border-slate-200">
-                  {selectedOrder.items.map((item, idx) => {
-                    const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
-                    return (
-                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-5 py-5">
-                          <p className="text-[#134b60] font-black text-sm">{item.name}</p>
-                          <p className="text-slate-500 text-[10px] font-bold">{item.unit}</p>
-                          {item.observation && <p className="text-[9px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
-                        </td>
-                        <td className="px-5 py-5 text-center font-mono text-[#134b60] text-sm">{item.quantity}</td>
-                        <td className="px-5 py-5 text-right font-mono text-slate-500">{formatCurrency(baseUnit)}</td>
-                        <td className="px-5 py-5 text-right font-mono text-[#2596be]">{item.taxValue}%</td>
-                        <td className="px-5 py-5 text-right font-black text-[#134b60] text-sm">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {selectedOrder.generalObservation && (
-              <div className="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">OBSERVACIONES GENERALES DEL PEDIDO:</p>
-                <p className="text-xs font-bold text-[#134b60]">{selectedOrder.generalObservation}</p>
-              </div>
-            )}
-
-            <div className="flex justify-end mb-12">
-              <div className="w-80 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-2xl">
-                {(() => {
-                    const calc = getCalculatedTotals(selectedOrder);
-                    return (
-                        <>
-                          <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span>{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
-                          {calc.totalItemDiscounts > 0 && (
-                            <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span>- {formatCurrency(calc.totalItemDiscounts)}</span></div>
-                          )}
-                          {calc.globalDiscountAmount > 0 && (
-                            <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span>- {formatCurrency(calc.globalDiscountAmount)}</span></div>
-                          )}
-                          <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span>{formatCurrency(calc?.taxesAmount || 0)}</span></div>
-                          <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span>{formatCurrency(calc?.total || 0)}</span></div>
-                        </>
-                    )
-                })()}
-              </div>
-            </div>
-
-            <div className="mt-auto pt-6 border-t-2 border-[#134b60] flex flex-col gap-6">
-              <div className="bg-amber-50 p-4 border-l-4 border-amber-400 rounded-r-xl">
-                  <p className="text-[9px] font-black text-amber-700 uppercase tracking-[0.3em] mb-1 flex items-center gap-2"><AlertTriangle size={14}/> NOTA LEGAL IMPORTANTE</p>
-                  <p className="text-[9px] text-amber-900 font-bold leading-relaxed">ESTE DOCUMENTO CONSTITUYE UNA SOLICITUD DE PEDIDO INTERNA OPERATIVA. NO TIENE VALIDEZ COMO FACTURA ELECTRÓNICA DE VENTA NI COMO TÍTULO VALOR SEGÚN LA NORMATIVA VIGENTE. SUJETO A REVISIÓN DE BODEGA.</p>
-              </div>
-              <div className="flex flex-col gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  <span className="flex items-center gap-2"><Activity size={14} className="text-[#2596be]"/> WWW.DISTRIBUCIONESCASTILLA.COM</span>
-                  <span className="flex items-center gap-2 text-emerald-600"><Smartphone size={14}/> WHATSAPP SOPORTE: 315000123123</span>
-              </div>
-              <div className="text-center mt-4">
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.4em]">Creado con Inventrack de Distribuciones Castilla. Derechos reservados © 2026.</p>
-              </div>
+            <div className="p-4 border-t border-slate-100 bg-white flex gap-3 shrink-0 print:hidden">
+              {viewMode === 'list' ? (
+                <>
+                  <button 
+                    onClick={() => setViewMode('pdf')} 
+                    className="flex-1 bg-[#134b60] hover:bg-[#0f3c4c] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <FileText size={16}/> GENERAR PDF
+                  </button>
+                  <button 
+                    onClick={() => setSelectedOrder(null)} 
+                    className="flex-1 border border-slate-200 text-slate-600 hover:bg-slate-50 py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    SALIR
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => window.print()} 
+                    className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Download size={16}/> DESCARGAR / IMPRIMIR PDF
+                  </button>
+                  <button 
+                    onClick={() => setViewMode('list')} 
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-[#134b60] py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <ChevronDown size={16} className="rotate-90"/> VOLVER AL RESUMEN
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="p-4 border-t border-slate-100 bg-white flex gap-3 shrink-0 print:hidden">
-  {viewMode === 'list' ? (
-    <>
-      <button 
-        onClick={() => setViewMode('pdf')} 
-        className="flex-1 bg-[#134b60] hover:bg-[#0f3c4c] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
-      >
-        <FileText size={16}/> GENERAR PDF
-      </button>
-      <button 
-        onClick={() => setSelectedOrder(null)} 
-        className="flex-1 border border-slate-200 text-slate-600 hover:bg-slate-50 py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
-      >
-        SALIR
-      </button>
-    </>
-  ) : (
-    <>
-      <button 
-        onClick={() => window.print()} 
-        className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
-      >
-        <Download size={16}/> DESCARGAR / IMPRIMIR PDF
-      </button>
-      <button 
-        onClick={() => setViewMode('list')} 
-        className="flex-1 bg-slate-100 hover:bg-slate-200 text-[#134b60] py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
-      >
-        <ChevronDown size={16} className="rotate-90"/> VOLVER AL RESUMEN
-      </button>
-    </>
-  )}
-</div>
-    </div>
-  </div>
-)}
+        </div>
+      )}
       <Footer />
     </div>
   );
 };
-
 
 // --- DASHBOARD DE CLIENTE ---
 const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions, currentUser, clients }) => {
