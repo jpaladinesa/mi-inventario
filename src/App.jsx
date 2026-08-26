@@ -188,8 +188,9 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
 
 // --- MÓDULO DE PRODUCTOS ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
-const [csvPreview, setCsvPreview] = useState(null);
-const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
+  const [csvPreview, setCsvPreview] = useState(null);
+  const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
+  
   const getNextNumericID = () => {
     if (products.length === 0) return '00001';
     let max = 0;
@@ -202,21 +203,23 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
 
   const initialForm = { id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' };
   const [newProd, setNewProd] = useState(initialForm);
+  
   useEffect(() => {
     setNewProd(prev => ({ ...prev, id: getNextNumericID() }));
   }, [products]);
+
   const [modalType, setModalType] = useState(null);
   const [selectedProd, setSelectedProd] = useState(null);
   const [editData, setEditData] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
   
   const unitOptions = [
-  'UNIDAD', 'PAQUETE', 'CAJA', 'BOLSA',
-  'GRAMO', 'LIBRA', 'KILO', 'ARROBA',
-  'MILILITRO', 'LITRO', 'GALON',
-  'MILIMETRO', 'CENTIMETRO', 'METRO',
-  'FRASCO', 'BOTELLA'
-];
+    'UNIDAD', 'PAQUETE', 'CAJA', 'BOLSA',
+    'GRAMO', 'LIBRA', 'KILO', 'ARROBA',
+    'MILILITRO', 'LITRO', 'GALON',
+    'MILIMETRO', 'CENTIMETRO', 'METRO',
+    'FRASCO', 'BOTELLA'
+  ];
 
   const getCalculatedValues = (cost, utility, taxId) => {
     const c = parseFloat(cost) || 0;
@@ -229,15 +232,13 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
 
   const currentCalcs = getCalculatedValues(newProd.cost, newProd.utility, newProd.taxId);
 
- const handleAdd = async (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-   // Validación: Si no hay impuestos creados en el sistema
     if (taxes.length === 0) {
       setErrorMsg('DEBE CREAR AL MENOS UN IMPUESTO EN EL MÓDULO DE IMPUESTOS ANTES DE REGISTRAR PRODUCTOS.');
       return;
     }
 
-    // Validación: Si no ha seleccionado ningún impuesto
     if (!newProd.taxId) {
       setErrorMsg('DEBE SELECCIONAR UN IMPUESTO VÁLIDO.');
       return;
@@ -254,8 +255,6 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
     };
 
     try {
-                
-        // 2. Actualizar la tabla en la pantalla si se guardó con éxito
         setProducts([...products, nuevoProductoData]);
         setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' }); 
         setErrorMsg('');
@@ -276,7 +275,6 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
     setModalType(null);
   };
 
- // --- CSV CARGUE MASIVO PRODUCTOS ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -295,7 +293,6 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target.result;
-      // Normalización de saltos de línea para compatibilidad con Excel
       const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
       
       const validRows = [];
@@ -327,21 +324,18 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
         }
         seenIdsInFile.add(cleanId);
 
-        // Validar si ya existe en la base de datos actual
         const existsInDB = products.some(p => p.id === cleanId.padStart(5, '0') || p.id === cleanId);
         if (existsInDB) {
           errors.push(`Línea ${i + 1}: El producto con ID '${cleanId}' ya existe en el sistema.`);
           continue;
         }
 
-        // VALIDACIÓN ESTRICTA DE COSTO (Atrapa letras como "verde" en la celda D)
         const parsedCost = parseFloat(cost);
         if (isNaN(parsedCost)) {
           errors.push(`Línea ${i + 1} (Columna Costo): El valor '${cost}' no es un número válido.`);
           continue;
         }
 
-        // VALIDACIÓN ESTRICTA DE UTILIDAD (Celda E)
         const parsedUtility = parseFloat(utility);
         if (isNaN(parsedUtility)) {
           errors.push(`Línea ${i + 1} (Columna Utilidad): El valor '${utility}' no es un número válido.`);
@@ -422,13 +416,15 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
             </div>
 
             <div className="space-y-1 lg:col-span-2">
-  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
-  <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
-</div>
-<div className="space-y-1 lg:col-span-2">
-  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
-  <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
-</div>
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
+              <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
+            </div>
+            
+            <div className="space-y-1 lg:col-span-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
+              <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
+            </div>
+            
             <button type="submit" className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl transition-all">REGISTRAR</button>
           </div>
         </form>
@@ -441,10 +437,20 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
       </div>
 
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
-        <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
+        <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1200px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black"><tr><th className="px-6 py-6">ID CÓDIGO</th><th className="px-6 py-6">PRODUCTO / UNIDAD</th><th className="px-6 py-6 text-center">STOCK DISP.</th><th className="px-6 py-6 text-right">VALOR BASE</th><th className="px-6 py-6 text-right">IVA</th><th className="px-6 py-6 text-right">FINAL</th><th className="px-6 py-6 text-right">GESTIÓN</th></tr></thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-slate-600">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest">
+              <tr>
+                <th className="px-6 py-5">CÓDIGO ID</th>
+                <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
+                <th className="px-6 py-5 text-center">STOCK DISP.</th>
+                <th className="px-6 py-5 text-right">VALOR BASE</th>
+                <th className="px-6 py-5 text-right">IVA</th>
+                <th className="px-6 py-5 text-right">FINAL</th>
+                <th className="px-6 py-5 text-right">GESTIÓN</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
               {products.length === 0 ? (
                 <tr><td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td></tr>
               ) : (
@@ -453,13 +459,25 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
                   const availableStock = calculateAvailableStock(p.id, inventory, orders);
                   return (
                     <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                      <td className="px-6 py-5 font-mono text-[#2596be] font-black">{p.id}</td>
-                      <td className="px-6 py-5"><p className="font-black text-[#134b60]">{p.name}</p><p className="text-[9px] text-slate-400">{p.unitName}</p></td>
-                      <td className="px-6 py-5 text-center"><div className={`px-4 py-1.5 rounded-full font-black font-mono text-xs inline-block ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>{availableStock.toFixed(2)}</div></td>
-                      <td className="px-6 py-5 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
-                      <td className="px-6 py-5 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
-                      <td className="px-6 py-5 text-right font-black text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
-                      <td className="px-6 py-5 text-right"><div className="flex justify-end gap-2"><button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-3 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={16}/></button><button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={16}/></button></div></td>
+                      <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
+                      <td className="px-6 py-4">
+                        <p className="font-black text-[#134b60]">{p.name}</p>
+                        <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-3 py-1 rounded-full font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                          {availableStock.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
+                      <td className="px-6 py-4 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
+                      <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14}/></button>
+                          <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14}/></button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
@@ -469,10 +487,9 @@ const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
         </div>
       </div>
 
-{modalType === 'bulkUpload' && (
+      {modalType === 'bulkUpload' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
             <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
-                
                 {!csvPreview ? (
                   <>
                     <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
