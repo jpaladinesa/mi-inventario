@@ -106,7 +106,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                 value={newItem.name} 
                 onChange={(e) => setNewItem({...newItem, name: e.target.value.toUpperCase()})} 
                 placeholder="NOMBRE" 
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
                 required 
               />
             </div>
@@ -118,7 +118,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                 value={newItem.value} 
                 onChange={(e) => setNewItem({...newItem, value: e.target.value.replace(/\D/g, '')})} 
                 placeholder="0" 
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" 
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" 
                 required 
               />
             </div>
@@ -134,7 +134,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
         {/* TABLA DE LISTADO */}
         <div className="lg:col-span-2 bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left uppercase">
+            <table className="w-full text-left uppercase min-w-[600px]">
               <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest">
                 <tr>
                   <th className="px-6 py-5">ID</th>
@@ -146,7 +146,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
               <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center text-slate-300 font-black">SIN REGISTROS DISPONIBLES</td>
+                    <td colSpan="4" className="px-6 py-16 text-center text-slate-300 font-black">SIN REGISTROS DISPONIBLES</td>
                   </tr>
                 ) : (
                   items.map((item) => (
@@ -158,13 +158,13 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                         <div className="flex justify-end gap-2">
                           <button 
                             onClick={() => { setSelectedItem(item); setEditData({name: item.name, value: item.value}); setModalType('edit'); }} 
-                            className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl transition-all hover:bg-[#2596be] hover:text-white shadow-sm cursor-pointer"
+                            className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl transition-all hover:bg-[#2596be] hover:text-white shadow-sm cursor-pointer active:scale-95"
                           >
                             <Edit size={14} />
                           </button>
                           <button 
                             onClick={() => { setSelectedItem(item); setModalType('deleteFirst'); }} 
-                            className="p-2.5 bg-rose-50 text-rose-500 rounded-xl transition-all hover:bg-rose-500 hover:text-white shadow-sm cursor-pointer"
+                            className="p-2.5 bg-rose-50 text-rose-500 rounded-xl transition-all hover:bg-rose-500 hover:text-white shadow-sm cursor-pointer active:scale-95"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -185,7 +185,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
             <div className="p-8 text-[#134b60]">
               <div className="flex flex-col items-center text-center gap-4 mb-8">
-                <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
+                <div className={`p-4 rounded-full shadow-inner ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
                    {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' || modalType === 'createConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
                 </div>
                 <h3 className="font-black text-xl uppercase tracking-tighter">
@@ -202,7 +202,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                         type="text" 
                         value={editData.name} 
                         onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} 
-                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl font-black uppercase text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black uppercase text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
                       />
                     </div>
                     <div className="space-y-1">
@@ -211,48 +211,48 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                         type="number" 
                         value={editData.value} 
                         onChange={(e) => setEditData({...editData, value: e.target.value})} 
-                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
                       />
                     </div>
                   </div>
                 )}
                 {modalType === 'createConfirm' && (
-                  <div className="p-5 bg-indigo-50 border-2 border-indigo-200 rounded-2xl">
+                  <div className="p-5 bg-indigo-50 border-2 border-indigo-200 rounded-2xl shadow-sm">
                     <p className="text-indigo-700 font-black text-xs text-center leading-relaxed uppercase">
                       ESTÁS CREANDO {newItem.name.toUpperCase()} DE {newItem.value}%
                     </p>
                   </div>
                 )}
                 {modalType === 'updateConfirm' && (
-                  <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl">
-                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p>
+                  <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl shadow-sm">
+                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase tracking-wide">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p>
                   </div>
                 )}
                 {modalType === 'duplicateWarning' && (
-                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl">
+                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl shadow-sm">
                     <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">{duplicateMessage}</p>
                   </div>
                 )}
                 {modalType === 'deleteSecond' && (
-                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl">
-                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN TOTAL DE {selectedItem?.id}.</p>
+                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl shadow-sm">
+                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN TOTAL DE <span className="font-mono">{selectedItem?.id}</span>.</p>
                   </div>
                 )}
               </div>
 
               <div className="flex gap-4 mt-8">
                 {modalType === 'duplicateWarning' ? (
-                  <button onClick={() => setModalType(null)} className="w-full py-4 bg-[#134b60] text-white rounded-2xl font-black text-xs uppercase hover:bg-[#0f3c4c] transition-colors cursor-pointer">SALIR / CANCELAR</button>
+                  <button onClick={() => setModalType(null)} className="w-full py-4 bg-[#134b60] text-white rounded-2xl font-black text-xs uppercase hover:bg-[#0f3c4c] transition-colors cursor-pointer active:scale-95 shadow-md">SALIR / CANCELAR</button>
                 ) : (
                   <>
-                    <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
+                    <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer active:scale-95">CANCELAR</button>
                     <button onClick={() => {
                        if (modalType === 'createConfirm') executeCreate();
                        else if (modalType === 'edit') setModalType('updateConfirm');
                        else if (modalType === 'updateConfirm') executeUpdate();
                        else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                        else if (modalType === 'deleteSecond') { setItems(items.filter(i => i.id !== selectedItem.id)); setModalType(null); }
-                    }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                    }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'createConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b] shadow-[#2596be]/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'}`}>ACEPTAR</button>
                   </>
                 )}
               </div>
@@ -2181,7 +2181,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
       'ANULADA': 'bg-rose-50 text-rose-500 border-rose-100',
       'CANCELADA': 'bg-rose-50 text-rose-500 border-rose-100'
     };
-    return <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border ${colors[status] || 'bg-slate-50 text-slate-400'}`}>{status}</span>;
+    return <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border shadow-sm ${colors[status] || 'bg-slate-50 text-slate-400'}`}>{status}</span>;
   };
 
   return (
@@ -2192,12 +2192,12 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
         </h2>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 md:gap-3">
         {['TODOS', 'NUEVA', 'EN ALISTAMIENTO', 'EN CAMINO', 'ENTREGADA', 'ANULADA'].map(s => (
           <button 
             key={s} 
             onClick={() => setFilterStatus(s)}
-            className={`px-6 py-2.5 rounded-xl font-black text-[9px] transition-all uppercase border-2 ${filterStatus === s ? 'bg-[#134b60] text-white border-[#134b60] shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:border-[#2596be]/30 hover:text-[#2596be]'}`}
+            className={`px-5 md:px-6 py-2.5 rounded-2xl font-black text-[9px] transition-all uppercase border-2 shadow-sm cursor-pointer active:scale-95 ${filterStatus === s ? 'bg-[#134b60] text-white border-[#134b60] shadow-[#134b60]/20' : 'bg-white text-slate-400 border-slate-100 hover:border-[#2596be]/30 hover:text-[#2596be]'}`}
           >
             {s} ({s === 'TODOS' ? stats.total : s === 'NUEVA' ? stats.new : s === 'EN ALISTAMIENTO' ? stats.prep : s === 'EN CAMINO' ? stats.shipped : s === 'ENTREGADA' ? stats.delivered : stats.cancelled})
           </button>
@@ -2207,15 +2207,15 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
         <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1100px]">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest uppercase">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest uppercase sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-6">ID SOLICITUD</th>
-                {role === 'ADMIN' && <th className="px-6 py-6">CLIENTE</th>}
-                <th className="px-6 py-6">FECHA REGISTRO</th>
-                <th className="px-6 py-6 text-center">ITEMS</th>
-                <th className="px-6 py-6 text-right">TOTAL</th>
-                <th className="px-6 py-6 text-center">ESTADO</th>
-                <th className="px-6 py-6 text-right">ACCIONES</th>
+                <th className="px-6 py-5">ID SOLICITUD</th>
+                {role === 'ADMIN' && <th className="px-6 py-5">CLIENTE</th>}
+                <th className="px-6 py-5">FECHA REGISTRO</th>
+                <th className="px-6 py-5 text-center">ITEMS</th>
+                <th className="px-6 py-5 text-right">TOTAL</th>
+                <th className="px-6 py-5 text-center">ESTADO</th>
+                <th className="px-6 py-5 text-right">ACCIONES</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
@@ -2224,31 +2224,31 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
               ) : (
                 filteredOrders.map(o => (
                   <tr key={o.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-5 font-mono text-[#2596be] font-black">{o.id}</td>
-                    {role === 'ADMIN' && <td className="px-6 py-5 text-[#134b60] font-black">{o.clientName}</td>}
-                    <td className="px-6 py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
-                    <td className="px-6 py-5 text-center">{o.totalItems}</td>
-                    <td className="px-6 py-5 text-right">
+                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{o.id}</td>
+                    {role === 'ADMIN' && <td className="px-6 py-4 text-[#134b60] font-black">{o.clientName}</td>}
+                    <td className="px-6 py-4 text-slate-400 font-mono text-[10px]">{o.date}</td>
+                    <td className="px-6 py-4 text-center font-black">{o.totalItems}</td>
+                    <td className="px-6 py-4 text-right">
                       <div className="font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</div>
                       <div className={`text-[9px] font-bold uppercase mt-0.5 ${(o.shippingStatus === 'ENVÍO GRATIS' || o.totalValue >= 300000) ? 'text-emerald-600' : 'text-slate-500'}`}>
                         {o.shippingStatus || (o.totalValue >= 300000 ? 'ENVÍO GRATIS' : 'ENVÍO: POR CONFIRMAR')}
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-center"><StatusBadge status={o.status} /></td>
-                    <td className="px-6 py-5 text-right">
+                    <td className="px-6 py-4 text-center"><StatusBadge status={o.status} /></td>
+                    <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2 items-center">
                         <button 
                           onClick={() => {
                             localStorage.setItem('repeatOrderItems', JSON.stringify(o.items));
                             setActiveTab('client_new_order');
                           }}
-                          className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 transition-all shadow-sm"
+                          className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 transition-all shadow-sm cursor-pointer"
                         >
                           <History size={14} /> REPETIR
                         </button>
                         <button 
                           onClick={() => { setSelectedOrder(o); setViewMode('list'); }} 
-                          className="bg-[#e9f4f8] text-[#2596be] hover:text-white px-5 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 hover:bg-[#2596be] active:scale-95 transition-all"
+                          className="bg-[#e9f4f8] text-[#2596be] hover:text-white px-5 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 hover:bg-[#2596be] active:scale-95 transition-all cursor-pointer"
                         >
                           <Eye size={14} /> VER DETALLE
                         </button>
@@ -2269,18 +2269,18 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                     <ShieldCheck size={32} />
                 </div>
                 <h3 className="font-black text-lg mb-1 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO?</h3>
-                <p className="text-[10px] text-slate-400 font-bold mb-4">EL ESTADO PASARÁ A: <br/><span className="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-1 rounded-full inline-block mt-2 border border-indigo-100">{pendingChange.newStatus}</span></p>
+                <p className="text-[10px] text-slate-400 font-bold mb-4">EL ESTADO PASARÁ A: <br/><span className="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-1.5 rounded-xl inline-block mt-2 border border-indigo-100">{pendingChange.newStatus}</span></p>
                 
                 {pendingChange.newStatus === 'ANULADA' && (
-                  <div className="mb-6 text-left space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <label className="text-[9px] font-black text-[#134b60] uppercase block">MOTIVO DE ANULACIÓN <span className="text-rose-500">*</span></label>
+                  <div className="mb-6 text-left space-y-3 bg-slate-50 p-5 rounded-2xl border-2 border-slate-100">
+                    <label className="text-[9px] font-black text-[#134b60] uppercase block tracking-widest">MOTIVO DE ANULACIÓN <span className="text-rose-500">*</span></label>
                     <select 
                       value={cancelReason} 
                       onChange={(e) => {
                         setCancelReason(e.target.value);
                         if (e.target.value !== 'OTROS') setCancelOtherText('');
                       }} 
-                      className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer"
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all"
                       required
                     >
                       <option value="">SELECCIONE UN MOTIVO...</option>
@@ -2295,7 +2295,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                     {cancelReason === 'OTROS' && (
                       <div className="space-y-1 pt-1 animate-in fade-in duration-300">
                         <div className="flex justify-between items-center">
-                          <label className="text-[8px] font-black text-slate-400 uppercase">ESPECIFIQUE EL MOTIVO</label>
+                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ESPECIFIQUE EL MOTIVO</label>
                           <span className={`text-[8px] font-black ${cancelOtherText.length >= 80 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
                             {cancelOtherText.length} / 80
                           </span>
@@ -2306,7 +2306,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                           placeholder="ESCRIBA EL MOTIVO (MÁX. 80 CARACTERES)..."
                           value={cancelOtherText}
                           onChange={(e) => setCancelOtherText(e.target.value.toUpperCase())}
-                          className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]"
+                          className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all"
                         />
                       </div>
                     )}
@@ -2320,14 +2320,14 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                         setCancelReason(''); 
                         setCancelOtherText(''); 
                       }} 
-                      className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors"
+                      className="flex-1 py-4 border-2 border-slate-200 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors cursor-pointer"
                     >
                       VOLVER
                     </button>
                     <button 
                       onClick={confirmUpdateStatus} 
                       disabled={pendingChange.newStatus === 'ANULADA' && (!cancelReason || (cancelReason === 'OTROS' && !cancelOtherText.trim()))}
-                      className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
                     >
                       CONFIRMAR
                     </button>
@@ -2341,8 +2341,8 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-3xl flex flex-col max-h-[90vh]">
             <div className="p-8 border-b-2 border-slate-100 flex justify-between items-center bg-[#e9f4f8]/30">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-amber-100 text-amber-600 rounded-xl"><Tag size={24}/></div>
-                    <div><h3 className="font-black text-xl text-[#134b60] tracking-tighter">APLICAR DESCUENTOS</h3><p className="text-[10px] text-slate-400 font-bold">SOLICITUD: {selectedOrder?.id}</p></div>
+                    <div className="p-3 bg-amber-100 text-amber-600 rounded-xl shadow-sm"><Tag size={24}/></div>
+                    <div><h3 className="font-black text-xl text-[#134b60] tracking-tighter">APLICAR DESCUENTOS</h3><p className="text-[10px] text-slate-400 font-bold tracking-widest">SOLICITUD: <span className="font-mono text-[#2596be]">{selectedOrder?.id}</span></p></div>
                 </div>
             </div>
             
@@ -2356,7 +2356,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                             <div className="mb-8 p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center gap-6">
                                 <div className="flex-1">
                                     <label className="text-[10px] font-black text-[#134b60] tracking-widest uppercase">DESCUENTO GLOBAL (%) SOBRE SUBTOTAL</label>
-                                    <p className="text-[9px] text-slate-400 font-bold mt-1">Se aplica a toda la factura antes de impuestos. {hasItemDiscounts && <span className="text-rose-500 block">Bloqueado por tener descuentos en ítems.</span>}</p>
+                                    <p className="text-[9px] text-slate-400 font-bold mt-1 leading-relaxed">Se aplica a toda la factura antes de impuestos. {hasItemDiscounts && <span className="text-rose-500 block mt-1">Bloqueado por tener descuentos en ítems.</span>}</p>
                                 </div>
                                 <input 
                                     type="number" 
@@ -2372,16 +2372,16 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                                 />
                             </div>
 
-                            <p className="text-[10px] font-black text-[#134b60] tracking-widest uppercase mb-4">DESCUENTO ESPECÍFICO POR ÍTEM (%) {hasGlobalDiscount && <span className="text-rose-500 font-normal">(Bloqueado por Descuento Global activo)</span>}</p>
+                            <p className="text-[10px] font-black text-[#134b60] tracking-widest uppercase mb-4">DESCUENTO ESPECÍFICO POR ÍTEM (%) {hasGlobalDiscount && <span className="text-rose-500 font-normal tracking-normal">(Bloqueado por Descuento Global activo)</span>}</p>
                             <div className="border-2 border-slate-100 rounded-2xl overflow-hidden">
                                 <table className="w-full text-left">
-                                    <thead className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase"><tr><th className="px-5 py-3">PRODUCTO</th><th className="px-5 py-3 text-center">CANT.</th><th className="px-5 py-3 text-right">DESCUENTO %</th></tr></thead>
+                                    <thead className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest"><tr><th className="px-5 py-4">PRODUCTO</th><th className="px-5 py-4 text-center">CANT.</th><th className="px-5 py-4 text-right">DESCUENTO %</th></tr></thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {discountData.items.map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-50">
-                                                <td className="px-5 py-3 text-[10px] font-black text-[#134b60]">{item.name}</td>
-                                                <td className="px-5 py-3 text-center font-mono text-sm">{item.quantity}</td>
-                                                <td className="px-5 py-3 text-right">
+                                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-5 py-4 text-[10px] font-black text-[#134b60]">{item.name}</td>
+                                                <td className="px-5 py-4 text-center font-mono text-sm">{item.quantity}</td>
+                                                <td className="px-5 py-4 text-right">
                                                     <input 
                                                         type="number" 
                                                         min="0" 
@@ -2396,7 +2396,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                                                                 items: newItems
                                                             });
                                                         }} 
-                                                        className="w-24 px-3 py-2 border-2 border-slate-200 rounded-lg text-center font-black outline-none focus:border-[#2596be] text-[#134b60] disabled:opacity-40" 
+                                                        className="w-24 px-3 py-2 bg-white border-2 border-slate-200 rounded-xl text-center font-black outline-none focus:border-[#2596be] text-[#134b60] disabled:opacity-40 transition-all" 
                                                     />
                                                 </td>
                                             </tr>
@@ -2410,10 +2410,10 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
             </div>
 
             <div className="p-8 border-t-2 border-slate-100 bg-white flex gap-4">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button>
+                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
                 <button 
                   onClick={() => setModalType('confirmSaveDiscounts')}
-                  className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2"
+                  className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2 transition-all cursor-pointer active:scale-95"
                 >
                   <CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS
                 </button>
@@ -2429,10 +2429,10 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                     <AlertTriangle size={40} />
                 </div>
                 <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO DE APLICAR ESTE DESCUENTO?</h3>
-                <p className="text-[10px] text-slate-400 font-bold mb-8">ESTA ACCIÓN MODIFICARÁ LOS VALORES FINANCIEROS DE LA SOLICITUD.</p>
+                <p className="text-[10px] text-slate-400 font-bold mb-8 leading-relaxed">ESTA ACCIÓN MODIFICARÁ LOS VALORES FINANCIEROS DE LA SOLICITUD Y RE-CALCULARÁ IMPUESTOS.</p>
                 <div className="flex gap-4">
-                    <button onClick={() => setModalType('editDiscounts')} className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500">VOLVER</button>
-                    <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-amber-600">CONFIRMAR</button>
+                    <button onClick={() => setModalType('editDiscounts')} className="flex-1 py-4 border-2 border-slate-200 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors cursor-pointer">VOLVER</button>
+                    <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-amber-600 transition-all cursor-pointer active:scale-95">CONFIRMAR</button>
                 </div>
             </div>
         </div>
@@ -2460,15 +2460,15 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                 <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
                   <div className="text-left md:text-right">
                     <p className="text-sm font-black text-[#134b60] tracking-tight">{selectedOrder.clientName || 'CLIENTE GENERAL'}</p>
-                    <div className="flex flex-wrap md:justify-end gap-x-2 text-[10px] text-slate-500 font-semibold mt-0.5">
+                    <div className="flex flex-wrap md:justify-end gap-x-2 text-[10px] text-slate-500 font-semibold mt-0.5 tracking-widest">
                       <span>{selectedOrder.clientDocType || 'NIT'}: {selectedOrder.clientDocNumber || 'N/A'}</span>
-                      <span>•</span>
+                      <span className="hidden md:inline">•</span>
                       <span>{selectedOrder.clientAddress || 'SIN DIRECCIÓN'}</span>
                     </div>
                   </div>
                   <button 
                     onClick={() => setSelectedOrder(null)} 
-                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0"
+                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0 cursor-pointer"
                   >
                     <X size={24}/>
                   </button>
@@ -2479,14 +2479,14 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
             <div className={`flex-1 overflow-y-auto scrollbar-hide ${viewMode === 'pdf' ? "overflow-x-auto" : "p-8"}`}>
               {viewMode === 'list' ? (
                 <div className="space-y-6">
-                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm gap-4 mb-4">
+                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-50 p-4 rounded-3xl border-2 border-slate-200 shadow-sm gap-4 mb-4">
                     <div className="flex items-center gap-6 divide-x-2 divide-slate-200 w-full lg:w-auto">
                       <div className="pr-2">
                         <p className="text-[8px] text-emerald-600 font-black mb-0.5 uppercase tracking-widest">VALOR TOTAL DE LA ORDEN</p>
-                        <p className="text-xl font-black text-emerald-800 font-mono tracking-tighter leading-none">{formatCurrency(selectedOrder.totalValue)}</p>
+                        <p className="text-2xl font-black text-emerald-800 font-mono tracking-tighter leading-none">{formatCurrency(selectedOrder.totalValue)}</p>
                       </div>
                       <div className="pl-6 flex items-center gap-3">
-                        <p className="text-[8px] text-slate-400 font-black uppercase mb-0">ESTADO:</p>
+                        <p className="text-[8px] text-slate-400 font-black uppercase mb-0 tracking-widest">ESTADO:</p>
                         <StatusBadge status={selectedOrder.status} />
                       </div>
                     </div>
@@ -2499,7 +2499,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                             <button
                               key={statusOption}
                               onClick={() => setPendingChange({ id: selectedOrder.id, newStatus: statusOption })}
-                              className={`px-4 py-2.5 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 ${
+                              className={`px-4 py-2.5 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 cursor-pointer ${
                                 isAnulada 
                                   ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
                                   : 'bg-[#2596be] hover:bg-[#134b60]'
@@ -2512,7 +2512,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                         })}
                         
                         {getNextStatusOptions(selectedOrder.status).length === 0 && (
-                           <p className="text-[9px] font-black text-slate-400 uppercase mr-2">SIN CAMBIOS PENDIENTES</p>
+                           <p className="text-[9px] font-black text-slate-400 uppercase mr-2 tracking-widest">SIN CAMBIOS PENDIENTES</p>
                         )}
 
                         {['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
@@ -2522,7 +2522,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                               setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
                               setModalType('editDiscounts');
                             }}
-                            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
                           >
                             <Tag size={14} /> DESCUENTOS
                           </button>
@@ -2531,9 +2531,9 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                     )}
                   </div>
 
-                  <div className="border-2 border-slate-100 rounded-2xl overflow-x-auto bg-white">
-                    <table className="w-full text-left min-w-[750px]">
-                      <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase">
+                  <div className="border-2 border-slate-100 rounded-3xl overflow-x-auto bg-white shadow-sm">
+                    <table className="w-full text-left min-w-[850px]">
+                      <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase tracking-widest sticky top-0 z-10">
                         <tr>
                           <th className="px-5 py-4">PRODUCTO</th>
                           <th className="px-5 py-4 text-center">SOLICITADA</th>
@@ -2553,13 +2553,13 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                            const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
                            const finalTotal = (baseUnit * (1 - ((item.discount || 0) / 100))) * (1 + (item.taxValue / 100)) * item.quantity;
                            return (
-                            <tr key={idx}>
+                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
                               <td className="px-5 py-4">
                                 <p className="text-[#134b60] font-black">{item.name}</p>
-                                <p className="text-[8px] text-slate-400 uppercase">{item.unit}</p>
+                                <p className="text-[8px] text-slate-400 uppercase tracking-widest">{item.unit}</p>
                                 {item.observation && <p className="text-[8px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
                               </td>
-                              <td className="px-5 py-4 text-center font-mono">{item.quantity}</td>
+                              <td className="px-5 py-4 text-center font-mono text-sm">{item.quantity}</td>
                               <td className="px-5 py-4 text-center font-mono">
                                 <input 
                                   type="number" 
@@ -2568,10 +2568,10 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                                   step="1"
                                   value={currentEdits.deliveredQuantity}
                                   onChange={(e) => handleItemDeliveryChange(idx, 'deliveredQuantity', parseInt(e.target.value) || 0)}
-                                  className="w-20 px-2 py-1.5 bg-[#e9f4f8] border border-[#2596be]/30 rounded-lg text-center font-black text-emerald-600 outline-none focus:border-[#2596be]"
+                                  className="w-20 px-2 py-2 bg-white border-2 border-slate-200 rounded-xl text-center font-black text-emerald-600 outline-none focus:border-emerald-500 transition-all"
                                 />
                               </td>
-                              <td className="px-5 py-4 text-center font-mono text-rose-500 font-black">{currentEdits.pendingQuantity}</td>
+                              <td className="px-5 py-4 text-center font-mono text-rose-500 font-black text-sm">{currentEdits.pendingQuantity}</td>
                               <td className="px-5 py-4">
                                 <input 
                                   type="text" 
@@ -2579,10 +2579,10 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                                   placeholder="OBSERVACIÓN..."
                                   value={currentEdits.deliveryObservation}
                                   onChange={(e) => handleItemDeliveryChange(idx, 'deliveryObservation', e.target.value)}
-                                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-600 outline-none focus:border-[#2596be] uppercase text-[10px]"
+                                  className="w-full px-4 py-2 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-600 outline-none focus:border-[#2596be] uppercase text-[10px] transition-all"
                                 />
                               </td>
-                              <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black">{formatCurrency(finalTotal)}</td>
+                              <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black text-sm">{formatCurrency(finalTotal)}</td>
                             </tr>
                           )})}
                       </tbody>
@@ -2611,7 +2611,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                           setEditingItems({ ...editingItems, [selectedOrder.id]: null });
                           setSelectedOrder(null);
                         }}
-                        className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase shadow-sm transition-all flex items-center gap-2 active:scale-95"
+                        className="px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-emerald-600/20 transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
                       >
                         <CheckCircle2 size={16} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
                       </button>
@@ -2619,7 +2619,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                   )}
 
                   {selectedOrder.generalObservation && (
-                    <div className="mt-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
+                    <div className="mt-4 p-5 bg-amber-50 border-2 border-amber-200 rounded-2xl">
                       <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
                       <p className="text-xs font-bold text-amber-900 break-all">{selectedOrder.generalObservation}</p>
                     </div>
@@ -2630,10 +2630,10 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                   
                   {(selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA') && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 overflow-hidden">
-                      <div className="border-8 border-rose-500/30 text-rose-500/30 font-black text-6xl md:text-8xl tracking-widest px-12 py-6 rounded-3xl transform -rotate-12 select-none uppercase text-center">
+                      <div className="border-8 border-rose-500/30 text-rose-500/30 font-black text-6xl md:text-8xl tracking-widest px-12 py-6 rounded-3xl transform -rotate-12 select-none uppercase text-center backdrop-blur-sm">
                         {selectedOrder.status}
                         {selectedOrder.cancelReason && (
-                          <span className="block text-xl md:text-2xl mt-2 tracking-normal font-bold">
+                          <span className="block text-xl md:text-2xl mt-4 tracking-normal font-bold">
                             MOTIVO: {selectedOrder.cancelReason}
                           </span>
                         )}
@@ -2656,13 +2656,13 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                     </div>
                   </div>
                   
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
+                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 mb-8">
                     <p className="font-black text-slate-400 mb-4 border-b border-slate-200 pb-2 text-[9px] tracking-[0.2em] uppercase">DATOS DEL CLIENTE</p>
                     <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-xs">
-                      <div><p className="text-[9px] text-slate-400 font-bold">NOMBRE</p><p className="font-black text-[#134b60]">{selectedOrder.clientName}</p></div>
-                      <div><p className="text-[9px] text-slate-400 font-bold">DOCUMENTO</p><p className="font-black text-[#134b60]">{selectedOrder.clientDocType || 'NIT'} {selectedOrder.clientDocNumber || 'N/A'}</p></div>
-                      <div><p className="text-[9px] text-slate-400 font-bold">DIRECCIÓN</p><p className="font-black text-[#134b60]">{selectedOrder.clientAddress || 'NO REGISTRADA'}</p></div>
-                      <div><p className="text-[9px] text-slate-400 font-bold">TELÉFONO</p><p className="font-black text-[#134b60]">{selectedOrder.clientPhone || 'NO REGISTRADO'}</p></div>
+                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">NOMBRE</p><p className="font-black text-[#134b60]">{selectedOrder.clientName}</p></div>
+                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">DOCUMENTO</p><p className="font-black text-[#134b60]">{selectedOrder.clientDocType || 'NIT'} {selectedOrder.clientDocNumber || 'N/A'}</p></div>
+                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">DIRECCIÓN</p><p className="font-black text-[#134b60]">{selectedOrder.clientAddress || 'NO REGISTRADA'}</p></div>
+                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">TELÉFONO</p><p className="font-black text-[#134b60]">{selectedOrder.clientPhone || 'NO REGISTRADO'}</p></div>
                     </div>
                   </div>
 
@@ -2677,15 +2677,15 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                           <th className="px-5 py-4 text-right rounded-tr-2xl">SUBTOTAL</th>
                         </tr>
                       </thead>
-                      <tbody className="text-[11px] font-bold text-[#134b60] divide-y divide-slate-100 border-b border-slate-200">
+                      <tbody className="text-[11px] font-bold text-[#134b60] divide-y divide-slate-100 border-b-2 border-slate-200">
                         {selectedOrder.items.map((item, idx) => {
                           const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
                           return (
                             <tr key={idx} className="hover:bg-slate-50 transition-colors">
                               <td className="px-5 py-5">
                                 <p className="text-[#134b60] font-black text-sm">{item.name}</p>
-                                <p className="text-slate-500 text-[10px] font-bold">{item.unit}</p>
-                                {item.observation && <p className="text-[9px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
+                                <p className="text-slate-500 text-[10px] font-bold tracking-widest mt-0.5">{item.unit}</p>
+                                {item.observation && <p className="text-[9px] text-amber-600 font-bold mt-1.5 uppercase">NOTA: {item.observation}</p>}
                               </td>
                               <td className="px-5 py-5 text-center font-mono text-[#134b60] text-sm">{item.quantity}</td>
                               <td className="px-5 py-5 text-right font-mono text-slate-500">{formatCurrency(baseUnit)}</td>
@@ -2699,35 +2699,35 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                   </div>
 
                   {selectedOrder.generalObservation && (
-                    <div className="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                    <div className="mb-8 p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">OBSERVACIONES GENERALES DEL PEDIDO:</p>
                       <p className="text-xs font-bold text-[#134b60]">{selectedOrder.generalObservation}</p>
                     </div>
                   )}
 
                   <div className="flex justify-end mb-12">
-                    <div className="w-80 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-2xl">
+                    <div className="w-80 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-3xl">
                       {(() => {
                           const calc = getCalculatedTotals(selectedOrder);
                           return (
                               <>
-                                <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span>{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
+                                <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span className="font-mono">{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
                                 {calc.totalItemDiscounts > 0 && (
-                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span>- {formatCurrency(calc.totalItemDiscounts)}</span></div>
+                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span className="font-mono">- {formatCurrency(calc.totalItemDiscounts)}</span></div>
                                 )}
                                 {calc.globalDiscountAmount > 0 && (
-                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span>- {formatCurrency(calc.globalDiscountAmount)}</span></div>
+                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span className="font-mono">- {formatCurrency(calc.globalDiscountAmount)}</span></div>
                                 )}
-                                <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span>{formatCurrency(calc?.taxesAmount || 0)}</span></div>
-                                <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span>{formatCurrency(calc?.total || 0)}</span></div>
+                                <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span className="font-mono">{formatCurrency(calc?.taxesAmount || 0)}</span></div>
+                                <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span className="font-mono">{formatCurrency(calc?.total || 0)}</span></div>
                               </>
                           )
                       })()}
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-6 border-t-2 border-[#134b60] flex flex-col gap-6">
-                    <div className="bg-amber-50 p-4 border-l-4 border-amber-400 rounded-r-xl">
+                  <div className="mt-auto pt-6 border-t-4 border-[#134b60] flex flex-col gap-6">
+                    <div className="bg-amber-50 p-4 border-l-4 border-amber-400 rounded-r-2xl">
                         <p className="text-[9px] font-black text-amber-700 uppercase tracking-[0.3em] mb-1 flex items-center gap-2"><AlertTriangle size={14}/> NOTA LEGAL IMPORTANTE</p>
                         <p className="text-[9px] text-amber-900 font-bold leading-relaxed">ESTE DOCUMENTO CONSTITUYE UNA SOLICITUD DE PEDIDO INTERNA OPERATIVA. NO TIENE VALIDEZ COMO FACTURA ELECTRÓNICA DE VENTA NI COMO TÍTULO VALOR SEGÚN LA NORMATIVA VIGENTE. SUJETO A REVISIÓN DE BODEGA.</p>
                     </div>
@@ -2743,18 +2743,18 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-white flex gap-3 shrink-0 print:hidden">
+            <div className="p-4 border-t border-slate-100 bg-white flex gap-4 shrink-0 print:hidden">
               {viewMode === 'list' ? (
                 <>
                   <button 
                     onClick={() => setViewMode('pdf')} 
-                    className="flex-1 bg-[#134b60] hover:bg-[#0f3c4c] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+                    className="flex-1 bg-[#134b60] hover:bg-[#0f3c4c] text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
                   >
                     <FileText size={16}/> GENERAR PDF
                   </button>
                   <button 
                     onClick={() => setSelectedOrder(null)} 
-                    className="flex-1 border border-slate-200 text-slate-600 hover:bg-slate-50 py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
+                    className="flex-1 border-2 border-slate-200 text-slate-600 hover:bg-slate-50 py-4 rounded-2xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
                   >
                     SALIR
                   </button>
@@ -2763,13 +2763,13 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                 <>
                   <button 
                     onClick={() => window.print()} 
-                    className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+                    className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-md shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
                   >
                     <Download size={16}/> DESCARGAR / IMPRIMIR PDF
                   </button>
                   <button 
                     onClick={() => setViewMode('list')} 
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-[#134b60] py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 active:scale-95"
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-[#134b60] py-4 rounded-2xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
                   >
                     <ChevronDown size={16} className="rotate-90"/> VOLVER AL RESUMEN
                   </button>
