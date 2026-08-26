@@ -2846,7 +2846,7 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
           <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden w-full max-w-lg relative border-4 border-[#2596be]">
             <button 
               onClick={() => setShowPromo(false)} 
-              className="absolute top-4 right-4 bg-white/80 backdrop-blur-md text-[#134b60] p-2 rounded-full shadow-lg hover:bg-rose-500 hover:text-white transition-all z-10"
+              className="absolute top-4 right-4 bg-white/80 backdrop-blur-md text-[#134b60] p-2.5 rounded-full shadow-lg hover:bg-rose-500 hover:text-white transition-all z-10 cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -2880,7 +2880,9 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
       )}
       {/* --- FIN DEL POP-UP --- */}
 
-      <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">PORTAL CLIENTE CASTILLA</h2></div>
+      <div className="border-b-4 border-[#2596be] w-fit pb-2">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">PORTAL CLIENTE CASTILLA</h2>
+      </div>
       
       <RealTimeClock />
 
@@ -2892,33 +2894,53 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
             className={`p-8 rounded-[32px] border-2 ${card.color} ${card.bg} shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden`}
           >
             <div className="flex items-center justify-between relative z-10">
-              <div><p className="text-[9px] text-[#134b60] opacity-70 font-black mb-1 tracking-widest">{card.title}</p><p className="text-4xl font-black text-[#134b60] tracking-tighter">{card.value}</p></div>
-              <div className="bg-white/60 p-4 rounded-2xl group-hover:bg-white transition-colors shadow-sm border border-white">{card.icon}</div>
+              <div>
+                <p className="text-[9px] text-[#134b60] opacity-70 font-black mb-1 tracking-widest">{card.title}</p>
+                <p className="text-4xl font-black text-[#134b60] tracking-tighter">{card.value}</p>
+              </div>
+              <div className="bg-white/80 p-4 rounded-2xl group-hover:bg-white transition-colors shadow-sm border border-white">{card.icon}</div>
             </div>
           </div>
         ))}
       </div>
 
       <div className="bg-white rounded-[40px] border-2 border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-[#e9f4f8]/30">
+        <div className="p-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#e9f4f8]/30 gap-4">
           <h4 className="text-[10px] font-black text-[#134b60] tracking-widest flex items-center gap-2 uppercase"><Activity size={16} className="text-[#2596be]"/> MOVIMIENTOS RECIENTES</h4>
-          <button onClick={() => setActiveTab('client_new_order')} className="bg-[#2596be] text-white px-6 py-3 rounded-2xl font-black text-[10px] flex items-center gap-2 hover:bg-[#1e7a9b] shadow-lg shadow-[#2596be]/20 uppercase transition-all">CREAR SOLICITUD <ChevronRight size={14} /></button>
+          <button onClick={() => setActiveTab('client_new_order')} className="bg-[#2596be] text-white px-6 py-3.5 rounded-2xl font-black text-[10px] flex items-center gap-2 hover:bg-[#1e7a9b] shadow-lg shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CREAR SOLICITUD <ChevronRight size={14} /></button>
         </div>
-        <div className="flex-1 overflow-y-auto overflow-x-auto">
-          <table className="w-full text-left uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest"><tr><th className="px-8 py-6">ID SOLICITUD</th><th className="px-8 py-6">FECHA</th><th className="px-8 py-6 text-center">ITEMS</th><th className="px-8 py-6 text-right">TOTAL ESTIMADO</th><th className="px-8 py-6 text-center">ESTADO</th><th className="px-8 py-6 text-right">ACCIÓN</th></tr></thead>
+        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
+          <table className="w-full text-left uppercase min-w-[900px]">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+              <tr>
+                <th className="px-8 py-5">ID SOLICITUD</th>
+                <th className="px-8 py-5">FECHA</th>
+                <th className="px-8 py-5 text-center">ITEMS</th>
+                <th className="px-8 py-5 text-right">TOTAL ESTIMADO</th>
+                <th className="px-8 py-5 text-center">ESTADO</th>
+                <th className="px-8 py-5 text-right">ACCIÓN</th>
+              </tr>
+            </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {orders.length === 0 ? (<tr><td colSpan="6" className="px-8 py-24 text-center text-slate-300 font-black tracking-tighter uppercase">SIN SOLICITUDES REGISTRADAS</td></tr>) : (
+              {orders.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-8 py-20 text-center text-slate-300 font-black tracking-tighter uppercase">SIN SOLICITUDES REGISTRADAS</td>
+                </tr>
+              ) : (
                 orders.map(o => (
                   <tr key={o.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-8 py-6 font-mono text-[#2596be] font-black">{o.id}</td>
-                    <td className="px-8 py-6 text-slate-400 font-mono text-[10px]">{o.date}</td>
-                    <td className="px-8 py-6 text-center">{o.totalItems}</td>
-                    <td className="px-8 py-6 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
-                    <td className="px-8 py-6 text-center">
-                        <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border ${o.status === 'NUEVA' ? 'bg-[#e9f4f8] text-[#2596be] border-[#2596be]/20' : o.status === 'CANCELADA' ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>{o.status}</span>
+                    <td className="px-8 py-5 font-mono text-[#2596be] font-black">{o.id}</td>
+                    <td className="px-8 py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
+                    <td className="px-8 py-5 text-center font-black">{o.totalItems}</td>
+                    <td className="px-8 py-5 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
+                    <td className="px-8 py-5 text-center">
+                        <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border shadow-sm ${o.status === 'NUEVA' ? 'bg-[#e9f4f8] text-[#2596be] border-[#2596be]/20' : o.status === 'CANCELADA' ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>{o.status}</span>
                     </td>
-                    <td className="px-8 py-6 text-right"><button onClick={() => { setFilterStatus('TODOS'); setActiveTab('client_orders_history'); }} className="bg-[#e9f4f8] text-[#2596be] p-3 rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm flex items-center gap-2 ml-auto text-[10px] uppercase"><Eye size={14}/> DETALLE</button></td>
+                    <td className="px-8 py-5 text-right">
+                      <button onClick={() => { setFilterStatus('TODOS'); setActiveTab('client_orders_history'); }} className="bg-[#e9f4f8] text-[#2596be] p-3 rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm flex items-center gap-2 ml-auto text-[10px] uppercase font-black cursor-pointer active:scale-95">
+                        <Eye size={14}/> DETALLE
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -2930,7 +2952,6 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
     </div>
   );
 };
-
 /// --- PANEL DE CONTROL (ADMIN) OPTIMIZADO ---
 const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, setFilterStatus }) => {
   const stats = useMemo(() => {
