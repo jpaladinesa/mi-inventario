@@ -458,36 +458,36 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
       <div className="flex justify-between items-end border-b-4 border-[#2596be] pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">GESTIÓN DE PRODUCTOS</h2>
-        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-4 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 shadow-lg transition-all"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE PRODUCTOS</h2>
+        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
       </div>
 
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full">
-        <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><ShoppingCart size={18} className="text-[#2596be]" /> REGISTRO MANUAL DE PRODUCTO</h3>
-        {errorMsg && <div className="mb-4 p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl animate-pulse">{errorMsg}</div>}
+      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6">
+        <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><ShoppingCart size={18} className="text-[#2596be]" /> REGISTRO MANUAL DE PRODUCTO</h3>
+        {errorMsg && <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl animate-pulse">{errorMsg}</div>}
         <form className="space-y-6" onSubmit={handleAdd}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 items-end">
             <div className="space-y-1 lg:col-span-1">
               <label className="text-[9px] font-black text-[#2596be] uppercase tracking-widest">CÓDIGO ID (5 DÍGITOS)</label>
-              <input type="text" maxLength={5} value={newProd.id} onChange={e => {const val = e.target.value.replace(/\D/g, ''); setNewProd({...newProd, id: val});}} className="w-full px-4 py-3 bg-[#e9f4f8] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center text-[#134b60] focus:ring-4 focus:ring-[#2596be]/20" placeholder="00001" required />
+              <input type="text" maxLength={5} value={newProd.id} onChange={e => {const val = e.target.value.replace(/\D/g, ''); setNewProd({...newProd, id: val});}} className="w-full px-4 py-3 bg-[#e9f4f8] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center text-[#134b60] focus:ring-4 focus:ring-[#2596be]/20 transition-all" placeholder="00001" required />
             </div>
             
             <div className="space-y-1 lg:col-span-3 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase">NOMBRE DEL PRODUCTO</label>
-              <input type="text" maxLength={100} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="DESCRIPCIÓN DETALLADA DEL PRODUCTO..." required />
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE DEL PRODUCTO</label>
+              <input type="text" maxLength={100} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="DESCRIPCIÓN DETALLADA DEL PRODUCTO..." required />
               {newProd.name && newProd.name.length >= 100 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse">Límite 100 alcanzado</span>}
             </div>
 
             <div className="space-y-1 lg:col-span-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase">U. MEDIDA</label>
-              <select value={newProd.unitName} onChange={e => setNewProd({...newProd, unitName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60]" required>
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">U. MEDIDA</label>
+              <select value={newProd.unitName} onChange={e => setNewProd({...newProd, unitName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all" required>
                  {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
             </div>
 
             <div className="space-y-1 lg:col-span-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase">IVA</label>
-              <select value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60]">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IVA</label>
+              <select value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all">
                  <option value="">SELECCIONE</option>
                  {taxes.slice().sort((a, b) => a.value - b.value).map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
               </select>
@@ -495,29 +495,29 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
             <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
-              <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
+              <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
             <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
-              <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" placeholder="" required />
+              <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
-            <button type="submit" className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl transition-all">REGISTRAR</button>
+            <button type="submit" className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95">REGISTRAR PRODUCTO</button>
           </div>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-slate-50 border-2 border-slate-100 px-6 py-4 rounded-2xl"><p className="text-[8px] text-slate-400 font-black mb-1">COSTO + UTILIDAD</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(currentCalcs.subtotal)}</p></div>
           <div className="bg-amber-50 border-2 border-amber-100 px-6 py-4 rounded-2xl"><p className="text-[8px] text-amber-500 font-black mb-1">VALOR IVA</p><p className="text-lg font-black text-amber-700">{formatCurrency(currentCalcs.taxAmount)}</p></div>
           <div className="bg-[#e9f4f8] px-6 py-4 rounded-2xl border-2 border-[#2596be]/30"><p className="text-[8px] text-[#2596be] font-black mb-1">PRECIO SUGERIDO FINAL</p><p className="text-xl font-black text-[#134b60]">{formatCurrency(currentCalcs.finalPrice)}</p></div>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
         <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1200px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-5">CÓDIGO ID</th>
                 <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
@@ -543,7 +543,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                         <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-full font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                        <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
                           {availableStock.toFixed(2)}
                         </span>
                       </td>
@@ -552,8 +552,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                       <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14}/></button>
-                          <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14}/></button>
+                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
+                          <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
                         </div>
                       </td>
                     </tr>
@@ -566,24 +566,24 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
 
       {modalType === 'bulkUpload' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
             <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
                 {!csvPreview ? (
                   <>
-                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
+                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
                     <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO DE PRODUCTOS (CSV)</h3>
                     <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO: ID, NOMBRE, UNIDAD, COSTO, UTILIDAD, IVA(%)</p>
                     
-                    <button onClick={downloadTemplate} className="w-full mb-6 py-3 border-2 border-[#2596be] text-[#2596be] rounded-xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2">
+                    <button onClick={downloadTemplate} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                         <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
                     </button>
 
-                    <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
+                    <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
                         <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
                         <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
-                        <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
+                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">SELECCIONAR ARCHIVO CSV</span>
                     </label>
-                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-200 uppercase">CANCELAR</button>
+                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs hover:bg-slate-200 uppercase transition-colors cursor-pointer">CANCELAR</button>
                   </>
                 ) : (
                   <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
@@ -602,9 +602,9 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                       </div>
                     </div>
 
-                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl">
+                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
                       <table className="w-full text-left uppercase">
-                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest">
+                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest z-10">
                           <tr>
                             <th className="px-4 py-3">ID</th>
                             <th className="px-4 py-3">PRODUCTO</th>
@@ -634,7 +634,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     </div>
 
                     {csvPreview.errors.length > 0 && (
-                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1">
+                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
                         <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
                         {csvPreview.errors.map((err, idx) => (
                           <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
@@ -643,7 +643,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     )}
 
                     <div className="flex gap-4 pt-2">
-                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all">CANCELAR</button>
+                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all cursor-pointer">CANCELAR</button>
                       <button 
                         onClick={() => {
                           setProducts([...csvPreview.validRows, ...products]);
@@ -651,7 +651,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                           setModalType(null);
                         }} 
                         disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
-                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all"
+                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
                       >
                         CONFIRMAR E IMPORTAR {csvPreview.validRows.length} REGISTROS
                       </button>
@@ -705,13 +705,13 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DE {selectedProd?.name}.</p></div>}
               </div>
               <div className="flex gap-4 mt-10">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
+                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
                 <button onClick={() => {
                    if (modalType === 'edit') setModalType('updateConfirm');
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setProducts(products.filter(p => p.id !== selectedProd.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
               </div>
             </div>
           </div>
