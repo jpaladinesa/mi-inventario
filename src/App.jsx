@@ -1160,16 +1160,16 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-[#2596be] pb-2 gap-4">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">GESTIÓN DE CLIENTES</h2>
-        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-[#e9f4f8] shadow-sm">
-          <span className="text-[9px] font-black text-slate-400 uppercase">MOTOR DE DESCUENTOS:</span>
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE CLIENTES</h2>
+        <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border-2 border-[#e9f4f8] shadow-sm">
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">MOTOR DE DESCUENTOS:</span>
           <button 
             type="button"
             onClick={() => {
               setTargetDiscountState(!globalDiscountEngine);
               setShowDiscountModal(true);
             }}
-            className={`px-4 py-1.5 rounded-xl text-[9px] font-black transition-all uppercase shadow-md ${globalDiscountEngine ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}
+            className={`px-4 py-2 rounded-xl text-[9px] font-black transition-all uppercase shadow-md cursor-pointer active:scale-95 ${globalDiscountEngine ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-rose-500 text-white shadow-rose-500/20'}`}
           >
             {globalDiscountEngine ? 'ACTIVO (GLOBAL)' : 'APAGADO (GLOBAL)'}
           </button>
@@ -1185,7 +1185,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
             <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">
               {targetDiscountState ? '¿DESEA ACTIVAR LOS DESCUENTOS?' : '¿DESEA DESACTIVAR LOS DESCUENTOS?'}
             </h3>
-            <p className="text-[10px] text-slate-400 font-bold mb-8 uppercase">
+            <p className="text-[10px] text-slate-400 font-bold mb-8 uppercase leading-relaxed">
               {targetDiscountState 
                 ? 'EL MOTOR GLOBAL SE ACTIVARÁ Y OPERARÁ EN TODO EL SISTEMA.' 
                 : 'EL MOTOR GLOBAL SE APAGARÁ Y SE MANTENDRÁ EN ROJO (DESACTIVADO) HASTA QUE UN ADMINISTRADOR VUELVA A ACTIVARLO.'}
@@ -1194,7 +1194,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
               <button 
                 type="button"
                 onClick={() => setShowDiscountModal(false)} 
-                className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors"
+                className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors cursor-pointer"
               >
                 CANCELAR
               </button>
@@ -1204,7 +1204,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
                   setGlobalDiscountEngine(targetDiscountState);
                   setShowDiscountModal(false);
                 }} 
-                className={`flex-1 py-4 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase transition-all ${targetDiscountState ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'}`}
+                className={`flex-1 py-4 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase transition-all cursor-pointer active:scale-95 ${targetDiscountState ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20'}`}
               >
                 ACEPTAR
               </button>
@@ -1213,17 +1213,17 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
         </div>
       )}
 
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full">
-        <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><UserPlus size={18} className="text-[#2596be]" /> REGISTRO DE CLIENTE</h3>
+      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6">
+        <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><UserPlus size={18} className="text-[#2596be]" /> REGISTRO DE CLIENTE</h3>
         <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
           <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">NOMBRE / RAZÓN SOCIAL</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE / RAZÓN SOCIAL</label>
             <input type="text" maxLength={40} value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value.toUpperCase()})} className={getInputClass(newClient.name, 40)} required />
             <InputWarning val={newClient.name} max={40} />
           </div>
           <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400">DOC. TIPO</label>
-            <select value={newClient.docType} onChange={e => setNewClient({...newClient, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DOC. TIPO</label>
+            <select value={newClient.docType} onChange={e => setNewClient({...newClient, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all">
               <option value="NIT">NIT</option>
               <option value="CC">CÉDULA CIUDADANÍA</option>
               <option value="CE">CÉDULA EXTRANJERÍA</option>
@@ -1231,46 +1231,46 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
             </select>
           </div>
           <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">NÚMERO</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NÚMERO</label>
             <input type="text" maxLength={15} value={newClient.docNumber} onChange={e => handleNumChange(e.target.value, 'docNumber', false)} className={getInputClass(newClient.docNumber, 15)} required />
             <InputWarning val={newClient.docNumber} max={15} />
           </div>
           
           <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">EMAIL</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EMAIL</label>
             <input type="email" maxLength={50} pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className={getInputClass(newClient.email, 50).replace('uppercase', 'lowercase')} required placeholder="ejemplo@dominio.com" />
             <InputWarning val={newClient.email} max={50} />
           </div>
           <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400">TIPO CLIENTE</label>
-            <select value={newClient.typeId} onChange={e => setNewClient({...newClient, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer" required>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TIPO CLIENTE</label>
+            <select value={newClient.typeId} onChange={e => setNewClient({...newClient, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all" required>
               <option value="">SELECCIONE</option>{clientTypes.map(t => <option key={t.id} value={t.id}>{t.name} ({t.value}%)</option>)}
             </select>
           </div>
           <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">TELÉFONO</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TELÉFONO</label>
             <input type="text" maxLength={15} value={newClient.phone} onChange={e => handleNumChange(e.target.value, 'phone', false)} className={getInputClass(newClient.phone, 15)} required />
             <InputWarning val={newClient.phone} max={15} />
           </div>
 
           <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">EXTENSIÓN (OPC.)</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EXTENSIÓN (OPC.)</label>
             <input type="text" maxLength={5} value={newClient.extension} onChange={e => handleNumChange(e.target.value, 'extension', false)} className={getInputClass(newClient.extension, 5)} />
             <InputWarning val={newClient.extension} max={5} />
           </div>
           <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">CELULAR</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CELULAR</label>
             <input type="text" maxLength={15} value={newClient.mobile} onChange={e => handleNumChange(e.target.value, 'mobile', false)} className={getInputClass(newClient.mobile, 15)} required />
             <InputWarning val={newClient.mobile} max={15} />
           </div>
           <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">DIRECCIÓN</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DIRECCIÓN</label>
             <input type="text" maxLength={50} value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value.toUpperCase()})} className={getInputClass(newClient.address, 50)} required />
             <InputWarning val={newClient.address} max={50} />
           </div>
 
           <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400">PERSONA DE CONTACTO (OPC.)</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PERSONA DE CONTACTO (OPC.)</label>
             <input type="text" maxLength={20} value={newClient.contact} onChange={e => setNewClient({...newClient, contact: e.target.value.toUpperCase()})} className={getInputClass(newClient.contact, 20)} />
             <InputWarning val={newClient.contact} max={20} />
           </div>
@@ -1279,7 +1279,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
           <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
             <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
               <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
-              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-50">
                 <input 
                   type="checkbox" 
                   checked={newClient.autoDiscountActive} 
@@ -1293,27 +1293,27 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
             {newClient.autoDiscountActive && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400">DESCUENTO SUBTOTAL (%)</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCUENTO SUBTOTAL (%)</label>
                   <input 
                     type="number" 
                     placeholder="0%" 
                     value={newClient.discountPercentage} 
                     onChange={e => setNewClient({...newClient, discountPercentage: e.target.value})} 
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400">RECURRENCIA (Nº ÓRDENES AL MES)</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RECURRENCIA (Nº ÓRDENES AL MES)</label>
                   <input 
                     type="number" 
                     placeholder="Ej: 3" 
                     value={newClient.recurrenceOrdersCount} 
                     onChange={e => setNewClient({...newClient, recurrenceOrdersCount: e.target.value})} 
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
                   />
                 </div>
                 <div className="flex items-center pt-5">
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center">
+                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center transition-all hover:bg-slate-50">
                     <input 
                       type="checkbox" 
                       checked={newClient.topItemsActive} 
@@ -1327,13 +1327,13 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
             )}
           </div>
 
-          <div className="md:col-span-2 pt-2">
-            <button type="submit" className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] shadow-xl transition-all active:scale-95 tracking-widest flex justify-center items-center gap-2"><Plus size={16} /> REGISTRAR CLIENTE</button>
+          <div className="md:col-span-4 pt-2">
+            <button type="submit" className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black text-[10px] shadow-xl shadow-[#2596be]/20 transition-all active:scale-95 tracking-widest flex justify-center items-center gap-2 cursor-pointer"><Plus size={16} /> REGISTRAR CLIENTE</button>
           </div>
         </form>
       </div>
 
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
         <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1000px] uppercase">
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
@@ -1352,7 +1352,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
               ) : (
                 clients.map(c => (
                   <tr key={c.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#2596be]">{c.id}</td>
+                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{c.id}</td>
                     <td className="px-6 py-4">
                       <p className="font-black text-[#134b60]">{c.name}</p>
                       <p className="text-[9px] text-slate-400 lowercase">{c.email}</p>
@@ -1362,11 +1362,11 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
                       <p className="text-slate-600"><span className="text-[9px] text-slate-400 font-sans">CEL:</span> {c.mobile}</p>
                       <p className="text-[10px] text-slate-400"><span className="text-[9px] text-slate-400 font-sans">TEL:</span> {c.phone} {c.extension && `EXT: ${c.extension}`}</p>
                     </td>
-                    <td className="px-6 py-4 text-center"><span className="bg-[#e9f4f8] text-[#2596be] px-3 py-1.5 rounded-lg text-[9px] border border-[#2596be]/25 inline-block">{c.typeName}</span></td>
+                    <td className="px-6 py-4 text-center"><span className="bg-[#e9f4f8] text-[#2596be] px-3 py-1.5 rounded-xl text-[9px] border border-[#2596be]/25 inline-block font-black">{c.typeName}</span></td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14}/></button>
-                        <button onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14}/></button>
+                        <button onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
+                        <button onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
                       </div>
                     </td>
                   </tr>
@@ -1393,13 +1393,13 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
                 {modalType === 'edit' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 max-h-[50vh] overflow-y-auto px-2 py-2 scrollbar-hide">
                     <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">NOMBRE / RAZÓN SOCIAL</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE / RAZÓN SOCIAL</label>
                       <input type="text" maxLength={40} value={editData.name} onChange={e => setEditData({...editData, name: e.target.value.toUpperCase()})} className={getInputClass(editData.name, 40)} required />
                       <InputWarning val={editData.name} max={40} />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400">DOC. TIPO</label>
-                      <select value={editData.docType} onChange={e => setEditData({...editData, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60]">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DOC. TIPO</label>
+                      <select value={editData.docType} onChange={e => setEditData({...editData, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all">
                         <option value="NIT">NIT</option>
                         <option value="CC">CÉDULA CIUDADANÍA</option>
                         <option value="CE">CÉDULA EXTRANJERÍA</option>
@@ -1407,46 +1407,46 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
                       </select>
                     </div>
                     <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">NÚMERO</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NÚMERO</label>
                       <input type="text" maxLength={15} value={editData.docNumber} onChange={e => handleNumChange(e.target.value, 'docNumber', true)} className={getInputClass(editData.docNumber, 15)} required />
                       <InputWarning val={editData.docNumber} max={15} />
                     </div>
                     
                     <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">EMAIL</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EMAIL</label>
                       <input type="email" maxLength={50} pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} className={getInputClass(editData.email, 50).replace('uppercase', 'lowercase')} required />
                       <InputWarning val={editData.email} max={50} />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400">TIPO CLIENTE</label>
-                      <select value={editData.typeId} onChange={e => setEditData({...editData, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60]" required>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TIPO CLIENTE</label>
+                      <select value={editData.typeId} onChange={e => setEditData({...editData, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all" required>
                         <option value="">SELECCIONE</option>{clientTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                     </div>
                     <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">TELÉFONO</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TELÉFONO</label>
                       <input type="text" maxLength={15} value={editData.phone} onChange={e => handleNumChange(e.target.value, 'phone', true)} className={getInputClass(editData.phone, 15)} required />
                       <InputWarning val={editData.phone} max={15} />
                     </div>
 
                     <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">EXTENSIÓN (OPC.)</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EXTENSIÓN (OPC.)</label>
                       <input type="text" maxLength={5} value={editData.extension} onChange={e => handleNumChange(e.target.value, 'extension', true)} className={getInputClass(editData.extension, 5)} />
                       <InputWarning val={editData.extension} max={5} />
                     </div>
                     <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">CELULAR</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CELULAR</label>
                       <input type="text" maxLength={15} value={editData.mobile} onChange={e => handleNumChange(e.target.value, 'mobile', true)} className={getInputClass(editData.mobile, 15)} required />
                       <InputWarning val={editData.mobile} max={15} />
                     </div>
                     <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">DIRECCIÓN</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DIRECCIÓN</label>
                       <input type="text" maxLength={50} value={editData.address} onChange={e => setEditData({...editData, address: e.target.value.toUpperCase()})} className={getInputClass(editData.address, 50)} required />
                       <InputWarning val={editData.address} max={50} />
                     </div>
 
                     <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400">PERSONA DE CONTACTO (OPC.)</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PERSONA DE CONTACTO (OPC.)</label>
                       <input type="text" maxLength={20} value={editData.contact} onChange={e => setEditData({...editData, contact: e.target.value.toUpperCase()})} className={getInputClass(editData.contact, 20)} />
                       <InputWarning val={editData.contact} max={20} />
                     </div>
@@ -1455,7 +1455,7 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
                     <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
                       <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
                         <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
-                        <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                        <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-50">
                           <input 
                             type="checkbox" 
                             checked={editData.autoDiscountActive || false} 
@@ -1469,27 +1469,27 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
                       {editData.autoDiscountActive && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
                           <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400">DESCUENTO SUBTOTAL (%)</label>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCUENTO SUBTOTAL (%)</label>
                             <input 
                               type="number" 
                               placeholder="0%" 
                               value={editData.discountPercentage || ''} 
                               onChange={e => setEditData({...editData, discountPercentage: e.target.value})} 
-                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400">RECURRENCIA (Nº ÓRDENES AL MES)</label>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RECURRENCIA (Nº ÓRDENES AL MES)</label>
                             <input 
                               type="number" 
                               placeholder="Ej: 3" 
                               value={editData.recurrenceOrdersCount || ''} 
                               onChange={e => setEditData({...editData, recurrenceOrdersCount: e.target.value})} 
-                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]"
+                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
                             />
                           </div>
                           <div className="flex items-center pt-5">
-                            <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center">
+                            <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center transition-all hover:bg-slate-50">
                               <input 
                                 type="checkbox" 
                                 checked={editData.topItemsActive || false} 
@@ -1505,17 +1505,17 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
 
                   </div>
                 )}
-                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
+                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase tracking-tight">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
                 {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DE {selectedClient?.name}.</p></div>}
               </div>
               <div className="flex gap-4 mt-8">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
+                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
                 <button onClick={() => {
                    if (modalType === 'edit') setModalType('updateConfirm');
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setClients(clients.filter(c => c.id !== selectedClient.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
               </div>
             </div>
           </div>
