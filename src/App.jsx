@@ -3114,51 +3114,148 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2"><h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">GESTIÓN DE ACCESOS</h2></div>
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full">
-        <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><Fingerprint size={18} className="text-[#2596be]" /> NUEVO USUARIO / CREDENCIAL</h3>
-        {errorMsg && <div className="mb-4 p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl animate-pulse">{errorMsg}</div>}
+      <div className="border-b-4 border-[#2596be] w-fit pb-2">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE ACCESOS</h2>
+      </div>
+
+      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6">
+        <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase">
+          <Fingerprint size={18} className="text-[#2596be]" /> NUEVO USUARIO / CREDENCIAL
+        </h3>
+        
+        {errorMsg && (
+          <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl animate-pulse tracking-wide shadow-sm">
+            {errorMsg}
+          </div>
+        )}
+
         <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
           
           <div className="space-y-1 lg:col-span-2 relative">
-            <label className="text-[9px] font-black text-slate-400 tracking-widest">1. BUSCAR CLIENTE (DOC / NOMBRE)</label>
-            <input type="text" value={searchClient} onChange={e => {setSearchClient(e.target.value); setNewUser({...newUser, relatedId: '', name: ''});}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" placeholder="ESCRIBA PARA BUSCAR..." required />
+            <label className="text-[9px] font-black text-slate-400 tracking-widest block">1. BUSCAR CLIENTE (DOC / NOMBRE)</label>
+            <input 
+              type="text" 
+              value={searchClient} 
+              onChange={e => {setSearchClient(e.target.value); setNewUser({...newUser, relatedId: '', name: ''});}} 
+              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all shadow-sm" 
+              placeholder="ESCRIBA PARA BUSCAR..." 
+              required 
+            />
             {filteredClients.length > 0 && !newUser.relatedId && (
               <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
-                {filteredClients.map(c => <button key={c.id} type="button" onClick={() => { setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email, role: 'CLIENTE'}); setSearchClient(`${c.docNumber} - ${c.name}`); }} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60]">{c.docNumber} - {c.name}</button>)}
+                {filteredClients.map(c => (
+                  <button 
+                    key={c.id} 
+                    type="button" 
+                    onClick={() => { setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email, role: 'CLIENTE'}); setSearchClient(`${c.docNumber} - ${c.name}`); }} 
+                    className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer"
+                  >
+                    {c.docNumber} - {c.name}
+                  </button>
+                ))}
               </div>
             )}
           </div>
           
           <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400">2. ASIGNAR ROL</label>
-            <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} disabled={!newUser.relatedId} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60]" required>
+            <label className="text-[9px] font-black text-slate-400 tracking-widest block">2. ASIGNAR ROL</label>
+            <select 
+              value={newUser.role} 
+              onChange={e => setNewUser({...newUser, role: e.target.value})} 
+              disabled={!newUser.relatedId} 
+              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
+              required
+            >
               <option value="">SELECCIONE...</option>
               <option value="CLIENTE">CLIENTE</option>
               <option value="ADMIN">ADMINISTRADOR</option>
             </select>
           </div>
           
-          <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">3. CORREO (USUARIO)</label><input type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} disabled={!newUser.relatedId} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs lowercase text-[#134b60]" required /></div>
-          <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">4. CONTRASEÑA</label><input type="text" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} disabled={!newUser.relatedId} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required /></div>
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-slate-400 tracking-widest block">3. CORREO (USUARIO)</label>
+            <input 
+              type="email" 
+              value={newUser.email} 
+              onChange={e => setNewUser({...newUser, email: e.target.value})} 
+              disabled={!newUser.relatedId} 
+              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs lowercase text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
+              required 
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-slate-400 tracking-widest block">4. CONTRASEÑA</label>
+            <input 
+              type="text" 
+              value={newUser.password} 
+              onChange={e => setNewUser({...newUser, password: e.target.value})} 
+              disabled={!newUser.relatedId} 
+              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
+              required 
+            />
+          </div>
           
-          <div className="lg:col-span-5 pt-2"><button type="submit" disabled={!newUser.relatedId || !newUser.role} className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] shadow-xl transition-all active:scale-95 tracking-widest flex justify-center items-center gap-2 disabled:opacity-50"><Plus size={16} /> CREAR ACCESO AL SISTEMA</button></div>
+          <div className="lg:col-span-5 pt-2">
+            <button 
+              type="submit" 
+              disabled={!newUser.relatedId || !newUser.role} 
+              className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black text-[10px] shadow-xl shadow-[#2596be]/20 transition-all active:scale-95 tracking-widest flex justify-center items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              <Plus size={16} /> CREAR ACCESO AL SISTEMA
+            </button>
+          </div>
         </form>
       </div>
 
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="flex-1 overflow-y-auto overflow-x-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest"><tr><th className="px-6 py-6">ID USUARIO</th><th className="px-6 py-6">NOMBRE ASIGNADO</th><th className="px-6 py-6">CORREO ACCESO</th><th className="px-6 py-6 text-center">ROL</th><th className="px-6 py-6 text-right">GESTIÓN</th></tr></thead>
+            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+              <tr>
+                <th className="px-6 py-5">ID USUARIO</th>
+                <th className="px-6 py-5">NOMBRE ASIGNADO</th>
+                <th className="px-6 py-5">CORREO ACCESO</th>
+                <th className="px-6 py-5 text-center">ROL</th>
+                <th className="px-6 py-5 text-right">GESTIÓN</th>
+              </tr>
+            </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {users.length === 0 ? (<tr><td colSpan="5" className="px-6 py-20 text-center text-slate-300 font-black">SIN ACCESOS</td></tr>) : (
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-20 text-center text-slate-300 font-black">SIN ACCESOS</td>
+                </tr>
+              ) : (
                 users.map(u => (
                   <tr key={u.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-5 font-mono text-[#2596be]">{u.id}</td>
-                    <td className="px-6 py-5"><p className="font-black text-[#134b60]">{u.name}</p>{u.relatedId && <p className="text-[9px] text-slate-400">ID REL: {u.relatedId}</p>}</td>
-                    <td className="px-6 py-5 font-mono lowercase text-slate-500">{u.email}</td>
-                    <td className="px-6 py-5 text-center"><span className={`px-3 py-1.5 rounded-lg text-[9px] border ${u.role === 'ADMIN' ? 'bg-[#134b60] text-white border-[#134b60]' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>{u.role}</span></td>
-                    <td className="px-6 py-5 text-right"><div className="flex justify-end gap-2"><button onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} className="p-3 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={16}/></button><button onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm" disabled={u.role === 'ADMIN' && users.filter(usr=>usr.role==='ADMIN').length===1}><Trash2 size={16}/></button></div></td>
+                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{u.id}</td>
+                    <td className="px-6 py-4">
+                      <p className="font-black text-[#134b60]">{u.name}</p>
+                      {u.relatedId && <p className="text-[9px] text-slate-400 font-mono mt-0.5">ID REL: {u.relatedId}</p>}
+                    </td>
+                    <td className="px-6 py-4 font-mono lowercase text-slate-500">{u.email}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-3.5 py-1.5 rounded-xl text-[9px] font-black border inline-block ${u.role === 'ADMIN' ? 'bg-[#134b60] text-white border-[#134b60]' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} 
+                          className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer active:scale-95"
+                        >
+                          <Edit size={16}/>
+                        </button>
+                        <button 
+                          onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} 
+                          className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed" 
+                          disabled={u.role === 'ADMIN' && users.filter(usr=>usr.role==='ADMIN').length===1}
+                        >
+                          <Trash2 size={16}/>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -3171,34 +3268,74 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
             <div className="p-8 text-[#134b60]">
-              <div className="flex flex-col items-center text-center gap-4 mb-8">
-                <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}><Fingerprint size={40} /></div>
-                <h3 className="font-black text-xl uppercase tracking-tighter">{modalType === 'edit' ? 'EDITAR ACCESO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR ACCESO'}</h3>
+              <div className="flex flex-col items-center text-center gap-4 mb-6">
+                <div className={`p-4 rounded-full shadow-inner ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
+                  <Fingerprint size={40} />
+                </div>
+                <h3 className="font-black text-xl uppercase tracking-tighter">
+                  {modalType === 'edit' ? 'EDITAR ACCESO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR ACCESO'}
+                </h3>
               </div>
+              
               <div className="space-y-4">
                 {modalType === 'edit' && (
                   <div className="space-y-4 max-h-[50vh] overflow-y-auto px-2 py-1 scrollbar-hide">
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">CORREO ACCESO</label><input type="email" value={editData.email} onChange={(e) => setEditData({...editData, email: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] transition-all lowercase text-[#134b60]" /></div>
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">CONTRASEÑA</label><input type="text" value={editData.password} onChange={(e) => setEditData({...editData, password: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] transition-all text-[#134b60]" /></div>
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">ROL DEL USUARIO</label>
-                      <select value={editData.role} onChange={(e) => setEditData({...editData, role: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] transition-all text-[#134b60]">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">CORREO ACCESO</label>
+                      <input 
+                        type="email" 
+                        value={editData.email} 
+                        onChange={(e) => setEditData({...editData, email: e.target.value})} 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all lowercase text-[#134b60]" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">CONTRASEÑA</label>
+                      <input 
+                        type="text" 
+                        value={editData.password} 
+                        onChange={(e) => setEditData({...editData, password: e.target.value})} 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">ROL DEL USUARIO</label>
+                      <select 
+                        value={editData.role} 
+                        onChange={(e) => setEditData({...editData, role: e.target.value})} 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60] cursor-pointer uppercase"
+                      >
                         <option value="CLIENTE">CLIENTE</option>
                         <option value="ADMIN">ADMINISTRADOR</option>
                       </select>
                     </div>
                   </div>
                 )}
-                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE MODIFICARÁN LAS CREDENCIALES DE ACCESO PARA ESTE USUARIO.</p></div>}
-                {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE ELIMINARÁ EL ACCESO AL SISTEMA. EL USUARIO NO PODRÁ INGRESAR. ELIMINACIÓN DE {selectedUser?.name}.</p></div>}
+                {modalType === 'updateConfirm' && (
+                  <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl shadow-sm">
+                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase tracking-wide">⚠️ SE MODIFICARÁN LAS CREDENCIALES DE ACCESO PARA ESTE USUARIO.</p>
+                  </div>
+                )}
+                {modalType === 'deleteSecond' && (
+                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl shadow-sm">
+                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE ELIMINARÁ EL ACCESO AL SISTEMA. EL USUARIO NO PODRÁ INGRESAR. ELIMINACIÓN DE <span className="font-mono">{selectedUser?.name}</span>.</p>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-4 mt-10">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
-                <button onClick={() => {
-                   if (modalType === 'edit') setModalType('updateConfirm');
-                   else if (modalType === 'updateConfirm') executeUpdate();
-                   else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-                   else if (modalType === 'deleteSecond') { setUsers(users.filter(p => p.id !== selectedUser.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+
+              <div className="flex gap-4 mt-8">
+                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer active:scale-95">CANCELAR</button>
+                <button 
+                  onClick={() => {
+                     if (modalType === 'edit') setModalType('updateConfirm');
+                     else if (modalType === 'updateConfirm') executeUpdate();
+                     else if (modalType === 'deleteFirst') setModalType('deleteSecond');
+                     else if (modalType === 'deleteSecond') { setUsers(users.filter(p => p.id !== selectedUser.id)); setModalType(null); }
+                  }} 
+                  className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b] shadow-[#2596be]/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'}`}
+                >
+                  ACEPTAR
+                </button>
               </div>
             </div>
           </div>
