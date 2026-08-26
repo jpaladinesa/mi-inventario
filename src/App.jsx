@@ -1699,18 +1699,18 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
       <div className="border-b-4 border-[#2596be] w-fit pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">HACER PEDIDO</h2>
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">HACER PEDIDO</h2>
       </div>
       
       {currentUser.role === 'ADMIN' && (
-        <div className="bg-[#e9f4f8] p-6 rounded-3xl border-2 border-[#2596be]/20 shadow-sm w-full">
-          <h3 className="font-black text-[#134b60] mb-4 flex items-center gap-2 text-[11px] uppercase">
+        <div className="bg-[#e9f4f8] p-6 rounded-3xl border-2 border-[#2596be]/20 shadow-sm w-full space-y-3">
+          <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase">
             <UserCircle size={18} className="text-[#2596be]" /> SELECCIONAR CLIENTE A FACTURAR (SOLO MODO ADMIN)
           </h3>
           <select 
             value={adminOrderClient} 
             onChange={e => setAdminOrderClient(e.target.value)} 
-            className="w-full px-4 py-3 bg-white border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer"
+            className="w-full px-4 py-3 bg-white border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all shadow-sm"
           >
              <option value="">SELECCIONE UN CLIENTE PRIMERO...</option>
              {clients.map(c => <option key={c.id} value={c.id}>{c.docNumber} - {c.name}</option>)}
@@ -1719,28 +1719,28 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 shadow-sm"><p className="text-[8px] text-slate-500 font-black mb-1">VALOR BASE</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(financialData.base)}</p></div>
-        <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-200 shadow-sm"><p className="text-[8px] text-indigo-500 font-black mb-1">IVA UNITARIO</p><p className="text-lg font-black text-indigo-800">{formatCurrency(financialData.iva)}</p></div>
-        <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-200 shadow-sm"><p className="text-[8px] text-emerald-500 font-black mb-1">TOTAL UNITARIO</p><p className="text-lg font-black text-emerald-800">{formatCurrency(financialData.totalUnit)}</p></div>
-        <div className="bg-amber-50 p-6 rounded-3xl border border-amber-200 shadow-sm"><p className="text-[8px] text-amber-600 font-black mb-1">COSTO SELECCIÓN</p><p className="text-lg font-black text-amber-800">{formatCurrency(financialData.selectionTotal)}</p></div>
-        <div className="bg-[#e9f4f8] p-6 rounded-3xl border border-[#2596be]/30 shadow-sm relative overflow-hidden">
+        <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100 shadow-sm"><p className="text-[8px] text-slate-500 font-black mb-1">VALOR BASE</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(financialData.base)}</p></div>
+        <div className="bg-indigo-50 p-6 rounded-3xl border-2 border-indigo-100 shadow-sm"><p className="text-[8px] text-indigo-500 font-black mb-1">IVA UNITARIO</p><p className="text-lg font-black text-indigo-800">{formatCurrency(financialData.iva)}</p></div>
+        <div className="bg-emerald-50 p-6 rounded-3xl border-2 border-emerald-100 shadow-sm"><p className="text-[8px] text-emerald-500 font-black mb-1">TOTAL UNITARIO</p><p className="text-lg font-black text-emerald-800">{formatCurrency(financialData.totalUnit)}</p></div>
+        <div className="bg-amber-50 p-6 rounded-3xl border-2 border-amber-100 shadow-sm"><p className="text-[8px] text-amber-600 font-black mb-1">COSTO SELECCIÓN</p><p className="text-lg font-black text-amber-800">{formatCurrency(financialData.selectionTotal)}</p></div>
+        <div className="bg-[#e9f4f8] p-6 rounded-3xl border-2 border-[#2596be]/30 shadow-sm relative overflow-hidden">
             <p className="text-[8px] text-[#2596be] font-black mb-1">TOTAL ACUMULADO</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(cartFinancials)}</p>
         </div>
       </div>
 
       {/* --- BANNER DE ENVÍO GRATIS Y PROGRESO --- */}
-      <div className={`p-5 rounded-3xl border-2 transition-all shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60]'}`}>
+      <div className={`p-6 rounded-3xl border-2 transition-all shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60]'}`}>
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className={`p-3 rounded-2xl ${cartFinancials >= 300000 ? 'bg-emerald-500 text-white' : 'bg-[#2596be] text-white'}`}>
-              <Truck size={20} />
+          <div className="flex items-center gap-3.5 w-full md:w-auto">
+            <div className={`p-3.5 rounded-2xl shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-500 text-white' : 'bg-[#2596be] text-white'}`}>
+              <Truck size={22} />
             </div>
            <div>
               <p className="text-[10px] font-black tracking-wide uppercase text-[#134b60]">
                 {cartFinancials >= 300000 ? '🎉 META ALCANZADA: ENVÍO GRATIS' : `TE FALTAN ${formatCurrency(300000 - cartFinancials)} PARA OBTENER ENVÍO GRATIS`}
               </p>
               {cartFinancials < 300000 && (
-                <p className="text-[9px] font-medium text-[#134b60]/75 mt-1.5 tracking-normal uppercase">
+                <p className="text-[9px] font-bold text-[#134b60]/75 mt-1 tracking-normal uppercase">
                   Si no supera el tope, el envío es: Por confirmar
                 </p>
               )}
@@ -1784,13 +1784,13 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                   value={searchID} 
                   disabled={isSearchDisabled} 
                   onChange={e => {setSearchID(e.target.value); setSelectedProd(null);}} 
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50" 
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all" 
                   placeholder="EJ: 00001" 
                 />
                 {filteredIDs.length > 0 && !selectedProd && (
                   <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
                     {filteredIDs.map(p => (
-                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60]">
+                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer">
                         {p.id} - {p.name}
                       </button>
                     ))}
@@ -1807,13 +1807,13 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                   value={searchName} 
                   disabled={isSearchDisabled} 
                   onChange={e => {setSearchName(e.target.value); setSelectedProd(null);}} 
-                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-50" 
+                  className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all" 
                   placeholder="BUSCAR POR NOMBRE..." 
                 />
                 {filteredProducts.length > 0 && !selectedProd && (
                   <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
                     {filteredProducts.map(p => (
-                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60]">
+                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer">
                         {p.name}
                       </button>
                     ))}
@@ -1868,7 +1868,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
             </button>
 
             {isOverStock && (
-              <div className="md:col-span-3 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
+              <div className="md:col-span-3 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-2xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
                 <AlertTriangle size={20} className="animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-widest">
                   AVISO: CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR
@@ -1885,7 +1885,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
         </div>
         <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-5">CÓDIGO (ID)</th>
                 <th className="px-6 py-5">PRODUCTO</th>
@@ -1898,22 +1898,22 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
             </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
               {cart.length === 0 ? (
-                <tr><td colSpan="7" className="px-6 py-10 text-center text-slate-300 font-black">CARRITO VACÍO</td></tr>
+                <tr><td colSpan="7" className="px-6 py-16 text-center text-slate-300 font-black">CARRITO VACÍO</td></tr>
               ) : (
                 cart.map(item => (
                   <tr key={item.tempId} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#2596be]">{item.productId}</td>
+                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{item.productId}</td>
                     <td className="px-6 py-4">
                       <p className="font-black text-[#134b60]">{item.name}</p>
                       {item.observation && <p className="text-[9px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
                     </td>
                     <td className="px-6 py-4 text-center font-black">{item.unit}</td>
-                    <td className="px-6 py-4 text-center font-mono">{item.quantity}</td>
+                    <td className="px-6 py-4 text-center font-mono text-emerald-600 font-black">{item.quantity}</td>
                     <td className="px-6 py-4 text-right text-slate-500 font-mono">{formatCurrency(item.totalPricePerUnit)}</td>
-                    <td className="px-6 py-4 text-right text-emerald-600 font-black font-mono">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
+                    <td className="px-6 py-4 text-right text-[#134b60] font-black font-mono">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
                     <td className="px-6 py-4 text-right flex justify-end gap-2">
-                      <button onClick={() => { setEditItem(item); setModalType('editCart'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14} /></button>
-                      <button onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
+                      <button onClick={() => { setEditItem(item); setModalType('editCart'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14} /></button>
+                      <button onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14} /></button>
                     </td>
                   </tr>
                 ))
@@ -1935,24 +1935,27 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                 maxLength={500}
                 value={generalObservation} 
                 onChange={e => setGeneralObservation(e.target.value.toUpperCase())} 
-                className="w-full p-4 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all resize-none min-h-[80px]" 
+                className="w-full p-4 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all resize-none min-h-[90px]" 
                 placeholder="ESPECIFICACIONES DE ENTREGA, NOTAS PARA EL ASESOR O PRODUCTOS ADICIONALES NO ENCONTRADOS..."
               />
             </div>
             <div className="flex flex-col md:flex-row gap-4">
-              <button onClick={() => { setCart([]); setGeneralObservation(''); }} className="flex-1 py-4 border-2 border-rose-200 text-rose-500 rounded-2xl font-black text-xs hover:bg-rose-50 transition-all uppercase">REINICIAR</button>
-              <button onClick={() => setModalType('confirmSaveOrder')} className="flex-1 py-4 px-8 bg-[#2596be] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2">ENVIAR SOLICITUD</button>
+              <button onClick={() => { setCart([]); setGeneralObservation(''); }} className="flex-1 py-4 border-2 border-rose-200 text-rose-500 rounded-2xl font-black text-xs hover:bg-rose-50 transition-all uppercase cursor-pointer">REINICIAR</button>
+              <button onClick={() => setModalType('confirmSaveOrder')} className="flex-1 py-4 px-8 bg-[#2596be] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">ENVIAR SOLICITUD</button>
             </div>
           </div>
         )}
       </div>
 
       {modalType === 'editCart' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-8 text-[#134b60]">
-            <h3 className="font-black text-xl text-center mb-6 uppercase tracking-tighter">AJUSTAR CANTIDAD</h3>
-            <input type="number" step="0.01" value={editItem?.quantity} onChange={e => setEditItem({...editItem, quantity: parseFloat(e.target.value)})} className="w-full p-6 bg-slate-50 border-2 border-slate-200 text-[#134b60] rounded-xl text-center font-black text-3xl outline-none focus:border-[#2596be]" />
-            <div className="flex gap-4 pt-6"><button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50">CANCELAR</button><button onClick={() => { setCart(cart.map(c => c.tempId === editItem.tempId ? editItem : c)); setModalType(null); }} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-[#1e7a9b]">ACEPTAR</button></div>
+            <h3 className="font-black text-xl text-center mb-6 tracking-tighter">AJUSTAR CANTIDAD</h3>
+            <input type="number" step="0.01" value={editItem?.quantity} onChange={e => setEditItem({...editItem, quantity: parseFloat(e.target.value)})} className="w-full p-6 bg-slate-50 border-2 border-slate-200 text-[#134b60] rounded-2xl text-center font-black text-3xl outline-none focus:border-[#2596be]" />
+            <div className="flex gap-4 pt-6">
+              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
+              <button onClick={() => { setCart(cart.map(c => c.tempId === editItem.tempId ? editItem : c)); setModalType(null); }} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs uppercase shadow-xl shadow-[#2596be]/25 hover:bg-[#1e7a9b] transition-all cursor-pointer active:scale-95">ACEPTAR</button>
+            </div>
           </div>
         </div>
       )}
@@ -1960,15 +1963,15 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
       {modalType === 'confirmSaveOrder' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} /></div>
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><CheckCircle2 size={40} /></div>
             <h3 className="font-black text-xl mb-4 tracking-tighter leading-tight">¿DESEA CREAR LA SOLICITUD?</h3>
             <p className="text-xs font-black uppercase tracking-wider text-[#2596be] mt-2 mb-4">
               {cartFinancials >= 300000 ? '🎉 INCLUYE ENVÍO GRATIS' : '📦 ESTADO DE ENVÍO: POR CONFIRMAR'}
             </p>
-            <p className="text-[10px] text-slate-400 font-black mb-8">TOTAL ESTIMADO: <span className="text-[#2596be]">{formatCurrency(cartFinancials)}</span></p>
+            <p className="text-[10px] text-slate-400 font-black mb-8">TOTAL ESTIMADO: <span className="text-[#2596be] font-mono">{formatCurrency(cartFinancials)}</span></p>
             <div className="flex gap-4">
-              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-2xl font-black text-xs uppercase">VOLVER</button>
-              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl uppercase">CREAR SOLICITUD</button>
+              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-2xl font-black text-xs uppercase transition-colors cursor-pointer">VOLVER</button>
+              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CREAR SOLICITUD</button>
             </div>
           </div>
         </div>
@@ -1977,19 +1980,19 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
       {modalType === 'orderSuccess' && lastSavedOrder && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
               <CheckCircle2 size={40} />
             </div>
             <h3 className="font-black text-xl mb-2 tracking-tighter leading-tight">¡SOLICITUD CREADA CON ÉXITO!</h3>
             <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl mb-8 space-y-2">
-              <p className="text-[10px] text-slate-400 font-black uppercase">NÚMERO DE SOLICITUD</p>
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">NÚMERO DE SOLICITUD</p>
               <p className="text-2xl font-black text-[#2596be] font-mono">{lastSavedOrder.id}</p>
-              <p className="text-[10px] text-slate-400 font-black uppercase pt-2">VALOR TOTAL</p>
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest pt-2">VALOR TOTAL</p>
               <p className="text-xl font-black text-emerald-600 font-mono">{formatCurrency(lastSavedOrder.totalValue)}</p>
             </div>
             <button 
               onClick={() => { setModalType(null); setLastSavedOrder(null); }} 
-              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl uppercase transition-all"
+              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95"
             >
               CERRAR
             </button>
