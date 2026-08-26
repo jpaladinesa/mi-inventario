@@ -846,54 +846,54 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
       <div className="flex justify-between items-end border-b-4 border-[#2596be] pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase">CARGUE DE INVENTARIO</h2>
-        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-4 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 shadow-lg transition-all"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">CARGUE DE INVENTARIO</h2>
+        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
       </div>
       
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full overflow-visible">
-        <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase"><Boxes size={18} className="text-[#2596be]" /> BÚSQUEDA INTELIGENTE</h3>
+      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full overflow-visible space-y-6">
+        <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><Boxes size={18} className="text-[#2596be]" /> BÚSQUEDA INTELIGENTE</h3>
         
-        <div className="relative mb-6">
+        <div className="relative">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase">CÓDIGO ID</label>
-              <input type="text" value={filters.id} onChange={e => {setFilters({...filters, id: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" placeholder="BUSCAR..." />
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CÓDIGO ID</label>
+              <input type="text" value={filters.id} onChange={e => {setFilters({...filters, id: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" placeholder="BUSCAR..." />
             </div>
             <div className="space-y-1 md:col-span-2">
-              <label className="text-[9px] font-black text-slate-400 uppercase">PRODUCTO</label>
-              <input type="text" value={filters.name} onChange={e => {setFilters({...filters, name: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" placeholder="NOMBRE..." />
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PRODUCTO</label>
+              <input type="text" value={filters.name} onChange={e => {setFilters({...filters, name: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" placeholder="NOMBRE..." />
             </div>
             <div className="space-y-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CANTIDAD</label>
-              <input type="text" inputMode="numeric" value={quantity} onChange={e => setQuantity(e.target.value.replace(/\D/g, ''))} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center" placeholder="" />
+              <input type="text" inputMode="numeric" value={quantity} onChange={e => setQuantity(e.target.value.replace(/\D/g, ''))} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center transition-all disabled:opacity-50" placeholder="" />
             </div>
           </div>
 
           {!selectedProd && filteredOptions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-white border-2 border-[#e9f4f8] shadow-2xl rounded-2xl mt-2 z-[100] max-h-60 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 bg-white border-2 border-[#e9f4f8] shadow-2xl rounded-2xl mt-2 z-[100] max-h-60 overflow-y-auto scrollbar-hide">
               {filteredOptions.map(p => (
                 <button 
                   key={p.id} 
                   type="button"
                   onClick={() => {setSelectedProd(p); setFilters({id: p.id, name: p.name});}} 
-                  className="w-full text-left px-5 py-3 hover:bg-[#e9f4f8] border-b border-slate-50 flex justify-between items-center group transition-colors"
+                  className="w-full text-left px-5 py-3 hover:bg-[#e9f4f8] border-b border-slate-50 flex justify-between items-center group transition-colors cursor-pointer"
                 >
                   <div className="flex gap-4 items-center">
-                    <div className="bg-slate-100 p-2 rounded-lg text-slate-500 font-mono text-[9px] font-bold">{p.id}</div>
+                    <div className="bg-slate-100 p-2 rounded-xl text-slate-500 font-mono text-[9px] font-bold">{p.id}</div>
                     <div>
                       <p className="text-[10px] font-black text-[#134b60] uppercase">{p.name}</p>
                       <p className="text-[8px] text-slate-400 font-bold uppercase">{p.unitName}</p>
                     </div>
                   </div>
-                  <Plus size={16} className="text-[#2596be] opacity-0 group-hover:opacity-100" />
+                  <Plus size={16} className="text-[#2596be] opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <button onClick={() => setModalType('confirm')} disabled={!selectedProd || !quantity} className="w-full bg-[#2596be] text-white py-5 rounded-xl font-black hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl flex items-center justify-center gap-3 disabled:opacity-50">
-          <ArrowUpRight size={20} /> PROCESAR CARGUE
+        <button onClick={() => setModalType('confirm')} disabled={!selectedProd || !quantity} className="w-full bg-[#2596be] text-white py-4 rounded-2xl font-black hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer active:scale-95">
+          <ArrowUpRight size={18} /> PROCESAR CARGUE
         </button>
       </div>
 
@@ -901,7 +901,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
         <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1300px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest">
+            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-5">ID MOV.</th>
                 <th className="px-6 py-5">CÓDIGO ID</th>
@@ -929,8 +929,8 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                     <td className="px-6 py-4 text-center text-[9px] font-black text-slate-500">{ev.user}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedItem(ev); setEditData({ quantity: ev.quantity }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm"><Edit size={14}/></button>
-                        <button onClick={() => { setSelectedItem(ev); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14}/></button>
+                        <button onClick={() => { setSelectedItem(ev); setEditData({ quantity: ev.quantity }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
+                        <button onClick={() => { setSelectedItem(ev); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
                       </div>
                     </td>
                   </tr>
@@ -942,24 +942,24 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
       </div>
 
       {modalType === 'bulkUpload' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden">
-            <div className={`bg-white rounded-3xl shadow-2xl p-4 md:p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-sm md:max-w-3xl lg:max-w-5xl' : 'max-w-sm'}`}>
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
+            <div className={`bg-white rounded-3xl shadow-2xl p-6 md:p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-sm md:max-w-3xl lg:max-w-5xl' : 'max-w-md'}`}>
                 {!csvPreview ? (
                   <>
-                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><FileSpreadsheet size={40} /></div>
+                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
                     <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO INVENTARIO (CSV)</h3>
                     <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO ESPERADO: CÓDIGO_ID, CANTIDAD</p>
                     
-                    <button onClick={downloadTemplate} className="w-full mb-6 py-3 border-2 border-[#2596be] text-[#2596be] rounded-xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2">
+                    <button onClick={downloadTemplate} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                         <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
                     </button>
 
-                    <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
+                    <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
                         <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
                         <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
-                        <span className="text-xs font-black text-slate-500 uppercase">SELECCIONAR ARCHIVO CSV</span>
+                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">SELECCIONAR ARCHIVO CSV</span>
                     </label>
-                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-200 uppercase">CANCELAR</button>
+                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs hover:bg-slate-200 uppercase transition-colors cursor-pointer">CANCELAR</button>
                   </>
                 ) : (
                   <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
@@ -978,9 +978,9 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                       </div>
                     </div>
 
-                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl">
+                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
                       <table className="w-full text-left uppercase">
-                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest">
+                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest z-10">
                           <tr>
                             <th className="px-4 py-3">CÓDIGO ID</th>
                             <th className="px-4 py-3">PRODUCTO</th>
@@ -1004,7 +1004,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                     </div>
 
                     {csvPreview.errors.length > 0 && (
-                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1">
+                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
                         <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
                         {csvPreview.errors.map((err, idx) => (
                           <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
@@ -1013,7 +1013,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                     )}
 
                     <div className="flex gap-4 pt-2">
-                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all">CANCELAR</button>
+                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all cursor-pointer">CANCELAR</button>
                       <button 
                         onClick={() => {
                           setInventory([...csvPreview.validRows, ...inventory]);
@@ -1021,7 +1021,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                           setModalType(null);
                         }} 
                         disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
-                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all"
+                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
                       >
                         CONFIRMAR E IMPORTAR {csvPreview.validRows.length} REGISTROS
                       </button>
@@ -1035,13 +1035,16 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
       {modalType === 'confirm' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-8 text-center text-[#134b60]">
-            <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6"><Boxes size={40}/></div>
-            <h3 className="font-black text-xl mb-4">¿CONFIRMAR CARGUE?</h3>
+            <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><Boxes size={40}/></div>
+            <h3 className="font-black text-xl mb-4 tracking-tighter">¿CONFIRMAR CARGUE?</h3>
             <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl mb-8">
               <p className="text-emerald-500 text-4xl font-black font-mono">{quantity} <span className="text-xs text-slate-400">{selectedProd?.unitName}</span></p>
               <p className="text-[10px] font-bold text-slate-400 mt-2 tracking-widest uppercase">DISPONIBLE ACTUAL: {selectedProd && calculateAvailableStock(selectedProd.id, inventory, orders)}</p>
             </div>
-            <div className="flex gap-4"><button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-xl font-black text-xs uppercase hover:bg-slate-50">VOLVER</button><button onClick={handleSave} className="flex-1 py-4 bg-[#2596be] text-white rounded-xl font-black text-xs shadow-xl hover:bg-[#1e7a9b] uppercase">ACEPTAR</button></div>
+            <div className="flex gap-4">
+              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">VOLVER</button>
+              <button onClick={handleSave} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 hover:bg-[#1e7a9b] uppercase transition-all cursor-pointer active:scale-95">ACEPTAR</button>
+            </div>
           </div>
         </div>
       )}
@@ -1061,21 +1064,21 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
               <div className="space-y-4">
                 {modalType === 'edit' && (
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400">NUEVA CANTIDAD</label>
-                    <input type="number" step="0.01" value={editData.quantity} onChange={(e) => setEditData({...editData, quantity: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-center text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" />
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NUEVA CANTIDAD</label>
+                    <input type="number" step="0.01" value={editData.quantity} onChange={(e) => setEditData({...editData, quantity: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-center text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" />
                   </div>
                 )}
-                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ AL STOCK GENERAL.</p></div>}
+                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase tracking-tight">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ AL STOCK GENERAL.</p></div>}
                 {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-100 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ AL STOCK Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DEL REGISTRO {selectedItem?.id}.</p></div>}
               </div>
               <div className="flex gap-4 mt-10">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors">CANCELAR</button>
+                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
                 <button onClick={() => {
                    if (modalType === 'edit') setModalType('updateConfirm');
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setInventory(inventory.filter(i => i.id !== selectedItem.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
               </div>
             </div>
           </div>
