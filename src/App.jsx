@@ -3853,159 +3853,121 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   </div>
 </aside>
       <main className="flex-1 flex flex-col min-h-screen min-w-0">
-        <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
-          <button onClick={() => setIsSidebarOpen(true)} className="p-3 text-[#134b60] md:hidden hover:bg-slate-100 rounded-2xl transition-all shadow-sm"><MenuIcon size={24} /></button>
-<div className="hidden sm:block relative w-96 uppercase tracking-widest z-50">
-  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-  
-  <input 
-    type="text" 
-    value={globalSearch}
-    onChange={(e) => {
-      setGlobalSearch(e.target.value);
-      setIsSearchOpen(e.target.value.trim().length > 0);
-    }}
-    onKeyDown={(e) => {
-      if (e.key === 'Escape') setIsSearchOpen(false);
-    }}
-    placeholder="BÚSQUEDA TOTAL DEL SISTEMA..." 
-    className="w-full pl-14 pr-6 py-3 bg-slate-50 rounded-full text-[10px] outline-none font-black uppercase transition-all focus:ring-8 focus:ring-[#e9f4f8] border-2 border-transparent focus:border-[#2596be] text-[#134b60]" 
-  />
-  
-  {isSearchOpen && (
-    <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsSearchOpen(false)}></div>
-  )}
+        <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
+          {/* Botón de menú móvil */}
+          <button 
+            onClick={() => setIsSidebarOpen(true)} 
+            className="p-2.5 text-[#134b60] md:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100"
+          >
+            <MenuIcon size={20} />
+          </button>
 
-  {isSearchOpen && (
-    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border-2 border-[#e9f4f8] overflow-hidden max-h-[500px] overflow-y-auto flex flex-col z-50 scrollbar-hide">
-      {(() => {
-        const busqueda = globalSearch.toLowerCase();
-        
-        // FILTROS PARA TODAS LAS BASES DE DATOS (Máximo 3 para no saturar)
-        const pedidosEncontrados = orders.filter(o => o.id.toLowerCase().includes(busqueda) || (o.clientName && o.clientName.toLowerCase().includes(busqueda))).slice(0, 3);
-        const clientesEncontrados = clients.filter(c => c.docNumber.includes(busqueda) || (c.name && c.name.toLowerCase().includes(busqueda))).slice(0, 3);
-        const productosEncontrados = products.filter(p => p.id.toLowerCase().includes(busqueda) || p.name.toLowerCase().includes(busqueda)).slice(0, 3);
-        const inventarioEncontrado = inventory.filter(i => i.id.toLowerCase().includes(busqueda) || i.productName.toLowerCase().includes(busqueda) || i.productId.toLowerCase().includes(busqueda)).slice(0, 3);
-        const usuariosEncontrados = users.filter(u => u.id.toLowerCase().includes(busqueda) || u.name.toLowerCase().includes(busqueda) || u.email.toLowerCase().includes(busqueda)).slice(0, 3);
-        const impuestosEncontrados = taxes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
-        const tiposClienteEncontrados = clientTypes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
-
-        const hayResultados = pedidosEncontrados.length > 0 || clientesEncontrados.length > 0 || productosEncontrados.length > 0 || inventarioEncontrado.length > 0 || usuariosEncontrados.length > 0 || impuestosEncontrados.length > 0 || tiposClienteEncontrados.length > 0;
-
-        if (!hayResultados) {
-          return (
-            <div className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              No se encontraron resultados para "{globalSearch}"
-            </div>
-          );
-        }
-
-        // Función rápida para navegar y limpiar
-        const navegarA = (ruta) => {
-            setActiveTab(ruta);
-            setFilterStatus('TODOS');
-            setIsSearchOpen(false);
-            setGlobalSearch('');
-        };
-
-        return (
-          <div className="flex flex-col relative z-50">
+          {/* Barra de búsqueda global estilizada */}
+          <div className="hidden sm:block relative w-80 md:w-96 uppercase tracking-widest z-50">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
             
-            {/* 📦 PEDIDOS */}
-            {pedidosEncontrados.length > 0 && (
-              <div className="p-2">
-                <p className="px-4 py-2 text-[9px] font-black text-[#2596be] uppercase tracking-widest bg-[#e9f4f8]/50 rounded-lg mb-1">📦 Pedidos</p>
-                {pedidosEncontrados.map(o => (
-                  <div key={o.id} onClick={() => { navegarA(role === 'ADMIN' ? 'admin_orders' : 'client_orders_history'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirPedidoGlobal', { detail: o.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                    <div><p className="text-xs font-black text-[#134b60]">{o.id}</p><p className="text-[9px] text-slate-400 uppercase">{o.clientName}</p></div>
-                    <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{o.status}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 🏢 CLIENTES */}
-            {clientesEncontrados.length > 0 && role === 'ADMIN' && (
-              <div className="p-2 border-t border-slate-100">
-                <p className="px-4 py-2 text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50/50 rounded-lg mb-1">🏢 Clientes</p>
-                {clientesEncontrados.map(c => (
-                  <div key={c.id} onClick={() => { navegarA('clients'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirClienteGlobal', { detail: c.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                    <div><p className="text-xs font-black text-[#134b60]">{c.name}</p><p className="text-[9px] text-slate-400 uppercase">{c.docType}: {c.docNumber}</p></div>
-                    <span className="text-[9px] font-black text-slate-400">{c.typeName}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 📋 PRODUCTOS */}
-            {productosEncontrados.length > 0 && role === 'ADMIN' && (
-              <div className="p-2 border-t border-slate-100">
-                <p className="px-4 py-2 text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50 rounded-lg mb-1">📋 Productos</p>
-                {productosEncontrados.map(p => (
-                  <div key={p.id} onClick={() => navegarA('products')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                    <div><p className="text-xs font-black text-[#134b60]">{p.name}</p><p className="text-[9px] text-slate-400 uppercase">CÓDIGO: {p.id}</p></div>
-                    <span className="text-[9px] font-black text-slate-400">{p.unitName}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 🏭 INVENTARIO */}
-            {inventarioEncontrado.length > 0 && role === 'ADMIN' && (
-              <div className="p-2 border-t border-slate-100">
-                <p className="px-4 py-2 text-[9px] font-black text-amber-600 uppercase tracking-widest bg-amber-50/50 rounded-lg mb-1">🏭 Mov. Inventario</p>
-                {inventarioEncontrado.map(i => (
-                  <div key={i.id} onClick={() => navegarA('inventory')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                    <div><p className="text-xs font-black text-[#134b60]">{i.productName}</p><p className="text-[9px] text-slate-400 uppercase">MOV: {i.id} | COD: {i.productId}</p></div>
-                    <span className="text-[9px] font-black text-emerald-600">CANT: {i.quantity}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 🔐 ACCESOS */}
-            {usuariosEncontrados.length > 0 && role === 'ADMIN' && (
-              <div className="p-2 border-t border-slate-100">
-                <p className="px-4 py-2 text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-50/50 rounded-lg mb-1">🔐 Accesos y Usuarios</p>
-                {usuariosEncontrados.map(u => (
-                  <div key={u.id} onClick={() => navegarA('access')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                    <div><p className="text-xs font-black text-[#134b60]">{u.name}</p><p className="text-[9px] text-slate-400 lowercase">{u.email}</p></div>
-                    <span className="text-[9px] font-black text-slate-400">{u.role}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* ⚖️ IMPUESTOS Y TIPOS CLIENTE */}
-            {(impuestosEncontrados.length > 0 || tiposClienteEncontrados.length > 0) && role === 'ADMIN' && (
-              <div className="p-2 border-t border-slate-100">
-                <p className="px-4 py-2 text-[9px] font-black text-purple-500 uppercase tracking-widest bg-purple-50/50 rounded-lg mb-1">⚙️ Configuraciones</p>
-                
-                {impuestosEncontrados.map(t => (
-                  <div key={t.id} onClick={() => navegarA('taxes')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                    <div><p className="text-xs font-black text-[#134b60]">IMPUESTO: {t.name}</p><p className="text-[9px] text-slate-400 uppercase">ID: {t.id}</p></div>
-                    <span className="text-[9px] font-black text-purple-600">VALOR: {t.value}%</span>
-                  </div>
-                ))}
-
-                {tiposClienteEncontrados.map(t => (
-                  <div key={t.id} onClick={() => navegarA('client_types')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                    <div><p className="text-xs font-black text-[#134b60]">TIPO CLIENTE: {t.name}</p><p className="text-[9px] text-slate-400 uppercase">ID: {t.id}</p></div>
-                    <span className="text-[9px] font-black text-cyan-600">RECARGO: {t.value}%</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <input 
+              type="text" 
+              value={globalSearch}
+              onChange={(e) => {
+                setGlobalSearch(e.target.value);
+                setIsSearchOpen(e.target.value.trim().length > 0);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setIsSearchOpen(false);
+              }}
+              placeholder="Búsqueda rápida en el sistema..." 
+              className="w-full pl-12 pr-6 py-2.5 bg-slate-50 rounded-xl text-[10px] outline-none font-bold uppercase transition-all focus:bg-white border-2 border-transparent focus:border-[#2596be] text-[#134b60] shadow-inner" 
+            />
             
+            {/* Resultados de búsqueda global (Dropdown igual al tuyo funcional) */}
+            {isSearchOpen && (
+              <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsSearchOpen(false)}></div>
+            )}
+
+            {isSearchOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border-2 border-[#e9f4f8] overflow-hidden max-h-[400px] overflow-y-auto flex flex-col z-50 scrollbar-hide">
+                {(() => {
+                  const busqueda = globalSearch.toLowerCase();
+                  
+                  const pedidosEncontrados = orders.filter(o => o.id.toLowerCase().includes(busqueda) || (o.clientName && o.clientName.toLowerCase().includes(busqueda))).slice(0, 3);
+                  const clientesEncontrados = clients.filter(c => c.docNumber.includes(busqueda) || (c.name && c.name.toLowerCase().includes(busqueda))).slice(0, 3);
+                  const productosEncontrados = products.filter(p => p.id.toLowerCase().includes(busqueda) || p.name.toLowerCase().includes(busqueda)).slice(0, 3);
+                  const inventarioEncontrado = inventory.filter(i => i.id.toLowerCase().includes(busqueda) || i.productName.toLowerCase().includes(busqueda) || i.productId.toLowerCase().includes(busqueda)).slice(0, 3);
+                  const usuariosEncontrados = users.filter(u => u.id.toLowerCase().includes(busqueda) || u.name.toLowerCase().includes(busqueda) || u.email.toLowerCase().includes(busqueda)).slice(0, 3);
+                  const impuestosEncontrados = taxes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
+                  const tiposClienteEncontrados = clientTypes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
+
+                  const hayResultados = pedidosEncontrados.length > 0 || clientesEncontrados.length > 0 || productosEncontrados.length > 0 || inventarioEncontrado.length > 0 || usuariosEncontrados.length > 0 || impuestosEncontrados.length > 0 || tiposClienteEncontrados.length > 0;
+
+                  if (!hayResultados) {
+                    return (
+                      <div className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        No se encontraron resultados para "{globalSearch}"
+                      </div>
+                    );
+                  }
+
+                  const navegarA = (ruta) => {
+                      setActiveTab(ruta);
+                      setFilterStatus('TODOS');
+                      setIsSearchOpen(false);
+                      setGlobalSearch('');
+                  };
+
+                  return (
+                    <div className="flex flex-col relative z-50">
+                      {pedidosEncontrados.length > 0 && (
+                        <div className="p-2">
+                          <p className="px-4 py-2 text-[9px] font-black text-[#2596be] uppercase tracking-widest bg-[#e9f4f8]/50 rounded-lg mb-1">📦 Pedidos</p>
+                          {pedidosEncontrados.map(o => (
+                            <div key={o.id} onClick={() => { navegarA(role === 'ADMIN' ? 'admin_orders' : 'client_orders_history'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirPedidoGlobal', { detail: o.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                              <div><p className="text-xs font-black text-[#134b60]">{o.id}</p><p className="text-[9px] text-slate-400 uppercase">{o.clientName}</p></div>
+                              <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{o.status}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {clientesEncontrados.length > 0 && role === 'ADMIN' && (
+                        <div className="p-2 border-t border-slate-100">
+                          <p className="px-4 py-2 text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50/50 rounded-lg mb-1">🏢 Clientes</p>
+                          {clientesEncontrados.map(c => (
+                            <div key={c.id} onClick={() => { navegarA('clients'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirClienteGlobal', { detail: c.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                              <div><p className="text-xs font-black text-[#134b60]">{c.name}</p><p className="text-[9px] text-slate-400 uppercase">{c.docType}: {c.docNumber}</p></div>
+                              <span className="text-[9px] font-black text-slate-400">{c.typeName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {productosEncontrados.length > 0 && role === 'ADMIN' && (
+                        <div className="p-2 border-t border-slate-100">
+                          <p className="px-4 py-2 text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50 rounded-lg mb-1">📋 Productos</p>
+                          {productosEncontrados.map(p => (
+                            <div key={p.id} onClick={() => navegarA('products')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
+                              <div><p className="text-xs font-black text-[#134b60]">{p.name}</p><p className="text-[9px] text-slate-400 uppercase">CÓDIGO: {p.id}</p></div>
+                              <span className="text-[9px] font-black text-slate-400">{p.unitName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
-        );
-      })()}
-    </div>
-  )}
-</div>
-          <div className="flex items-center gap-6 uppercase">
-            <div className="text-right leading-tight"><p className="text-[10px] font-black text-[#134b60] uppercase tracking-tighter">{currentUser.name}</p><p className="text-[9px] text-[#2596be] font-black flex items-center justify-end gap-1.5"><span className="w-2 h-2 bg-[#2596be] rounded-full animate-pulse"></span> {role}</p></div>
-            <div className="w-12 h-12 bg-[#e9f4f8] text-[#2596be] rounded-[20px] flex items-center justify-center shadow-inner border-2 border-[#2596be]/20"><UserCircle size={28} /></div>
+
+          {/* Bloque de Usuario Activo en la esquina derecha */}
+          <div className="flex items-center gap-4 uppercase">
+            <div className="text-right leading-tight hidden sm:block">
+              <p className="text-[10px] font-black text-[#134b60] uppercase tracking-tight">{currentUser.name}</p>
+              <p className="text-[8px] text-[#2596be] font-bold flex items-center justify-end gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 bg-[#2596be] rounded-full animate-pulse"></span> {role}
+              </p>
+            </div>
+            <div className="w-10 h-10 bg-[#e9f4f8] text-[#2596be] rounded-xl flex items-center justify-center shadow-inner border border-[#2596be]/20">
+              <UserCircle size={22} />
+            </div>
           </div>
         </header>
         <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
