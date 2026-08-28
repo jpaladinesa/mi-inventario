@@ -11,6 +11,8 @@ export const Footer = () => (
 );
 
 // --- COMPONENTE DE RELOJ ---
+
+
 export const RealTimeClock = () => {
   const [time, setTime] = useState(new Date());
 
@@ -19,24 +21,44 @@ export const RealTimeClock = () => {
     return () => clearInterval(timer);
   }, []);
 
+  const dateStr = time.toLocaleDateString('es-CO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).toUpperCase();
+
+  const timeStr = time.toLocaleTimeString('es-CO', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }).toUpperCase();
+
   return (
-    <div className="bg-white text-[#134b60] p-6 rounded-3xl shadow-sm flex items-center justify-between border-b-4 border-[#2596be]">
-      <div>
-        <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1">FECHA Y HORA ACTUAL</p>
-        <p className="text-xs font-black flex items-center gap-2 text-[#2596be]">
-          <Calendar size={14} className="text-[#2596be]" />
-          {time.toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
-        </p>
-      </div>
-      <div className="text-right">
-        <p className="text-3xl font-black font-mono tracking-tighter text-[#134b60]">
-          {time.toLocaleTimeString('es-CO', { hour12: true })}
-        </p>
+    <div className="bg-white px-6 py-4 rounded-3xl border border-slate-100 shadow-sm border-b-4 border-b-[#2596be] min-w-fit w-full xl:w-auto">
+      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 text-center xl:text-left">
+        FECHA Y HORA ACTUAL
+      </span>
+      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 justify-center xl:justify-between">
+        
+        {/* Fecha */}
+        <div className="flex items-center gap-2 text-[#2596be]">
+          <Calendar size={14} className="shrink-0" />
+          <span className="text-[10px] md:text-xs font-black uppercase tracking-widest whitespace-nowrap">
+            {dateStr}
+          </span>
+        </div>
+        
+        {/* Hora */}
+        <div className="text-base md:text-lg font-black text-[#134b60] tracking-widest whitespace-nowrap">
+          {timeStr}
+        </div>
+        
       </div>
     </div>
   );
 };
-
 // --- COMPONENTE DE LOGIN ---
 export const Login = ({ onLogin, logoImage }) => {
   const [email, setEmail] = useState('');

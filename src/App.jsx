@@ -2987,21 +2987,29 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
     <div className="flex flex-col min-h-full space-y-8 animate-in fade-in duration-500 uppercase">
       
      {/* Cabecera / Barra de Estado Superior */}
-<div className="bg-white p-6 md:p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+<div className="bg-white p-6 md:p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col xl:flex-row items-center justify-between gap-6">
   
-  {/* Lado Izquierdo: Estado y Títulos */}
-  <div className="flex items-center gap-4">
-    <span className="px-3.5 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full text-[10px] font-black flex items-center gap-2">
+  {/* 1. Lado Izquierdo: Títulos alineados a la izquierda */}
+  <div className="flex flex-col items-start text-left">
+    <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-tight uppercase leading-none mb-1.5">
+      Centro de control IT
+    </h2>
+    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
+      Resumen general de operaciones y stock
+    </p>
+  </div>
+
+  {/* 2. Centro: El indicador OPERATIVO ubicado exactamente donde marcaste el círculo */}
+  <div className="flex justify-center">
+    <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full text-[10px] font-black flex items-center gap-2 shadow-sm">
       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OPERATIVO
     </span>
-    <div>
-      <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-tight uppercase">Centro de control IT</h2>
-      <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase">Resumen general de operaciones y stock</p>
-    </div>
   </div>
   
-  {/* Lado Derecho: EL RELOJ ORIGINAL (Sin cajas ni fondos extra) */}
-  <RealTimeClock />
+  {/* 3. Lado Derecho: Reloj */}
+  <div className="w-full xl:w-auto flex justify-center xl:justify-end">
+    <RealTimeClock />
+  </div>
 </div>
       {/* Tarjetas de Métricas Principales (KPIs) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
