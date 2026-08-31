@@ -502,17 +502,30 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               </select>
             </div>
 
-            <div className="space-y-1 lg:col-span-2">
+            <div className="space-y-1 lg:col-span-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
               <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
-            <div className="space-y-1 lg:col-span-2">
+            <div className="space-y-1 lg:col-span-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
               <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
-            <button type="submit" className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95">REGISTRAR PRODUCTO</button>
+            <button 
+              type="button" 
+              onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' })}
+              className="lg:col-span-2 w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-sm transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+            >
+              <XCircle size={16} /> LIMPIAR
+            </button>
+
+            <button 
+              type="submit" 
+              className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Plus size={16} /> REGISTRAR PRODUCTO
+            </button>
           </div>
         </form>
 
