@@ -3379,6 +3379,7 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
   const [newPromo, setNewPromo] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
   const [promoToFinalize, setPromoToFinalize] = useState(null);
+  const [showFullPreview, setShowFullPreview] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState('create'); // 'create' o 'list'
 
   const handleImageUpload = (e) => {
@@ -3594,7 +3595,11 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
               {/* Tarjeta de Vista Previa en Vivo */}
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VISTA PREVIA EN VIVO</label>
-                <div className="bg-[#134b60]/95 border-2 border-[#2596be] rounded-2xl p-4 text-center text-white shadow-md relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
+                <div 
+                  onClick={() => newPromo.image && setShowFullPreview(true)}
+                  className={`bg-[#134b60]/95 border-2 border-[#2596be] rounded-2xl p-4 text-center text-white shadow-md relative overflow-hidden flex flex-col items-center justify-center min-h-[160px] transition-all ${newPromo.image ? 'cursor-pointer hover:scale-[1.02] hover:border-white' : ''}`}
+                  title={newPromo.image ? "Clic para ver en tamaño real" : "Sube una imagen para previsualizar"}
+                >
                   <div className="absolute top-2 right-2 bg-white/20 text-white p-1 rounded-full text-[8px] font-bold">
                     <X size={10} />
                   </div>
@@ -3611,9 +3616,60 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
                   <p className="text-[9px] font-bold text-slate-200 uppercase line-clamp-2">
                     {newPromo.text || "Términos y condiciones o descripción..."}
                   </p>
+                  {newPromo.image && (
+                    <span className="text-[7px] bg-white/20 text-white px-2 py-0.5 rounded-full mt-2 font-black">
+                      🔍 CLIC PARA AMPLIAR
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
+            {/* MODAL DE VISTA PREVIA A TAMAÑO REAL (POP-UP CLIENTE) */}
+      {showFullPreview && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 uppercase">
+          <div className="bg-[#134b60] border-4 border-[#2596be] rounded-3xl shadow-2xl p-6 md:p-10 max-w-lg w-full text-white flex flex-col items-center text-center relative animate-in zoom-in-95 duration-200">
+            
+            {/* Botón X para cerrar */}
+            <button
+              type="button"
+              onClick={() => setShowFullPreview(false)}
+              className="absolute top-4 right-4 bg-white/10 hover:bg-rose-500 text-white p-2.5 rounded-full transition-all cursor-pointer shadow-lg"
+              title="Cerrar vista previa"
+            >
+              <X size={18} />
+            </button>
+
+            <span className="text-[9px] font-black text-[#2596be] bg-white px-3 py-1 rounded-full mb-6 tracking-widest">
+              📱 VISTA REAL DEL CLIENTE
+            </span>
+
+            {/* Imagen en tamaño real */}
+            {newPromo.image && (
+              <div className="w-full h-64 bg-white/5 rounded-2xl p-4 mb-6 border border-white/10 flex items-center justify-center overflow-hidden">
+                <img src={newPromo.image} alt="Full Preview" className="w-full h-full object-contain" />
+              </div>
+            )}
+
+            {/* Título de la campaña */}
+            <h3 className="font-black text-lg md:text-xl uppercase tracking-tight text-white mb-3">
+              {newPromo.name || "TÍTULO DE LA CAMPAÑA"}
+            </h3>
+
+            {/* Texto / Términos */}
+            <p className="text-xs font-bold text-slate-300 uppercase leading-relaxed max-w-md mb-8">
+              {newPromo.text || "Términos y condiciones o descripción de la campaña..."}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowFullPreview(false)}
+              className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[11px] uppercase transition-all shadow-xl cursor-pointer tracking-widest"
+            >
+              CERRAR VISTA PREVIA
+            </button>
+          </div>
+        </div>
+      )}
 
             {/* Botones de acción */}
             <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
