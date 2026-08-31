@@ -122,20 +122,29 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                 required 
               />
             </div>
-            <button 
-              type="submit"
-              className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2596be]/20 transition-all active:scale-95 cursor-pointer"
-            >
-              GUARDAR REGISTRO
-            </button>
+            <div className="flex flex-col gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setNewItem({ name: '', value: '' })}
+                className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+              >
+                <XCircle size={16} /> LIMPIAR FORMULARIO
+              </button>
+              <button 
+                type="submit"
+                className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+              >
+                <Plus size={16} /> GUARDAR REGISTRO
+              </button>
+            </div>
           </form>
         </div>
 
         {/* TABLA DE LISTADO */}
         <div className="lg:col-span-2 bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
-          <div className="overflow-x-auto scrollbar-hide">
+          <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
             <table className="w-full text-left uppercase min-w-[600px]">
-              <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest">
+              <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-5">ID</th>
                   <th className="px-6 py-5">NOMBRE</th>
