@@ -3144,14 +3144,30 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
           
           <div className="space-y-1 lg:col-span-2 relative">
             <label className="text-[9px] font-black text-slate-400 tracking-widest block">1. BUSCAR CLIENTE (DOC / NOMBRE)</label>
-            <input 
-              type="text" 
-              value={searchClient} 
-              onChange={e => {setSearchClient(e.target.value); setNewUser({...newUser, relatedId: '', name: ''});}} 
-              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all shadow-sm" 
-              placeholder="ESCRIBA PARA BUSCAR..." 
-              required 
-            />
+            <div className="relative">
+              <input 
+                type="text" 
+                value={searchClient} 
+                onChange={e => {setSearchClient(e.target.value); setNewUser({...newUser, relatedId: '', name: ''});}} 
+                className="w-full px-4 py-3.5 pr-10 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all shadow-sm" 
+                placeholder="ESCRIBA PARA BUSCAR..." 
+                required 
+              />
+              {searchClient && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setSearchClient('');
+                    setNewUser(initialForm);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 transition-colors cursor-pointer"
+                  title="Limpiar selección"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            
             {filteredClients.length > 0 && !newUser.relatedId && (
               <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
                 {filteredClients.map(c => (
@@ -3516,26 +3532,65 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
             </div>
           </div>
 
-          <div className="space-y-2 lg:col-span-1 flex flex-col h-full">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IMAGEN DE LA PROMOCIÓN</label>
-            <label className="flex-1 w-full min-h-[300px] border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden group">
-              <input type="file" accept=".jpg, .jpeg, .png" className="hidden" onChange={handleImageUpload} required />
-              {newPromo.image ? (
-                <>
-                  <img src={newPromo.image} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-4" />
-                  <div className="absolute inset-0 bg-[#134b60]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"><span className="bg-white text-[#134b60] px-5 py-3 rounded-xl text-[10px] font-black uppercase shadow-2xl flex items-center gap-2"><UploadCloud size={16}/> CAMBIAR IMAGEN</span></div>
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><UploadCloud size={24} /></div>
-                  <span className="text-[10px] font-black text-slate-500 uppercase text-center px-6 leading-relaxed">
-                    CLIC PARA CARGAR IMAGEN<br/>
-                    <span className="text-[8px] font-bold text-amber-600 block mt-2">FORMATOS: JPG, PNG</span>
-                    <span className="text-[8px] font-bold text-rose-500 block">TAMAÑO MÁXIMO: 1 MB</span>
-                  </span>
-                </>
-              )}
-            </label>
+          <div className="space-y-6 lg:col-span-1 flex flex-col">
+            {/* 1. Cargador de Imagen */}
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IMAGEN DE LA PROMOCIÓN</label>
+              <label className="w-full h-[220px] border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden group">
+                <input type="file" accept=".jpg, .jpeg, .png" className="hidden" onChange={handleImageUpload} required />
+                {newPromo.image ? (
+                  <>
+                    <img src={newPromo.image} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                    <div className="absolute inset-0 bg-[#134b60]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                      <span className="bg-white text-[#134b60] px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-2xl flex items-center gap-1.5">
+                        <UploadCloud size={14}/> CAMBIAR
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                      <UploadCloud size={20} />
+                    </div>
+                    <span className="text-[9px] font-black text-slate-500 uppercase text-center px-4 leading-relaxed">
+                      CLIC PARA CARGAR IMAGEN<br/>
+                      <span className="text-[7px] font-bold text-amber-600">JPG, PNG (MÁX. 1 MB)</span>
+                    </span>
+                  </>
+                )}
+              </label>
+            </div>
+
+            {/* 2. Tarjeta de Vista Previa en Vivo (Pop-up) */}
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VISTA PREVIA EN VIVO</label>
+              <div className="bg-[#134b60]/95 border-2 border-[#2596be] rounded-2xl p-4 text-center text-white shadow-md relative overflow-hidden flex flex-col items-center justify-center min-h-[170px]">
+                
+                {/* Botón X simulado */}
+                <div className="absolute top-2 right-2 bg-white/20 text-white p-1 rounded-full text-[8px] font-bold">
+                  <X size={10} />
+                </div>
+
+                {/* Imagen en la preview */}
+                {newPromo.image ? (
+                  <img src={newPromo.image} alt="Popup Preview" className="w-20 h-20 object-contain mb-2 rounded-lg bg-white/10 p-1" />
+                ) : (
+                  <div className="w-14 h-14 bg-white/10 rounded-lg flex items-center justify-center mb-2 text-slate-300 text-[8px] font-bold">
+                    SIN IMAGEN
+                  </div>
+                )}
+
+                {/* Título de la campaña en vivo */}
+                <h4 className="font-black text-xs uppercase tracking-tight text-white mb-1 line-clamp-1">
+                  {newPromo.name || "TÍTULO DE LA CAMPAÑA"}
+                </h4>
+
+                {/* Texto de la campaña en vivo */}
+                <p className="text-[9px] font-bold text-slate-200 uppercase line-clamp-2">
+                  {newPromo.text || "Términos y condiciones o descripción..."}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100">
