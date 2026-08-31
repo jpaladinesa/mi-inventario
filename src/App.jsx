@@ -3378,6 +3378,8 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
   const initialForm = { name: '', targetClients: [], startDateOnly: '', startTimeOnly: '', startDate: '', durationHours: '', screenTimeSeconds: '', text: '', image: '' };
   const [newPromo, setNewPromo] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
+  const [promoToFinalize, setPromoToFinalize] = useState(null);
+  const [activeSubTab, setActiveSubTab] = useState('create'); // 'create' o 'list'
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -3422,6 +3424,12 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
 
   const handleSave = (e) => {
     e.preventDefault();
+
+    if (!newPromo.image) {
+      setErrorMsg("DEBES CARGAR UNA IMAGEN PARA LA CAMPAÑA.");
+      return;
+    }
+
     if (newPromo.targetClients.length === 0) {
       setErrorMsg("DEBES SELECCIONAR AL MENOS UN PÚBLICO OBJETIVO (TIPO DE CLIENTE).");
       return;
@@ -3437,6 +3445,7 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
       const newId = `PR${String(promotions.length + 1).padStart(4, '0')}`;
       setPromotions([{ ...newPromo, id: newId, status: 'ACTIVA' }, ...promotions]);
       setNewPromo(initialForm);
+      setActiveSubTab('list'); // Al guardar, nos lleva automáticamente al historial
     } catch (error) {
       setErrorMsg("ERROR: EL ALMACENAMIENTO LOCAL SE HA LLENADO. INTENTA CON UNA IMAGEN MÁS LIGERA.");
     }
@@ -3444,227 +3453,284 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2">
+      
+      {/* Cabecera y Pestañas Internas */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
         <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PROMOCIONES</h2>
-      </div>
-
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full">
-        <h3 className="font-black text-[#134b60] mb-6 flex items-center gap-2 text-[11px] uppercase"><Megaphone size={18} className="text-[#2596be]" /> CREAR NUEVA CAMPAÑA</h3>
         
-        {errorMsg && (
-          <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl flex items-center gap-3 animate-pulse">
-            <AlertTriangle size={18} className="shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-          
-          <div className="space-y-6 lg:col-span-2">
-            <div className="space-y-1 relative">
-              <div className="flex justify-between items-center">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE DE LA CAMPAÑA</label>
-                <span className={`text-[8px] font-black ${newPromo.name.length >= 80 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
-                  {newPromo.name.length} / 80
-                </span>
-              </div>
-              <input 
-                type="text" 
-                maxLength={80} 
-                value={newPromo.name} 
-                onChange={e => setNewPromo({...newPromo, name: e.target.value.toUpperCase()})} 
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" 
-                required 
-                placeholder="EJ: OFERTA RELÁMPAGO (MÁX. 80 CARACTERES)" 
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">FECHA DE INICIO</label>
-                <input 
-                  type="date" 
-                  value={newPromo.startDateOnly} 
-                  onChange={e => handleDateChange(e.target.value, null)} 
-                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
-                  required 
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HORA DE INICIO</label>
-                <input 
-                  type="time" 
-                  value={newPromo.startTimeOnly} 
-                  onChange={e => handleDateChange(null, e.target.value)} 
-                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
-                  required 
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VIGENCIA (HORAS)</label>
-                <input type="number" min="1" value={newPromo.durationHours} onChange={e => setNewPromo({...newPromo, durationHours: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EN PANTALLA (SEGUNDOS)</label>
-                <input type="number" min="1" max="60" value={newPromo.screenTimeSeconds} onChange={e => setNewPromo({...newPromo, screenTimeSeconds: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
-              </div>
-            </div>
-
-            <div className="space-y-3 p-5 bg-[#e9f4f8]/30 rounded-2xl border-2 border-[#2596be]/10">
-              <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block border-b border-[#2596be]/10 pb-2">PÚBLICO OBJETIVO (TIPO DE CLIENTE)</label>
-              <div className="flex flex-wrap gap-3 pt-2">
-                {clientTypes.map(ct => (
-                  <label key={ct.id} className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:border-[#2596be] transition-colors select-none">
-                    <input type="checkbox" checked={newPromo.targetClients.includes(ct.id)} onChange={() => handleToggleClient(ct.id)} className="w-4 h-4 accent-[#2596be] cursor-pointer" />
-                    <span className="text-[9px] font-black text-[#134b60] uppercase">{ct.name}</span>
-                  </label>
-                ))}
-                {clientTypes.length === 0 && <span className="text-[9px] text-rose-500 font-bold bg-rose-50 px-4 py-2 rounded-xl">NO HAY TIPOS DE CLIENTE CREADOS</span>}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TEXTO / OBSERVACIONES (OPCIONAL)</label>
-              <textarea maxLength={150} value={newPromo.text} onChange={e => setNewPromo({...newPromo, text: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase resize-none h-24 text-[#134b60]" placeholder="TÉRMINOS Y CONDICIONES..." />
-            </div>
-          </div>
-
-          <div className="space-y-6 lg:col-span-1 flex flex-col">
-            {/* 1. Cargador de Imagen */}
-            <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IMAGEN DE LA PROMOCIÓN</label>
-              <label className="w-full h-[220px] border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden group">
-                <input type="file" accept=".jpg, .jpeg, .png" className="hidden" onChange={handleImageUpload} required />
-                {newPromo.image ? (
-                  <>
-                    <img src={newPromo.image} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
-                    <div className="absolute inset-0 bg-[#134b60]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                      <span className="bg-white text-[#134b60] px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-2xl flex items-center gap-1.5">
-                        <UploadCloud size={14}/> CAMBIAR
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-12 h-12 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                      <UploadCloud size={20} />
-                    </div>
-                    <span className="text-[9px] font-black text-slate-500 uppercase text-center px-4 leading-relaxed">
-                      CLIC PARA CARGAR IMAGEN<br/>
-                      <span className="text-[7px] font-bold text-amber-600">JPG, PNG (MÁX. 1 MB)</span>
-                    </span>
-                  </>
-                )}
-              </label>
-            </div>
-
-            {/* 2. Tarjeta de Vista Previa en Vivo (Pop-up) */}
-            <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VISTA PREVIA EN VIVO</label>
-              <div className="bg-[#134b60]/95 border-2 border-[#2596be] rounded-2xl p-4 text-center text-white shadow-md relative overflow-hidden flex flex-col items-center justify-center min-h-[170px]">
-                
-                {/* Botón X simulado */}
-                <div className="absolute top-2 right-2 bg-white/20 text-white p-1 rounded-full text-[8px] font-bold">
-                  <X size={10} />
-                </div>
-
-                {/* Imagen en la preview */}
-                {newPromo.image ? (
-                  <img src={newPromo.image} alt="Popup Preview" className="w-20 h-20 object-contain mb-2 rounded-lg bg-white/10 p-1" />
-                ) : (
-                  <div className="w-14 h-14 bg-white/10 rounded-lg flex items-center justify-center mb-2 text-slate-300 text-[8px] font-bold">
-                    SIN IMAGEN
-                  </div>
-                )}
-
-                {/* Título de la campaña en vivo */}
-                <h4 className="font-black text-xs uppercase tracking-tight text-white mb-1 line-clamp-1">
-                  {newPromo.name || "TÍTULO DE LA CAMPAÑA"}
-                </h4>
-
-                {/* Texto de la campaña en vivo */}
-                <p className="text-[9px] font-bold text-slate-200 uppercase line-clamp-2">
-                  {newPromo.text || "Términos y condiciones o descripción..."}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
-            <button 
-              type="button" 
-              onClick={() => setNewPromo(initialForm)}
-              className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
-            >
-              <XCircle size={16} /> LIMPIAR FORMULARIO
-            </button>
-            <button 
-              type="submit" 
-              className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
-            >
-              <Plus size={16} /> GUARDAR CAMPAÑA
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-          <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-6">ID</th>
-                <th className="px-6 py-6">CAMPAÑA</th>
-                <th className="px-6 py-6 text-center">INICIO Y VIGENCIA</th>
-                <th className="px-6 py-6 text-center">PÚBLICO</th>
-                <th className="px-6 py-6 text-center">ESTADO</th>
-                <th className="px-6 py-6 text-right">ACCIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {promotions.length === 0 ? (
-                <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black tracking-tighter">SIN PROMOCIONES REGISTRADAS</td></tr>
-              ) : (
-                promotions.map(p => (
-                  <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-5 font-mono text-[#2596be]">{p.id}</td>
-                    <td className="px-6 py-5 truncate max-w-[250px]">{p.name}</td>
-                    <td className="px-6 py-5 text-center">
-                      <p className="text-[10px] font-black">{new Date(p.startDate).toLocaleString()}</p>
-                      <p className="text-[9px] text-[#2596be] font-black mt-1 bg-[#e9f4f8] inline-block px-3 py-1 rounded-full">DURACIÓN: {p.durationHours} H</p>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-lg text-[9px] border border-indigo-100 font-black">{p.targetClients.length} TIPOS SEL.</span>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className={`px-4 py-1.5 rounded-lg text-[9px] border font-black ${p.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-right flex justify-end">
-                      <button 
-                        onClick={() => setPromotions(promotions.map(promo => promo.id === p.id ? { ...promo, status: 'FINALIZADA' } : promo))} 
-                        disabled={p.status === 'FINALIZADA'}
-                        className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center gap-2 text-[9px] font-black disabled:opacity-40 disabled:cursor-not-allowed" 
-                        title="Finalizar Campaña"
-                      >
-                        <XCircle size={14}/> FINALIZAR
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+          <button 
+            onClick={() => setActiveSubTab('create')} 
+            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+          >
+            ➕ CREAR CAMPAÑA
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('list')} 
+            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+          >
+            📋 HISTORIAL Y LISTADO ({promotions.length})
+          </button>
         </div>
       </div>
+
+      {/* PESTAÑA 1: CREAR CAMPAÑA Y VISTA PREVIA */}
+      {activeSubTab === 'create' && (
+        <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full animate-in fade-in duration-300">
+          <h3 className="font-black text-[#134b60] mb-6 flex items-center gap-2 text-[11px] uppercase">
+            <Megaphone size={18} className="text-[#2596be]" /> CREAR NUEVA CAMPAÑA
+          </h3>
+          
+          {errorMsg && (
+            <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl flex items-center gap-3 animate-pulse">
+              <AlertTriangle size={18} className="shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+            
+            <div className="space-y-6 lg:col-span-2">
+              <div className="space-y-1 relative">
+                <div className="flex justify-between items-center">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE DE LA CAMPAÑA</label>
+                  <span className={`text-[8px] font-black ${newPromo.name.length >= 80 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                    {newPromo.name.length} / 80
+                  </span>
+                </div>
+                <input 
+                  type="text" 
+                  maxLength={80} 
+                  value={newPromo.name} 
+                  onChange={e => setNewPromo({...newPromo, name: e.target.value.toUpperCase()})} 
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" 
+                  required 
+                  placeholder="EJ: OFERTA RELÁMPAGO (MÁX. 80 CARACTERES)" 
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">FECHA DE INICIO</label>
+                  <input 
+                    type="date" 
+                    value={newPromo.startDateOnly} 
+                    onChange={e => handleDateChange(e.target.value, null)} 
+                    className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HORA DE INICIO</label>
+                  <input 
+                    type="time" 
+                    value={newPromo.startTimeOnly} 
+                    onChange={e => handleDateChange(null, e.target.value)} 
+                    className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VIGENCIA (HORAS)</label>
+                  <input type="number" min="1" value={newPromo.durationHours} onChange={e => setNewPromo({...newPromo, durationHours: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EN PANTALLA (SEGUNDOS)</label>
+                  <input type="number" min="1" max="60" value={newPromo.screenTimeSeconds} onChange={e => setNewPromo({...newPromo, screenTimeSeconds: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
+                </div>
+              </div>
+
+              <div className="space-y-3 p-5 bg-[#e9f4f8]/30 rounded-2xl border-2 border-[#2596be]/10">
+                <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block border-b border-[#2596be]/10 pb-2">PÚBLICO OBJETIVO (TIPO DE CLIENTE)</label>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  {clientTypes.map(ct => (
+                    <label key={ct.id} className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:border-[#2596be] transition-colors select-none">
+                      <input type="checkbox" checked={newPromo.targetClients.includes(ct.id)} onChange={() => handleToggleClient(ct.id)} className="w-4 h-4 accent-[#2596be] cursor-pointer" />
+                      <span className="text-[9px] font-black text-[#134b60] uppercase">{ct.name}</span>
+                    </label>
+                  ))}
+                  {clientTypes.length === 0 && <span className="text-[9px] text-rose-500 font-bold bg-rose-50 px-4 py-2 rounded-xl">NO HAY TIPOS DE CLIENTE CREADOS</span>}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TEXTO / OBSERVACIONES (OPCIONAL)</label>
+                <textarea maxLength={150} value={newPromo.text} onChange={e => setNewPromo({...newPromo, text: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase resize-none h-24 text-[#134b60]" placeholder="TÉRMINOS Y CONDICIONES..." />
+              </div>
+            </div>
+
+            {/* Columna Derecha: Imagen y Vista Previa en Vivo */}
+            <div className="space-y-6 lg:col-span-1 flex flex-col">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IMAGEN DE LA PROMOCIÓN</label>
+                <label className="w-full h-[200px] border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden group">
+                  <input type="file" accept=".jpg, .jpeg, .png" className="hidden" onChange={handleImageUpload} />
+                  {newPromo.image ? (
+                    <>
+                      <img src={newPromo.image} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                      <div className="absolute inset-0 bg-[#134b60]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                        <span className="bg-white text-[#134b60] px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-2xl flex items-center gap-1.5">
+                          <UploadCloud size={14}/> CAMBIAR
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <UploadCloud size={20} />
+                      </div>
+                      <span className="text-[9px] font-black text-slate-500 uppercase text-center px-4 leading-relaxed">
+                        CLIC PARA CARGAR IMAGEN<br/>
+                        <span className="text-[7px] font-bold text-amber-600">JPG, PNG (MÁX. 1 MB)</span>
+                      </span>
+                    </>
+                  )}
+                </label>
+              </div>
+
+              {/* Tarjeta de Vista Previa en Vivo */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VISTA PREVIA EN VIVO</label>
+                <div className="bg-[#134b60]/95 border-2 border-[#2596be] rounded-2xl p-4 text-center text-white shadow-md relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
+                  <div className="absolute top-2 right-2 bg-white/20 text-white p-1 rounded-full text-[8px] font-bold">
+                    <X size={10} />
+                  </div>
+                  {newPromo.image ? (
+                    <img src={newPromo.image} alt="Popup Preview" className="w-16 h-16 object-contain mb-2 rounded-lg bg-white/10 p-1" />
+                  ) : (
+                    <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-2 text-slate-300 text-[8px] font-bold">
+                      SIN IMAGEN
+                    </div>
+                  )}
+                  <h4 className="font-black text-xs uppercase tracking-tight text-white mb-1 line-clamp-1">
+                    {newPromo.name || "TÍTULO DE LA CAMPAÑA"}
+                  </h4>
+                  <p className="text-[9px] font-bold text-slate-200 uppercase line-clamp-2">
+                    {newPromo.text || "Términos y condiciones o descripción..."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
+              <button 
+                type="button" 
+                onClick={() => setNewPromo(initialForm)}
+                className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+              >
+                <XCircle size={16} /> LIMPIAR FORMULARIO
+              </button>
+              <button 
+                type="submit" 
+                className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
+              >
+                <Plus size={16} /> GUARDAR CAMPAÑA
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* PESTAÑA 2: HISTORIAL Y LISTADO */}
+      {activeSubTab === 'list' && (
+        <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col animate-in fade-in duration-300 max-h-[75vh]">
+          <div className="overflow-x-auto overflow-y-auto scrollbar-hide">
+            <table className="w-full text-left min-w-[1000px] uppercase">
+              <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-6">ID</th>
+                  <th className="px-6 py-6">CAMPAÑA</th>
+                  <th className="px-6 py-6 text-center">INICIO Y VIGENCIA</th>
+                  <th className="px-6 py-6 text-center">PÚBLICO</th>
+                  <th className="px-6 py-6 text-center">ESTADO</th>
+                  <th className="px-6 py-6 text-right">ACCIÓN</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                {promotions.length === 0 ? (
+                  <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black tracking-tighter">SIN PROMOCIONES REGISTRADAS</td></tr>
+                ) : (
+                  promotions.map(p => (
+                    <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                      <td className="px-6 py-5 font-mono text-[#2596be]">{p.id}</td>
+                      <td className="px-6 py-5 truncate max-w-[250px]">{p.name}</td>
+                      <td className="px-6 py-5 text-center">
+                        <p className="text-[10px] font-black">{new Date(p.startDate).toLocaleString()}</p>
+                        <p className="text-[9px] text-[#2596be] font-black mt-1 bg-[#e9f4f8] inline-block px-3 py-1 rounded-full">DURACIÓN: {p.durationHours} H</p>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-lg text-[9px] border border-indigo-100 font-black">{p.targetClients.length} TIPOS SEL.</span>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span className={`px-4 py-1.5 rounded-lg text-[9px] border font-black ${p.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'}`}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right flex justify-end">
+                        <button 
+                          onClick={() => setPromoToFinalize(p)} 
+                          disabled={p.status === 'FINALIZADA'}
+                          className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center gap-2 text-[9px] font-black disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" 
+                          title="Finalizar Campaña"
+                        >
+                          <XCircle size={14}/> FINALIZAR
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {/* MODAL DE CONFIRMACIÓN PERSONALIZADO */}
+      {promoToFinalize && (
+        <div className="fixed inset-0 bg-[#134b60]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 uppercase">
+          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-2xl p-6 md:p-8 max-w-md w-full text-[#134b60] flex flex-col gap-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-rose-600 border-b border-slate-100 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h4 className="font-black text-xs">CONFIRMAR ACCIÓN</h4>
+                <p className="text-[9px] text-slate-400 font-bold">FINALIZAR CAMPAÑA</p>
+              </div>
+            </div>
+
+            <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
+              ¿ESTÁS SEGURO DE QUE DESEAS FINALIZAR LA CAMPAÑA <span className="text-[#2596be] font-black">"{promoToFinalize.name}"</span> ({promoToFinalize.id})? ESTA ACCIÓN NO SE PUEDE DESHACER.
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setPromoToFinalize(null)}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer"
+              >
+                CANCELAR
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPromotions(promotions.map(promo => promo.id === promoToFinalize.id ? { ...promo, status: 'FINALIZADA' } : promo));
+                  setPromoToFinalize(null);
+                }}
+                className="flex-1 bg-rose-500 hover:bg-rose-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-rose-500/20 transition-all cursor-pointer"
+              >
+                SÍ, FINALIZAR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 // --- MÓDULO CRM (100% COMPLETO Y CORREGIDO: DISEÑO ORIGINAL, FECHAS Y PESTAÑAS) ---
 const CRMView = ({ products, clients, inventory, orders }) => {
   const [activeSubTab, setActiveSubTab] = useState('metrics');
