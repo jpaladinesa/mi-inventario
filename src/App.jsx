@@ -4,7 +4,7 @@ import {
   AlertTriangle, Percent, Edit, Trash2, Menu as MenuIcon, DollarSign, 
   UserCheck, Tag, Info, Scale, Barcode, ShoppingCart, Boxes, ArrowUpRight, 
   History, X, ChevronDown, Mail, Phone, PhoneCall, UserPlus, Fingerprint, 
-  Clock, User, CheckCircle2, Truck, FileText, ChevronRight, ChevronLeft, UserCircle, 
+  Clock, User, CheckCircle2, Bell, Truck, FileText, ChevronRight, ChevronLeft, UserCircle, 
   Receipt, Calculator, Eye, Download, Printer, XCircle, Activity, Calendar, 
   ShieldCheck, MapPin, MessageCircle, Smartphone, UploadCloud, FileSpreadsheet, Megaphone, TrendingUp,
 } from 'lucide-react';
@@ -3028,10 +3028,6 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
     </span>
   </div>
   
-  {/* 3. Lado Derecho: Reloj */}
-  <div className="w-full xl:w-auto flex justify-center xl:justify-end">
-    <RealTimeClock />
-  </div>
 </div>
       {/* Tarjetas de Métricas Principales (KPIs) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -4246,6 +4242,58 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('TODOS');
   
+  // Estados para el reloj y el calendario desplegable
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Formatear hora y fecha en español
+  const timeString = currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateString = currentTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
+
+  // Función para calcular festivos fijos y móviles de Colombia según el año
+  const getColombiaHolidays = (year) => {
+    const holidays = [
+      `1-1-${year}`,   // Año Nuevo
+      `1-6-${year}`,   // Reyes Magos
+      `3-19-${year}`,  // San José
+      `5-1-${year}`,   // Día del Trabajo
+      `6-29-${year}`,  // San Pedro y San Pablo
+      `7-20-${year}`,  // Independencia de Colombia
+      `8-7-${year}`,   // Batalla de Boyacá
+      `8-15-${year}`,  // La Asunción de la Virgen
+      `10-12-${year}`, // Día de la Raza
+      `11-1-${year}`,  // Todos los Santos
+      `11-11-${year}`, // Independencia de Cartagena
+      `12-8-${year}`,  // Inmaculada Concepción
+      `12-25-${year}`, // Navidad
+    ];
+
+    // Función auxiliar para mover festivos al siguiente lunes (Ley Emiliani)
+    const moveToNextMonday = (d, m, y) => {
+      const dateObj = new Date(y, m - 1, d);
+      const dayOfWeek = dateObj.getDay(); // 0: Dom, 1: Lun, ...
+      if (dayOfWeek !== 1) {
+        const daysToAdd = (1 - dayOfWeek + 7) % 7;
+        dateObj.setDate(dateObj.getDate() + (daysToAdd === 0 ? 7 : daysToAdd));
+      }
+      return `${dateObj.getMonth() + 1}-${dateObj.getDate()}-${dateObj.getFullYear()}`;
+    };
+
+    holidays.push(moveToNextMonday(3, 21, year)); // San José (trasladado)
+    holidays.push(moveToNextMonday(6, 29, year)); // San Pedro y San Pablo (trasladado)
+    holidays.push(moveToNextMonday(8, 15, year)); // Asunción (trasladado)
+    holidays.push(moveToNextMonday(10, 12, year)); // Día de la Raza (trasladado)
+    holidays.push(moveToNextMonday(11, 1, year));  // Todos los Santos (trasladado)
+
+    return new Set(holidays);
+  };
+
   const [globalDiscountEngine, setGlobalDiscountEngine] = useState(() => {
     const saved = localStorage.getItem('inventrack_globalDiscountEngine');
     return saved !== null ? JSON.parse(saved) : true;
@@ -4452,16 +4500,136 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
             </h1>
           </div>
 
-          {/* Bloque de Usuario Activo en la esquina derecha */}
-          <div className="flex items-center gap-4 uppercase">
-            <div className="text-right leading-tight hidden sm:block">
-              <p className="text-[10px] font-black text-[#134b60] uppercase tracking-tight">{currentUser.name}</p>
-              <p className="text-[8px] text-[#2596be] font-bold flex items-center justify-end gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 bg-[#2596be] rounded-full animate-pulse"></span> {role}
-              </p>
+          {/* Lado derecho: Widget de Reloj/Fecha Extendido con Desplegable de Calendario, Festivos y Campana */}
+          <div className="flex items-center gap-3 ml-auto">
+            
+            {/* Widget de Reloj y Fecha (Alargado y Desplegable) */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                className="flex items-center gap-3.5 px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl shadow-inner text-[#134b60] hover:bg-slate-100 transition-all cursor-pointer"
+              >
+                <Clock size={20} className="text-[#2596be] shrink-0" />
+                <div className="flex flex-col text-left leading-tight">
+                  <span className="text-xs font-black tracking-wider">{timeString}</span>
+                  <span className="text-[9px] font-bold text-slate-400">{dateString}</span>
+                </div>
+                <ChevronDown size={14} className={`text-slate-400 transition-transform ${isCalendarOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Backdrop para cerrar el calendario al hacer clic fuera */}
+              {isCalendarOpen && (
+                <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsCalendarOpen(false)}></div>
+              )}
+
+              {/* Panel Desplegable del Calendario */}
+              {isCalendarOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-3xl shadow-2xl border-2 border-[#e9f4f8] p-5 z-50 uppercase font-sans text-slate-900">
+                  {/* Cabecera del Mes */}
+                  <div className="flex items-center justify-between mb-4">
+                    <button 
+                      onClick={() => {
+                        const newD = new Date(calendarDate);
+                        newD.setMonth(newD.getMonth() - 1);
+                        setCalendarDate(newD);
+                      }}
+                      className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="text-xs font-black text-[#134b60]">
+                      {calendarDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button 
+                      onClick={() => {
+                        const newD = new Date(calendarDate);
+                        newD.setMonth(newD.getMonth() + 1);
+                        setCalendarDate(newD);
+                      }}
+                      className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+
+                  {/* Días de la semana */}
+                  <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 mb-2">
+                    <span>LU</span><span>MA</span><span>MI</span><span>JU</span><span>VI</span><span className="text-slate-400">SA</span><span className="text-rose-500">DO</span>
+                  </div>
+
+                  {/* Cuadrícula de días */}
+                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold">
+                    {(() => {
+                      const year = calendarDate.getFullYear();
+                      const month = calendarDate.getMonth();
+                      const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Lunes inicio
+                      const totalDays = new Date(year, month + 1, 0).getDate();
+                      const today = new Date();
+                      const holidays = getColombiaHolidays(year);
+
+                      const days = [];
+                      for (let i = 0; i < firstDayIndex; i++) {
+                        days.push(<div key={`empty-${i}`} className="p-2"></div>);
+                      }
+
+                      for (let day = 1; day <= totalDays; day++) {
+                        const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+                        const dateKey = `${month + 1}-${day}-${year}`;
+                        const isHoliday = holidays.has(dateKey);
+                        const dateObj = new Date(year, month, day);
+                        const isSunday = dateObj.getDay() === 0;
+
+                        let styleClass = 'hover:bg-slate-100 text-[#134b60] cursor-pointer';
+                        let tooltip = '';
+
+                        if (isToday) {
+                          styleClass = 'bg-[#2596be] text-white font-black shadow-md';
+                        } else if (isHoliday) {
+                          styleClass = 'bg-rose-50 text-rose-600 font-black border border-rose-200';
+                          tooltip = 'Festivo Colombia';
+                        } else if (isSunday) {
+                          styleClass = 'text-rose-500 font-bold bg-rose-50/50';
+                        }
+
+                        days.push(
+                          <div 
+                            key={day} 
+                            title={tooltip}
+                            className={`p-2 rounded-xl flex items-center justify-center transition-all ${styleClass}`}
+                          >
+                            {day}
+                          </div>
+                        );
+                      }
+                      return days;
+                    })()}
+                  </div>
+
+                  {/* Botón "Hoy" para regresar al día actual */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex justify-center">
+                    <button 
+                      onClick={() => setCalendarDate(new Date())}
+                      className="text-xs font-black text-[#2596be] hover:underline cursor-pointer"
+                    >
+                      Hoy
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="w-10 h-10 bg-[#e9f4f8] text-[#2596be] rounded-xl flex items-center justify-center shadow-inner border border-[#2596be]/20">
-              <UserCircle size={22} />
+
+            {/* Campana de Notificaciones */}
+            <div className="relative">
+              <button 
+                onClick={() => {}}
+                className="w-10 h-10 bg-slate-50 border border-slate-200/80 text-[#134b60] rounded-2xl flex items-center justify-center hover:bg-slate-100 transition-all shadow-inner relative cursor-pointer"
+                title="Notificaciones"
+              >
+                <Bell size={18} className="text-[#134b60]" />
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-pulse">
+                  3
+                </span>
+              </button>
             </div>
           </div>
         </header>
