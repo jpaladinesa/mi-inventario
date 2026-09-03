@@ -3014,7 +3014,7 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
   {/* 1. Lado Izquierdo: Títulos alineados a la izquierda */}
   <div className="flex flex-col items-start text-left">
     <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-tight uppercase leading-none mb-1.5">
-      Centro de control IT
+      Dashboard General
     </h2>
     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
       Resumen general de operaciones y stock
@@ -4245,8 +4245,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   const [activeTab, setActiveTab] = useState(role === 'ADMIN' ? 'dashboard' : 'client_dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('TODOS');
-  const [globalSearch, setGlobalSearch] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
   const [globalDiscountEngine, setGlobalDiscountEngine] = useState(() => {
     const saved = localStorage.getItem('inventrack_globalDiscountEngine');
     return saved !== null ? JSON.parse(saved) : true;
@@ -4254,6 +4253,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   useEffect(() => {
     localStorage.setItem('inventrack_globalDiscountEngine', JSON.stringify(globalDiscountEngine));
   }, [globalDiscountEngine]);
+  
   const [taxes, setTaxes] = useState(() => {
     const saved = localStorage.getItem('inventrack_taxes');
     return saved ? JSON.parse(saved) : [];
@@ -4301,6 +4301,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   useEffect(() => {
     localStorage.setItem('inventrack_orders', JSON.stringify(orders));
   }, [orders]);
+  
   const [promotions, setPromotions] = useState(() => {
     const saved = localStorage.getItem('inventrack_promotions');
     return saved ? JSON.parse(saved) : [];
@@ -4311,6 +4312,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
 
   const [csvPreview, setCsvPreview] = useState(null);
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
+  
   const adminMenu = [
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={20} /> },
     { id: 'admin_orders', label: 'PEDIDOS', icon: <Activity size={20} /> },
@@ -4323,12 +4325,15 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     { id: 'taxes', label: 'IMPUESTOS', icon: <Percent size={20} /> },
     { id: 'promotions', label: 'PROMOCIONES', icon: <Megaphone size={20} /> },
   ];
+  
   const clientMenu = [
     { id: 'client_dashboard', label: 'INICIO', icon: <LayoutDashboard size={20} /> },
     { id: 'client_new_order', label: 'HACER PEDIDO', icon: <Plus size={20} /> },
     { id: 'client_orders_history', label: 'MIS PEDIDOS', icon: <History size={20} /> },
   ];
-const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -4340,200 +4345,111 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
-<aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-72'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative shadow-2xl border-r border-[#194052]`}>
-  
-  {/* Botón flotante para minimizar / expandir */}
-  <button 
-    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-    className="absolute -right-3.5 top-7 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
-    title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
-  >
-    {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-  </button>
+      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-72'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative shadow-2xl border-r border-[#194052]`}>
+        
+        {/* Botón flotante para minimizar / expandir */}
+        <button 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="absolute -right-3.5 top-7 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
+          title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
+        >
+          {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
 
-  {/* Cabecera del Logo */}
-  <div className={`p-5 border-b border-[#194052] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all`}>
-    <label htmlFor="logo-upload" className={`w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-3'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}>
-      {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
-      <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-      <Package size={22} className="text-[#2596be] hidden" />
-      {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={16} className="text-[#134b60]" /></div>}
-    </label>
-    
-    {!sidebarCollapsed && (
-      <>
-        <span className="font-black text-xs text-white tracking-tight mt-1.5 block">INVENTRACK</span>
-        <span className="text-[7px] text-[#e9f4f8] font-bold mt-0.5 opacity-50 uppercase tracking-[0.15em]">DISTRIBUCIONES CASTILLA</span>
-      </>
-    )}
-  </div>
+        {/* Cabecera del Logo */}
+        <div className={`p-5 border-b border-[#194052] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all`}>
+          <label htmlFor="logo-upload" className={`w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-3'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}>
+            {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
+            <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+            <Package size={22} className="text-[#2596be] hidden" />
+            {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={16} className="text-[#134b60]" /></div>}
+          </label>
+          
+          {!sidebarCollapsed && (
+            <>
+              <span className="font-black text-xs text-white tracking-tight mt-1.5 block">INVENTRACK</span>
+              <span className="text-[7px] text-[#e9f4f8] font-bold mt-0.5 opacity-50 uppercase tracking-[0.15em]">DISTRIBUCIONES CASTILLA</span>
+            </>
+          )}
+        </div>
 
-  {/* Badge de Rol Compacto */}
-  <div className="px-4 py-3">
-    <div 
-      className={`w-full py-2.5 rounded-xl text-[9px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3'} shadow-inner transition-all`}
-    >
-      {role === 'ADMIN' ? (
-        <ShieldCheck size={15} className="text-[#2596be] shrink-0" />
-      ) : (
-        <User size={15} className="text-[#2596be] shrink-0" />
-      )}
-      {!sidebarCollapsed && (
-        <span className="truncate uppercase tracking-wider">
-          {role === 'ADMIN' ? 'ADMINISTRADOR' : 'CLIENTE'}
-        </span>
-      )}
-    </div>
-  </div>
-
-  {/* Menú de Navegación */}
-  <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-4' : 'px-4 py-2'} space-y-1.5 overflow-y-auto scrollbar-hide`}>
-    {role === 'ADMIN' && (
-      <>
-        {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mb-1.5 opacity-60">Gestión General</div>}
-        {adminMenu.map((item) => (
-          <button 
-            key={item.id} 
-            onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
-            title={item.label} 
-            className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
+        {/* Badge de Rol Compacto */}
+        <div className="px-4 py-3">
+          <div 
+            className={`w-full py-2.5 rounded-xl text-[9px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3'} shadow-inner transition-all`}
           >
-            <span className="shrink-0">{item.icon}</span>
-            {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
+            {role === 'ADMIN' ? (
+              <ShieldCheck size={15} className="text-[#2596be] shrink-0" />
+            ) : (
+              <User size={15} className="text-[#2596be] shrink-0" />
+            )}
+            {!sidebarCollapsed && (
+              <span className="truncate uppercase tracking-wider">
+                {role === 'ADMIN' ? 'ADMINISTRADOR' : 'CLIENTE'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Menú de Navegación */}
+        <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-4' : 'px-4 py-2'} space-y-1.5 overflow-y-auto scrollbar-hide`}>
+          {role === 'ADMIN' && (
+            <>
+              {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mb-1.5 opacity-60">Gestión General</div>}
+              {adminMenu.map((item) => (
+                <button 
+                  key={item.id} 
+                  onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
+                  title={item.label} 
+                  className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
+                >
+                  <span className="shrink-0">{item.icon}</span>
+                  {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
+                </button>
+              ))}
+              {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mt-6 mb-1.5 border-t border-[#194052] pt-4 opacity-60">Portal Cliente</div>}
+            </>
+          )}
+
+          {clientMenu.map((item) => (
+            <button 
+              key={item.id} 
+              onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
+              title={item.label} 
+              className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
+            >
+              <span className="shrink-0">{item.icon}</span>
+              {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
+            </button>
+          ))}
+        </nav>
+
+        {/* Botón de Cerrar Sesión en el Footer del Sidebar */}
+        <div className="p-4 border-t border-[#194052]">
+          <button 
+            onClick={onLogout} 
+            title="Cerrar sesión"
+            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-3'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[9px] uppercase tracking-wider transition-all`}
+          >
+            <span className="shrink-0"><LogOut size={16} /></span>
+            {!sidebarCollapsed && <span>Cerrar Sesión</span>}
           </button>
-        ))}
-        {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mt-6 mb-1.5 border-t border-[#194052] pt-4 opacity-60">Portal Cliente</div>}
-      </>
-    )}
+        </div>
+      </aside>
 
-    {clientMenu.map((item) => (
-      <button 
-        key={item.id} 
-        onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
-        title={item.label} 
-        className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
-      >
-        <span className="shrink-0">{item.icon}</span>
-        {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
-      </button>
-    ))}
-  </nav>
-
-  {/* Botón de Cerrar Sesión en el Footer del Sidebar */}
-  <div className="p-4 border-t border-[#194052]">
-    <button 
-      onClick={onLogout} 
-      title="Cerrar sesión"
-      className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-3'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[9px] uppercase tracking-wider transition-all`}
-    >
-      <span className="shrink-0"><LogOut size={16} /></span>
-      {!sidebarCollapsed && <span>Cerrar Sesión</span>}
-    </button>
-  </div>
-</aside>
       <main className="flex-1 flex flex-col min-h-screen min-w-0">
         <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
-          {/* Botón de menú móvil */}
-          <button 
-            onClick={() => setIsSidebarOpen(true)} 
-            className="p-2.5 text-[#134b60] md:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100"
-          >
-            <MenuIcon size={20} />
-          </button>
-
-          {/* Barra de búsqueda global estilizada */}
-          <div className="hidden sm:block relative w-80 md:w-96 uppercase tracking-widest z-50">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-            
-            <input 
-              type="text" 
-              value={globalSearch}
-              onChange={(e) => {
-                setGlobalSearch(e.target.value);
-                setIsSearchOpen(e.target.value.trim().length > 0);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') setIsSearchOpen(false);
-              }}
-              placeholder="Búsqueda rápida en el sistema..." 
-              className="w-full pl-12 pr-6 py-2.5 bg-slate-50 rounded-xl text-[10px] outline-none font-bold uppercase transition-all focus:bg-white border-2 border-transparent focus:border-[#2596be] text-[#134b60] shadow-inner" 
-            />
-            
-            {/* Resultados de búsqueda global (Dropdown igual al tuyo funcional) */}
-            {isSearchOpen && (
-              <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsSearchOpen(false)}></div>
-            )}
-
-            {isSearchOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border-2 border-[#e9f4f8] overflow-hidden max-h-[400px] overflow-y-auto flex flex-col z-50 scrollbar-hide">
-                {(() => {
-                  const busqueda = globalSearch.toLowerCase();
-                  
-                  const pedidosEncontrados = orders.filter(o => o.id.toLowerCase().includes(busqueda) || (o.clientName && o.clientName.toLowerCase().includes(busqueda))).slice(0, 3);
-                  const clientesEncontrados = clients.filter(c => c.docNumber.includes(busqueda) || (c.name && c.name.toLowerCase().includes(busqueda))).slice(0, 3);
-                  const productosEncontrados = products.filter(p => p.id.toLowerCase().includes(busqueda) || p.name.toLowerCase().includes(busqueda)).slice(0, 3);
-                  const inventarioEncontrado = inventory.filter(i => i.id.toLowerCase().includes(busqueda) || i.productName.toLowerCase().includes(busqueda) || i.productId.toLowerCase().includes(busqueda)).slice(0, 3);
-                  const usuariosEncontrados = users.filter(u => u.id.toLowerCase().includes(busqueda) || u.name.toLowerCase().includes(busqueda) || u.email.toLowerCase().includes(busqueda)).slice(0, 3);
-                  const impuestosEncontrados = taxes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
-                  const tiposClienteEncontrados = clientTypes.filter(t => t.id.toLowerCase().includes(busqueda) || t.name.toLowerCase().includes(busqueda)).slice(0, 3);
-
-                  const hayResultados = pedidosEncontrados.length > 0 || clientesEncontrados.length > 0 || productosEncontrados.length > 0 || inventarioEncontrado.length > 0 || usuariosEncontrados.length > 0 || impuestosEncontrados.length > 0 || tiposClienteEncontrados.length > 0;
-
-                  if (!hayResultados) {
-                    return (
-                      <div className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        No se encontraron resultados para "{globalSearch}"
-                      </div>
-                    );
-                  }
-
-                  const navegarA = (ruta) => {
-                      setActiveTab(ruta);
-                      setFilterStatus('TODOS');
-                      setIsSearchOpen(false);
-                      setGlobalSearch('');
-                  };
-
-                  return (
-                    <div className="flex flex-col relative z-50">
-                      {pedidosEncontrados.length > 0 && (
-                        <div className="p-2">
-                          <p className="px-4 py-2 text-[9px] font-black text-[#2596be] uppercase tracking-widest bg-[#e9f4f8]/50 rounded-lg mb-1">📦 Pedidos</p>
-                          {pedidosEncontrados.map(o => (
-                            <div key={o.id} onClick={() => { navegarA(role === 'ADMIN' ? 'admin_orders' : 'client_orders_history'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirPedidoGlobal', { detail: o.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                              <div><p className="text-xs font-black text-[#134b60]">{o.id}</p><p className="text-[9px] text-slate-400 uppercase">{o.clientName}</p></div>
-                              <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{o.status}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {clientesEncontrados.length > 0 && role === 'ADMIN' && (
-                        <div className="p-2 border-t border-slate-100">
-                          <p className="px-4 py-2 text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50/50 rounded-lg mb-1">🏢 Clientes</p>
-                          {clientesEncontrados.map(c => (
-                            <div key={c.id} onClick={() => { navegarA('clients'); setTimeout(() => window.dispatchEvent(new CustomEvent('abrirClienteGlobal', { detail: c.id })), 150); }} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                              <div><p className="text-xs font-black text-[#134b60]">{c.name}</p><p className="text-[9px] text-slate-400 uppercase">{c.docType}: {c.docNumber}</p></div>
-                              <span className="text-[9px] font-black text-slate-400">{c.typeName}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {productosEncontrados.length > 0 && role === 'ADMIN' && (
-                        <div className="p-2 border-t border-slate-100">
-                          <p className="px-4 py-2 text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50/50 rounded-lg mb-1">📋 Productos</p>
-                          {productosEncontrados.map(p => (
-                            <div key={p.id} onClick={() => navegarA('products')} className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center rounded-xl transition-colors">
-                              <div><p className="text-xs font-black text-[#134b60]">{p.name}</p><p className="text-[9px] text-slate-400 uppercase">CÓDIGO: {p.id}</p></div>
-                              <span className="text-[9px] font-black text-slate-400">{p.unitName}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
+          {/* Lado izquierdo: Botón móvil y Mensaje de Bienvenida */}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsSidebarOpen(true)} 
+              className="p-2.5 text-[#134b60] md:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100"
+            >
+              <MenuIcon size={20} />
+            </button>
+            <h1 className="text-xs md:text-sm font-black text-[#134b60] tracking-tight uppercase">
+              Bienvenido, {currentUser.name}
+            </h1>
           </div>
 
           {/* Bloque de Usuario Activo en la esquina derecha */}
@@ -4549,6 +4465,7 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
             </div>
           </div>
         </header>
+
         <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
           {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
           {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
@@ -4556,7 +4473,8 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
           {activeTab === 'access' && <AccessManagementView users={users} setUsers={setUsers} clients={clients} />}
           {activeTab === 'crm' && <CRMView products={products} clients={clients} inventory={inventory} orders={orders} />}
           {activeTab === 'clients' && <ClientsView clients={clients} setClients={setClients} clientTypes={clientTypes} globalDiscountEngine={globalDiscountEngine} setGlobalDiscountEngine={setGlobalDiscountEngine} />}
-          {activeTab === 'products' && <ProductsView products={products} setProducts={setProducts} taxes={taxes} inventory={inventory} orders={orders} />}         {activeTab === 'taxes' && <ConfigurationListView title="IMPUESTOS" items={taxes} setItems={setTaxes} prefix="CI" labelName="IMPUESTO" labelValue="PORCENTAJE" /> }
+          {activeTab === 'products' && <ProductsView products={products} setProducts={setProducts} taxes={taxes} inventory={inventory} orders={orders} />}         
+          {activeTab === 'taxes' && <ConfigurationListView title="IMPUESTOS" items={taxes} setItems={setTaxes} prefix="CI" labelName="IMPUESTO" labelValue="PORCENTAJE" /> }
           {activeTab === 'client_types' && <ConfigurationListView title="TIPO CLIENTE" items={clientTypes} setItems={setClientTypes} prefix="TC" labelName="TIPO" labelValue="RECARGO" />}
           {activeTab === 'promotions' && <PromotionsManagementView promotions={promotions} setPromotions={setPromotions} clientTypes={clientTypes} />}
           {activeTab === 'client_dashboard' && <ClientDashboardView orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} promotions={promotions} currentUser={currentUser} clients={clients} />}
