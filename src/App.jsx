@@ -3689,19 +3689,18 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
           </div>
         </div>
       )}
-
             {/* Botones de acción */}
-            <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
+            <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-4">
               <button 
                 type="button" 
                 onClick={() => setNewPromo(initialForm)}
-                className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+                className="w-full sm:w-auto px-8 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
               >
                 <XCircle size={16} /> LIMPIAR FORMULARIO
               </button>
               <button 
                 type="submit" 
-                className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
+                className="w-full sm:w-auto px-8 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
               >
                 <Plus size={16} /> GUARDAR CAMPAÑA
               </button>
