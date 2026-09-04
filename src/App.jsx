@@ -3021,7 +3021,7 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
     </p>
   </div>
 
-  {/* 2. Centro: El indicador OPERATIVO ubicado exactamente donde marcaste el círculo */}
+  {/* 2. Centro: El indicador OPERATIVO */}
   <div className="flex justify-center">
     <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full text-[10px] font-black flex items-center gap-2 shadow-sm">
       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OPERATIVO
@@ -3398,6 +3398,7 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
   const [errorMsg, setErrorMsg] = useState('');
   const [promoToFinalize, setPromoToFinalize] = useState(null);
   const [showFullPreview, setShowFullPreview] = useState(false);
+  const [selectedPromo, setSelectedPromo] = useState(null);
   const [activeSubTab, setActiveSubTab] = useState('create'); // 'create' o 'list'
 
   const handleImageUpload = (e) => {
@@ -3729,8 +3730,8 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
                   <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black tracking-tighter">SIN PROMOCIONES REGISTRADAS</td></tr>
                 ) : (
                   promotions.map(p => (
-                    <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                      <td className="px-6 py-5 font-mono text-[#2596be]">{p.id}</td>
+                    <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer" onClick={() => setSelectedPromo(p)}>
+                      <td className="px-6 py-5 font-mono text-[#2596be] font-black">{p.id}</td>
                       <td className="px-6 py-5 truncate max-w-[250px]">{p.name}</td>
                       <td className="px-6 py-5 text-center">
                         <p className="text-[10px] font-black">{new Date(p.startDate).toLocaleString()}</p>
@@ -3746,7 +3747,7 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
                       </td>
                       <td className="px-6 py-5 text-right flex justify-end">
                         <button 
-                          onClick={() => setPromoToFinalize(p)} 
+                          onClick={(e) => { e.stopPropagation(); setPromoToFinalize(p); }} 
                           disabled={p.status === 'FINALIZADA'}
                           className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center gap-2 text-[9px] font-black disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" 
                           title="Finalizar Campaña"
@@ -3799,6 +3800,79 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
                 SÍ, FINALIZAR
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE DETALLE EN PANTALLA GRANDE */}
+      {selectedPromo && (
+        <div className="fixed inset-0 bg-[#134b60]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 uppercase font-sans">
+          <div className="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl border-2 border-[#e9f4f8] p-8 relative animate-in zoom-in-95 duration-200">
+            
+            {/* Botón de cerrar */}
+            <button 
+              onClick={() => setSelectedPromo(null)}
+              className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-rose-50 hover:text-rose-500 text-slate-500 rounded-2xl flex items-center justify-center transition-all cursor-pointer font-black"
+            >
+              ✕
+            </button>
+
+            {/* Cabecera del Detalle */}
+            <div className="mb-6">
+              <span className="px-3 py-1 bg-sky-50 text-[#2596be] border border-sky-100 rounded-full text-[9px] font-black">
+                DETALLE DE CAMPAÑA
+              </span>
+              <h3 className="text-2xl font-black text-[#134b60] tracking-tight mt-2">
+                {selectedPromo.id} - {selectedPromo.name}
+              </h3>
+              <p className="text-[10px] text-slate-400 font-bold tracking-widest mt-0.5">
+                Información general y configuración de la promoción
+              </p>
+            </div>
+
+            {/* Imagen de la campaña en grande */}
+            {selectedPromo.image && (
+              <div className="w-full h-48 bg-slate-50 rounded-2xl p-2 mb-6 border border-slate-100 flex items-center justify-center overflow-hidden">
+                <img src={selectedPromo.image} alt="Promo" className="w-full h-full object-contain" />
+              </div>
+            )}
+
+            {/* Cuerpo con la información desplegada */}
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-6 text-xs font-bold text-slate-700">
+              <div>
+                <span className="text-[9px] text-slate-400 block mb-1">Campaña:</span>
+                <span className="text-sm font-black text-[#134b60]">{selectedPromo.name}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-slate-400 block mb-1">Estado:</span>
+                <span className={`px-3 py-1 rounded-full text-[9px] font-black inline-block ${selectedPromo.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                  {selectedPromo.status}
+                </span>
+              </div>
+              <div>
+                <span className="text-[9px] text-slate-400 block mb-1">Inicio y Vigencia:</span>
+                <span>{new Date(selectedPromo.startDate).toLocaleString()} ({selectedPromo.durationHours} H)</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-slate-400 block mb-1">En Pantalla:</span>
+                <span>{selectedPromo.screenTimeSeconds} Segundos</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-[9px] text-slate-400 block mb-1">Términos / Observaciones:</span>
+                <span className="text-slate-600">{selectedPromo.text || "SIN DESCRIPCIÓN"}</span>
+              </div>
+            </div>
+
+            {/* Botón de acción inferior */}
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setSelectedPromo(null)}
+                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-[10px] transition-all cursor-pointer shadow-md"
+              >
+                Cerrar ventana
+              </button>
+            </div>
+
           </div>
         </div>
       )}
