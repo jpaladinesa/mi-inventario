@@ -3399,7 +3399,15 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
   const [promoToFinalize, setPromoToFinalize] = useState(null);
   const [showFullPreview, setShowFullPreview] = useState(false);
   const [selectedPromo, setSelectedPromo] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('create'); // 'create' o 'list'
+
+  
+  const filteredPromotions = promotions.filter(promo => 
+    promo.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (promo.name && promo.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (promo.text && promo.text.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -3712,6 +3720,21 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
       {/* PESTAÑA 2: HISTORIAL Y LISTADO */}
       {activeSubTab === 'list' && (
         <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col animate-in fade-in duration-300 max-h-[75vh]">
+          {/* BARRA DE BÚSQUEDA */}
+      <div className="px-6 pt-6 mb-2 flex items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            placeholder="Buscador inteligente: ID, Campaña o palabra clave..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400"
+          />
+        </div>
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          Mostrando {filteredPromotions.length} de {promotions.length}
+        </span>
+      </div>
           <div className="overflow-x-auto overflow-y-auto scrollbar-hide">
             <table className="w-full text-left min-w-[1000px] uppercase">
               <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
@@ -3725,10 +3748,10 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-                {promotions.length === 0 ? (
+                {filteredPromotions.length === 0 ? (
                   <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black tracking-tighter">SIN PROMOCIONES REGISTRADAS</td></tr>
                 ) : (
-                  promotions.map(p => (
+                  filteredPromotions.map((p) => (
                     <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer" onClick={() => setSelectedPromo(p)}>
                       <td className="px-6 py-5 font-mono text-[#2596be] font-black">{p.id}</td>
                       <td className="px-6 py-5 truncate max-w-[250px]">{p.name}</td>
