@@ -592,7 +592,11 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                       const c = getCalculatedValues(p.cost, p.utility, p.taxId);
                       const availableStock = calculateAvailableStock(p.id, inventory, orders);
                       return (
-                        <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                        <tr 
+                              key={p.id} 
+                              onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
+                              className="hover:bg-white transition-colors cursor-pointer"
+                            >
                           <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
                           <td className="px-6 py-4">
                             <p className="font-black text-[#134b60]">{p.name}</p>
@@ -658,7 +662,11 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                   const c = getCalculatedValues(p.cost, p.utility, p.taxId);
                   const availableStock = calculateAvailableStock(p.id, inventory, orders);
                   return (
-                    <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                    <tr 
+                              key={p.id} 
+                              onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
+                              className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
+                            >
                       <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
                       <td className="px-6 py-4">
                         <p className="font-black text-[#134b60]">{p.name}</p>
@@ -844,6 +852,80 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
         </div>
       )}
       <Footer />
+      {/* --- MODAL DE DETALLE DE PRODUCTO --- */}
+      {modalType === 'productDetail' && selectedProd && (() => {
+        const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
+        const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
+        return (
+          <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-xl text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
+              
+              {/* Encabezado del Modal */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE PRODUCTO #{selectedProd.id}</span>
+                  <h3 className="text-xl font-black text-[#134b60]">{selectedProd.name}</h3>
+                </div>
+                <button 
+                  onClick={() => setModalType(null)}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Información General en Tarjetas */}
+              <div className="grid grid-cols-2 gap-4 text-xs font-bold text-[#134b60]">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[9px] text-slate-400 font-black block mb-1">UNIDAD DE MEDIDA</span>
+                  {selectedProd.unitName}
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                  <span className="text-[9px] text-slate-400 font-black block mb-1">STOCK DISPONIBLE</span>
+                  <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                    {availableStock.toFixed(2)}
+                  </span>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[9px] text-slate-400 font-black block mb-1">COSTO BASE</span>
+                  <span className="font-mono">{formatCurrency(selectedProd.cost)}</span>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-[9px] text-slate-400 font-black block mb-1">UTILIDAD APLICADA</span>
+                  <span className="font-mono">{selectedProd.utility}%</span>
+                </div>
+              </div>
+
+              {/* Desglose Financiero */}
+              <div className="bg-[#e9f4f8] p-5 rounded-2xl border-2 border-[#2596be]/30 space-y-3">
+                <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
+                  <span className="text-[9px] text-[#2596be] font-black">SUBTOTAL (COSTO + UTILIDAD):</span>
+                  <span className="font-mono">{formatCurrency(c.subtotal)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
+                  <span className="text-[9px] text-amber-600 font-black">VALOR IMPUESTO (IVA):</span>
+                  <span className="font-mono text-amber-600">{formatCurrency(c.taxAmount)}</span>
+                </div>
+                <div className="border-t border-[#2596be]/20 pt-3 flex justify-between items-center text-sm font-black text-[#134b60]">
+                  <span>PRECIO FINAL SUGERIDO:</span>
+                  <span className="font-mono text-base text-[#2596be]">{formatCurrency(c.finalPrice)}</span>
+                </div>
+              </div>
+
+              {/* Botón de Cierre */}
+              <div className="flex justify-end pt-2">
+                <button 
+                  onClick={() => setModalType(null)}
+                  className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95"
+                >
+                  CERRAR DETALLE
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
