@@ -274,9 +274,17 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
   );
 };
 // --- MÓDULO DE PRODUCTOS ---
-const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
+  const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
+  const [activeSubTab, setActiveSubTab] = useState('create');
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const filteredProducts = products.filter(p => 
+
+  p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+  (p.unitName && p.unitName.toLowerCase().includes(searchTerm.toLowerCase()))
+);
   
   const getNextNumericID = () => {
     if (products.length === 0) return '00001';
@@ -466,11 +474,31 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="flex justify-between items-end border-b-4 border-[#2596be] pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE PRODUCTOS</h2>
-        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PRODUCTOS</h2>
+        
+        <div className="flex items-center gap-3">
+          <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95">
+            <UploadCloud size={16}/> CARGUE MASIVO EXCEL
+          </button>
+          
+          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+            <button 
+              onClick={() => setActiveSubTab('create')} 
+              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            >
+              ➕ NUEVO REGISTRO
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('list')} 
+              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            >
+              📋 LISTADO Y BUSCADOR ({products.length})
+            </button>
+          </div>
+        </div>
       </div>
-
+      {activeSubTab === 'create' && (
       <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6">
         <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><ShoppingCart size={18} className="text-[#2596be]" /> REGISTRO MANUAL DE PRODUCTO</h3>
         {errorMsg && <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl animate-pulse">{errorMsg}</div>}
@@ -512,6 +540,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
+            
             <button 
               type="button" 
               onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' })}
@@ -535,7 +564,25 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           <div className="bg-[#e9f4f8] px-6 py-4 rounded-2xl border-2 border-[#2596be]/30"><p className="text-[8px] text-[#2596be] font-black mb-1">PRECIO SUGERIDO FINAL</p><p className="text-xl font-black text-[#134b60]">{formatCurrency(currentCalcs.finalPrice)}</p></div>
         </div>
       </div>
-
+    )}
+    {activeSubTab === 'list' && (
+  <div className="space-y-6 animate-in fade-in duration-300">
+    {/* Buscador Inteligente */}
+    <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
+      <div className="relative flex-1">
+        <input
+          type="text"
+          placeholder="Buscador inteligente: ID, nombre o unidad..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
+        />
+      </div>
+      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+        Mostrando {filteredProducts.length} de {products.length}
+      </span>
+    </div>
+  
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
         <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1200px] uppercase">
@@ -551,10 +598,10 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {products.length === 0 ? (
+              {filteredProducts.length === 0 ? (
                 <tr><td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td></tr>
               ) : (
-                products.map(p => {
+                filteredProducts.map(p => {
                   const c = getCalculatedValues(p.cost, p.utility, p.taxId);
                   const availableStock = calculateAvailableStock(p.id, inventory, orders);
                   return (
@@ -577,6 +624,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                           <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
                           <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
                         </div>
+                        
                       </td>
                     </tr>
                   );
@@ -585,7 +633,10 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
             </tbody>
           </table>
         </div>
+        </div>
       </div>
+    )}
+      
 
       {modalType === 'bulkUpload' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
