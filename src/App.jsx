@@ -539,19 +539,20 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
               <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
-            
-            
+          </div>
+
+          {/* Fila de Botones Compactos y Alineados */}
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button 
               type="button" 
               onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' })}
-              className="lg:col-span-2 w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-sm transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+              className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
             >
-              <XCircle size={16} /> LIMPIAR
+              <XCircle size={16} /> LIMPIAR FORMULARIO
             </button>
-
             <button 
               type="submit" 
-              className="lg:col-span-2 w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-xl shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+              className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
             >
               <Plus size={16} /> REGISTRAR PRODUCTO
             </button>
@@ -562,6 +563,46 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           <div className="bg-slate-50 border-2 border-slate-100 px-6 py-4 rounded-2xl"><p className="text-[8px] text-slate-400 font-black mb-1">COSTO + UTILIDAD</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(currentCalcs.subtotal)}</p></div>
           <div className="bg-amber-50 border-2 border-amber-100 px-6 py-4 rounded-2xl"><p className="text-[8px] text-amber-500 font-black mb-1">VALOR IVA</p><p className="text-lg font-black text-amber-700">{formatCurrency(currentCalcs.taxAmount)}</p></div>
           <div className="bg-[#e9f4f8] px-6 py-4 rounded-2xl border-2 border-[#2596be]/30"><p className="text-[8px] text-[#2596be] font-black mb-1">PRECIO SUGERIDO FINAL</p><p className="text-xl font-black text-[#134b60]">{formatCurrency(currentCalcs.finalPrice)}</p></div>
+        </div>
+        {/* --- ÚLTIMOS 5 PRODUCTOS REGISTRADOS --- */}
+        <div className="pt-6 border-t border-slate-100 space-y-4">
+          <h4 className="font-black text-[#134b60] text-[10px] uppercase tracking-wider flex items-center gap-2">
+            <History size={16} className="text-[#2596be]" /> ÚLTIMOS 5 PRODUCTOS REGISTRADOS RECIENTEMENTE
+          </h4>
+          <div className="bg-slate-50 rounded-2xl border-2 border-slate-100 overflow-hidden shadow-sm">
+            <table className="w-full text-left uppercase text-[10px]">
+              <thead className="bg-[#134b60] text-white font-black tracking-widest text-[8px]">
+                <tr>
+                  <th className="px-4 py-3">CÓDIGO ID</th>
+                  <th className="px-4 py-3">PRODUCTO / UNIDAD</th>
+                  <th className="px-4 py-3 text-right">COSTO BASE</th>
+                  <th className="px-4 py-3 text-right">PRECIO FINAL</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-bold text-[#134b60]">
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="px-4 py-8 text-center text-slate-400 font-black">SIN REGISTROS RECIENTES EN EL CATÁLOGO</td>
+                  </tr>
+                ) : (
+                  products.slice(-5).reverse().map(p => {
+                    const c = getCalculatedValues(p.cost, p.utility, p.taxId);
+                    return (
+                      <tr key={p.id} className="hover:bg-white transition-colors">
+                        <td className="px-4 py-3 font-mono text-[#2596be] font-black">{p.id}</td>
+                        <td className="px-4 py-3">
+                          <p className="font-black text-[#134b60]">{p.name}</p>
+                          <p className="text-[8px] text-slate-400">{p.unitName}</p>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-slate-500">{formatCurrency(p.cost)}</td>
+                        <td className="px-4 py-3 text-right font-mono text-[#134b60] font-black">{formatCurrency(c.finalPrice)}</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     )}
