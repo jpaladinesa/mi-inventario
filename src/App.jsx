@@ -935,24 +935,23 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   const [selectedProd, setSelectedProd] = useState(null);
   const [quantity, setQuantity] = useState('');
   const [modalType, setModalType] = useState(null);
-  const [filters, setFilters] = useState({ id: '', name: '' });
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [editData, setEditData] = useState({ quantity: '' });
   const [csvPreview, setCsvPreview] = useState(null);
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
-
+  
   const filteredOptions = useMemo(() => {
-    if (Object.values(filters).every(v => !v)) return [];
+    if (!searchTerm) return [];
     return products.filter(p => 
-      p.id.includes(filters.id) && 
-      p.name.toUpperCase().includes(filters.name.toUpperCase())
-    )
-  }, [filters, products]);
+      p.id.includes(searchTerm) || p.name.toUpperCase().includes(searchTerm.toUpperCase())
+    );
+  }, [searchTerm, products]);
 
   const handleSave = () => {
     const id = `IV${String(inventory.length + 1).padStart(6, '0')}`;
     setInventory([{ id, productId: selectedProd.id, productName: selectedProd.name, unitName: selectedProd.unitName, quantity: parseFloat(quantity), date: new Date().toLocaleString(), user: 'ADMINISTRADOR' }, ...inventory]);
-    setSelectedProd(null); setQuantity(''); setModalType(null); setFilters({ id: '', name: '' });
+    setSelectedProd(null); setQuantity(''); setModalType(null); setSearchTerm('');
   };
 
   const executeUpdate = () => {
@@ -1058,51 +1057,75 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
         <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
       </div>
       
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full overflow-visible space-y-6">
-        <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><Boxes size={18} className="text-[#2596be]" /> BÚSQUEDA INTELIGENTE</h3>
-        
-        <div className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CÓDIGO ID</label>
-              <input type="text" value={filters.id} onChange={e => {setFilters({...filters, id: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" placeholder="BUSCAR..." />
-            </div>
-            <div className="space-y-1 md:col-span-2">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PRODUCTO</label>
-              <input type="text" value={filters.name} onChange={e => {setFilters({...filters, name: e.target.value}); setSelectedProd(null);}} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" placeholder="NOMBRE..." />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CANTIDAD</label>
-              <input type="text" inputMode="numeric" value={quantity} onChange={e => setQuantity(e.target.value.replace(/\D/g, ''))} disabled={!selectedProd} className="w-full px-4 py-3 bg-[#e9f4f8] text-[#134b60] border-2 border-[#2596be]/30 rounded-xl outline-none font-black text-xs text-center transition-all disabled:opacity-50" placeholder="" />
-            </div>
+      {/* --- FORMULARIO Y BÚSQUEDA INTELIGENTE DE INVENTARIO --- */}
+      <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          
+          {/* Buscador Inteligente Único */}
+          <div className="relative flex-1">
+            <input 
+              type="text"
+              placeholder="Buscador inteligente: ID o nombre de producto..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                if (selectedProd) setSelectedProd(null);
+              }}
+              className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all uppercase"
+            />
+            {!selectedProd && filteredOptions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl border-2 border-[#e9f4f8] shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-slate-100 uppercase text-xs font-bold">
+                {filteredOptions.map(p => (
+                  <div 
+                    key={p.id}
+                    onClick={() => {
+                      setSelectedProd(p);
+                      setSearchTerm(`${p.id} - ${p.name}`);
+                    }}
+                    className="px-4 py-3 hover:bg-[#e9f4f8]/50 cursor-pointer flex justify-between items-center text-[#134b60]"
+                  >
+                    <div>
+                      <span className="font-mono text-[#2596be] mr-2">{p.id}</span>
+                      <span>{p.name}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">{p.unitName}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {!selectedProd && filteredOptions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-white border-2 border-[#e9f4f8] shadow-2xl rounded-2xl mt-2 z-[100] max-h-60 overflow-y-auto scrollbar-hide">
-              {filteredOptions.map(p => (
-                <button 
-                  key={p.id} 
-                  type="button"
-                  onClick={() => {setSelectedProd(p); setFilters({id: p.id, name: p.name});}} 
-                  className="w-full text-left px-5 py-3 hover:bg-[#e9f4f8] border-b border-slate-50 flex justify-between items-center group transition-colors cursor-pointer"
-                >
-                  <div className="flex gap-4 items-center">
-                    <div className="bg-slate-100 p-2 rounded-xl text-slate-500 font-mono text-[9px] font-bold">{p.id}</div>
-                    <div>
-                      <p className="text-[10px] font-black text-[#134b60] uppercase">{p.name}</p>
-                      <p className="text-[8px] text-slate-400 font-bold uppercase">{p.unitName}</p>
-                    </div>
-                  </div>
-                  <Plus size={16} className="text-[#2596be] opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          {/* Cantidad y Botones Compactos a la Derecha */}
+          <div className="flex items-center gap-3">
+            <input 
+              type="text"
+              inputMode="numeric"
+              placeholder="CANTIDAD"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ''))}
+              disabled={!selectedProd}
+              className="w-32 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none font-mono uppercase disabled:opacity-50"
+            />
+            <button 
+              onClick={() => setModalType('confirm')}
+              disabled={!selectedProd || !quantity}
+              className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] disabled:opacity-50 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+            >
+              PROCESAR
+            </button>
+            <button 
+              onClick={() => {
+                setSelectedProd(null);
+                setQuantity('');
+                setSearchTerm('');
+              }}
+              className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+            >
+              LIMPIAR
+            </button>
+          </div>
 
-        <button onClick={() => setModalType('confirm')} disabled={!selectedProd || !quantity} className="w-full bg-[#2596be] text-white py-4 rounded-2xl font-black hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer active:scale-95">
-          <ArrowUpRight size={18} /> PROCESAR CARGUE
-        </button>
+        </div>
       </div>
 
       {/* TABLA DE INVENTARIO OPTIMIZADA */}
@@ -1125,7 +1148,11 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                 <tr><td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">HISTORIAL VACÍO</td></tr>
               ) : (
                 inventory.map(ev => (
-                  <tr key={ev.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                  <tr 
+                    key={ev.id} 
+                    onClick={() => { setSelectedItem(ev); setModalType('detail'); }}
+                    className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
+                  >
                     <td className="px-6 py-4 font-mono text-slate-400">{ev.id}</td>
                     <td className="px-6 py-4 font-mono text-[#2596be] font-black">{ev.productId}</td>
                     <td className="px-6 py-4">
@@ -1135,7 +1162,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                     <td className="px-6 py-4 text-center font-mono text-emerald-600 font-black">{ev.quantity}</td>
                     <td className="px-6 py-4 text-center text-slate-400 text-[10px] font-mono">{ev.date}</td>
                     <td className="px-6 py-4 text-center text-[9px] font-black text-slate-500">{ev.user}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-2">
                         <button onClick={() => { setSelectedItem(ev); setEditData({ quantity: ev.quantity }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
                         <button onClick={() => { setSelectedItem(ev); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
@@ -1148,6 +1175,48 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
           </table>
         </div>
       </div>
+
+      {/* MODAL DE DETALLE DE MOVIMIENTO */}
+      {modalType === 'detail' && selectedItem && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-lg text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE MOVIMIENTO #{selectedItem.id}</span>
+                <h3 className="text-xl font-black text-[#134b60]">{selectedItem.productName}</h3>
+              </div>
+              <button onClick={() => setModalType(null)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-xs font-bold text-[#134b60]">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">CÓDIGO ID</span>
+                <span className="font-mono text-[#2596be]">{selectedItem.productId}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">CANTIDAD REGISTRADA</span>
+                <span className="px-3 py-1 rounded-xl font-mono text-xs inline-block font-black bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  {selectedItem.quantity} {selectedItem.unitName}
+                </span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">FECHA / HORA</span>
+                <span className="font-mono text-[10px]">{selectedItem.date}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">USUARIO RESPONSABLE</span>
+                <span>{selectedItem.user}</span>
+              </div>
+            </div>
+            <div className="flex justify-end pt-2">
+              <button onClick={() => setModalType(null)} className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95">
+                CERRAR DETALLE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalType === 'bulkUpload' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
