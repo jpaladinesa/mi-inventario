@@ -569,41 +569,53 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           <h4 className="font-black text-[#134b60] text-[10px] uppercase tracking-wider flex items-center gap-2">
             <History size={16} className="text-[#2596be]" /> ÚLTIMOS 5 PRODUCTOS REGISTRADOS RECIENTEMENTE
           </h4>
-          <div className="bg-slate-50 rounded-2xl border-2 border-slate-100 overflow-hidden shadow-sm">
-            <table className="w-full text-left uppercase text-[10px]">
-              <thead className="bg-[#134b60] text-white font-black tracking-widest text-[8px]">
-                <tr>
-                  <th className="px-4 py-3">CÓDIGO ID</th>
-                  <th className="px-4 py-3">PRODUCTO / UNIDAD</th>
-                  <th className="px-4 py-3 text-right">COSTO BASE</th>
-                  <th className="px-4 py-3 text-right">PRECIO FINAL</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-bold text-[#134b60]">
-                {products.length === 0 ? (
+          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+            <div className="overflow-x-auto scrollbar-hide">
+              <table className="w-full text-left min-w-[1000px] uppercase">
+                <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest">
                   <tr>
-                    <td colSpan="4" className="px-4 py-8 text-center text-slate-400 font-black">SIN REGISTROS RECIENTES EN EL CATÁLOGO</td>
+                    <th className="px-6 py-5">CÓDIGO ID</th>
+                    <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
+                    <th className="px-6 py-5 text-center">STOCK DISP.</th>
+                    <th className="px-6 py-5 text-right">VALOR BASE</th>
+                    <th className="px-6 py-5 text-right">IVA</th>
+                    <th className="px-6 py-5 text-right">FINAL</th>
                   </tr>
-                ) : (
-                  products.slice(-5).reverse().map(p => {
-                    const c = getCalculatedValues(p.cost, p.utility, p.taxId);
-                    return (
-                      <tr key={p.id} className="hover:bg-white transition-colors">
-                        <td className="px-4 py-3 font-mono text-[#2596be] font-black">{p.id}</td>
-                        <td className="px-4 py-3">
-                          <p className="font-black text-[#134b60]">{p.name}</p>
-                          <p className="text-[8px] text-slate-400">{p.unitName}</p>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-500">{formatCurrency(p.cost)}</td>
-                        <td className="px-4 py-3 text-right font-mono text-[#134b60] font-black">{formatCurrency(c.finalPrice)}</td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                  {products.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td>
+                    </tr>
+                  ) : (
+                    products.slice(-5).reverse().map(p => {
+                      const c = getCalculatedValues(p.cost, p.utility, p.taxId);
+                      const availableStock = calculateAvailableStock(p.id, inventory, orders);
+                      return (
+                        <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                          <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
+                          <td className="px-6 py-4">
+                            <p className="font-black text-[#134b60]">{p.name}</p>
+                            <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                              {availableStock.toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
+                          <td className="px-6 py-4 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
+                          <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
+
       </div>
     )}
     {activeSubTab === 'list' && (
