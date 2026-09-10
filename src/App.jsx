@@ -1367,9 +1367,11 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
 };
 
 // --- MÓDULO DE CLIENTES ---
-const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, setGlobalDiscountEngine }) => {
+  const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, setGlobalDiscountEngine }) => {
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [targetDiscountState, setTargetDiscountState] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState('create');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const initialForm = { 
     name: '', docType: 'NIT', docNumber: '', typeId: '', 
@@ -1434,22 +1436,53 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
     else setNewClient({ ...newClient, [field]: numericVal });
   };
 
+// Lógica del buscador de clientes
+  const filteredClients = clients.filter(client => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (client.id && client.id.toString().includes(term)) ||
+      (client.name && client.name.toLowerCase().includes(term)) ||
+      (client.docNumber && client.docNumber.includes(term))
+    );
+  });
+
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-[#2596be] pb-2 gap-4">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE CLIENTES</h2>
-        <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border-2 border-[#e9f4f8] shadow-sm">
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">MOTOR DE DESCUENTOS:</span>
-          <button 
-            type="button"
-            onClick={() => {
-              setTargetDiscountState(!globalDiscountEngine);
-              setShowDiscountModal(true);
-            }}
-            className={`px-4 py-2 rounded-xl text-[9px] font-black transition-all uppercase shadow-md cursor-pointer active:scale-95 ${globalDiscountEngine ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-rose-500 text-white shadow-rose-500/20'}`}
-          >
-            {globalDiscountEngine ? 'ACTIVO (GLOBAL)' : 'APAGADO (GLOBAL)'}
-          </button>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE CLIENTES</h2>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border-2 border-[#e9f4f8] shadow-sm">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">MOTOR DE DESCUENTOS:</span>
+            <button 
+              type="button"
+              onClick={() => {
+                setTargetDiscountState(!globalDiscountEngine);
+                setShowDiscountModal(true);
+              }}
+              className={`px-4 py-2 rounded-xl text-[9px] font-black transition-all uppercase shadow-md cursor-pointer active:scale-95 ${globalDiscountEngine ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-rose-500 text-white shadow-rose-500/20'}`}
+            >
+              {globalDiscountEngine ? 'ACTIVO (GLOBAL)' : 'APAGADO (GLOBAL)'}
+            </button>
+          </div>
+
+          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+            <button 
+              type="button"
+              onClick={() => setActiveSubTab('create')} 
+              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            >
+              ➕ NUEVO REGISTRO
+            </button>
+            <button 
+              type="button"
+              onClick={() => setActiveSubTab('list')} 
+              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            >
+              📋 LISTADO Y BUSCADOR ({clients.length})
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1490,169 +1523,270 @@ const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, s
         </div>
       )}
 
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6">
-        <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><UserPlus size={18} className="text-[#2596be]" /> REGISTRO DE CLIENTE</h3>
-        <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
-          <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE / RAZÓN SOCIAL</label>
-            <input type="text" maxLength={40} value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value.toUpperCase()})} className={getInputClass(newClient.name, 40)} required />
-            <InputWarning val={newClient.name} max={40} />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DOC. TIPO</label>
-            <select value={newClient.docType} onChange={e => setNewClient({...newClient, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all">
-              <option value="NIT">NIT</option>
-              <option value="CC">CÉDULA CIUDADANÍA</option>
-              <option value="CE">CÉDULA EXTRANJERÍA</option>
-              <option value="RUT">RUT</option>
-            </select>
-          </div>
-          <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NÚMERO</label>
-            <input type="text" maxLength={15} value={newClient.docNumber} onChange={e => handleNumChange(e.target.value, 'docNumber', false)} className={getInputClass(newClient.docNumber, 15)} required />
-            <InputWarning val={newClient.docNumber} max={15} />
-          </div>
-          
-          <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EMAIL</label>
-            <input type="email" maxLength={50} pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className={getInputClass(newClient.email, 50).replace('uppercase', 'lowercase')} required placeholder="ejemplo@dominio.com" />
-            <InputWarning val={newClient.email} max={50} />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TIPO CLIENTE</label>
-            <select value={newClient.typeId} onChange={e => setNewClient({...newClient, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all" required>
-              <option value="">SELECCIONE</option>{clientTypes.map(t => <option key={t.id} value={t.id}>{t.name} ({t.value}%)</option>)}
-            </select>
-          </div>
-          <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TELÉFONO</label>
-            <input type="text" maxLength={15} value={newClient.phone} onChange={e => handleNumChange(e.target.value, 'phone', false)} className={getInputClass(newClient.phone, 15)} required />
-            <InputWarning val={newClient.phone} max={15} />
-          </div>
-
-          <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EXTENSIÓN (OPC.)</label>
-            <input type="text" maxLength={5} value={newClient.extension} onChange={e => handleNumChange(e.target.value, 'extension', false)} className={getInputClass(newClient.extension, 5)} />
-            <InputWarning val={newClient.extension} max={5} />
-          </div>
-          <div className="space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CELULAR</label>
-            <input type="text" maxLength={15} value={newClient.mobile} onChange={e => handleNumChange(e.target.value, 'mobile', false)} className={getInputClass(newClient.mobile, 15)} required />
-            <InputWarning val={newClient.mobile} max={15} />
-          </div>
-          <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DIRECCIÓN</label>
-            <input type="text" maxLength={50} value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value.toUpperCase()})} className={getInputClass(newClient.address, 50)} required />
-            <InputWarning val={newClient.address} max={50} />
-          </div>
-
-          <div className="md:col-span-2 space-y-1 relative">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PERSONA DE CONTACTO (OPC.)</label>
-            <input type="text" maxLength={20} value={newClient.contact} onChange={e => setNewClient({...newClient, contact: e.target.value.toUpperCase()})} className={getInputClass(newClient.contact, 20)} />
-            <InputWarning val={newClient.contact} max={20} />
-          </div>
-
-          {/* CONFIGURACIÓN DE DESCUENTOS POR CLIENTE */}
-          <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
-            <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
-              <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
-              <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-50">
-                <input 
-                  type="checkbox" 
-                  checked={newClient.autoDiscountActive} 
-                  onChange={e => setNewClient({...newClient, autoDiscountActive: e.target.checked})}
-                  className="w-4 h-4 accent-[#2596be] cursor-pointer"
-                />
-                <span className="text-[9px] font-black text-[#134b60] uppercase">ACTIVAR DESCUENTOS</span>
-              </label>
+      {/* PESTAÑA 1: NUEVO REGISTRO */}
+      {activeSubTab === 'create' && (
+        <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6 animate-in fade-in duration-300">
+          <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><UserPlus size={18} className="text-[#2596be]" /> REGISTRO DE CLIENTE</h3>
+          <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
+            <div className="md:col-span-2 space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE / RAZÓN SOCIAL</label>
+              <input type="text" maxLength={40} value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value.toUpperCase()})} className={getInputClass(newClient.name, 40)} required />
+              <InputWarning val={newClient.name} max={40} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DOC. TIPO</label>
+              <select value={newClient.docType} onChange={e => setNewClient({...newClient, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all">
+                <option value="NIT">NIT</option>
+                <option value="CC">CÉDULA CIUDADANÍA</option>
+                <option value="CE">CÉDULA EXTRANJERÍA</option>
+                <option value="RUT">RUT</option>
+              </select>
+            </div>
+            <div className="space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NÚMERO</label>
+              <input type="text" maxLength={15} value={newClient.docNumber} onChange={e => handleNumChange(e.target.value, 'docNumber', false)} className={getInputClass(newClient.docNumber, 15)} required />
+              <InputWarning val={newClient.docNumber} max={15} />
+            </div>
+            
+            <div className="md:col-span-2 space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EMAIL</label>
+              <input type="email" maxLength={50} pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className={getInputClass(newClient.email, 50).replace('uppercase', 'lowercase')} required placeholder="ejemplo@dominio.com" />
+              <InputWarning val={newClient.email} max={50} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TIPO CLIENTE</label>
+              <select value={newClient.typeId} onChange={e => setNewClient({...newClient, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all" required>
+                <option value="">SELECCIONE</option>{clientTypes.map(t => <option key={t.id} value={t.id}>{t.name} ({t.value}%)</option>)}
+              </select>
+            </div>
+            <div className="space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TELÉFONO</label>
+              <input type="text" maxLength={15} value={newClient.phone} onChange={e => handleNumChange(e.target.value, 'phone', false)} className={getInputClass(newClient.phone, 15)} required />
+              <InputWarning val={newClient.phone} max={15} />
             </div>
 
-            {newClient.autoDiscountActive && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCUENTO SUBTOTAL (%)</label>
+            <div className="space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EXTENSIÓN (OPC.)</label>
+              <input type="text" maxLength={5} value={newClient.extension} onChange={e => handleNumChange(e.target.value, 'extension', false)} className={getInputClass(newClient.extension, 5)} />
+              <InputWarning val={newClient.extension} max={5} />
+            </div>
+            <div className="space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CELULAR</label>
+              <input type="text" maxLength={15} value={newClient.mobile} onChange={e => handleNumChange(e.target.value, 'mobile', false)} className={getInputClass(newClient.mobile, 15)} required />
+              <InputWarning val={newClient.mobile} max={15} />
+            </div>
+            <div className="md:col-span-2 space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DIRECCIÓN</label>
+              <input type="text" maxLength={50} value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value.toUpperCase()})} className={getInputClass(newClient.address, 50)} required />
+              <InputWarning val={newClient.address} max={50} />
+            </div>
+
+            <div className="md:col-span-2 space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PERSONA DE CONTACTO (OPC.)</label>
+              <input type="text" maxLength={20} value={newClient.contact} onChange={e => setNewClient({...newClient, contact: e.target.value.toUpperCase()})} className={getInputClass(newClient.contact, 20)} />
+              <InputWarning val={newClient.contact} max={20} />
+            </div>
+
+            {/* CONFIGURACIÓN DE DESCUENTOS POR CLIENTE */}
+            <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
+              <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
+                <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
+                <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-50">
                   <input 
-                    type="number" 
-                    placeholder="0%" 
-                    value={newClient.discountPercentage} 
-                    onChange={e => setNewClient({...newClient, discountPercentage: e.target.value})} 
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
+                    type="checkbox" 
+                    checked={newClient.autoDiscountActive} 
+                    onChange={e => setNewClient({...newClient, autoDiscountActive: e.target.checked})}
+                    className="w-4 h-4 accent-[#2596be] cursor-pointer"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RECURRENCIA (Nº ÓRDENES AL MES)</label>
-                  <input 
-                    type="number" 
-                    placeholder="Ej: 3" 
-                    value={newClient.recurrenceOrdersCount} 
-                    onChange={e => setNewClient({...newClient, recurrenceOrdersCount: e.target.value})} 
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
-                  />
-                </div>
-                <div className="flex items-center pt-5">
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center transition-all hover:bg-slate-50">
-                    <input 
-                      type="checkbox" 
-                      checked={newClient.topItemsActive} 
-                      onChange={e => setNewClient({...newClient, topItemsActive: e.target.checked})}
-                      className="w-4 h-4 accent-[#2596be] cursor-pointer"
-                    />
-                    <span className="text-[9px] font-black text-[#134b60] uppercase">APLICAR A ÍTEMS MÁS PEDIDOS</span>
-                  </label>
-                </div>
+                  <span className="text-[9px] font-black text-[#134b60] uppercase">ACTIVAR DESCUENTOS</span>
+                </label>
               </div>
-            )}
-          </div>
 
-          <div className="md:col-span-4 pt-2">
-            <button type="submit" className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black text-[10px] shadow-xl shadow-[#2596be]/20 transition-all active:scale-95 tracking-widest flex justify-center items-center gap-2 cursor-pointer"><Plus size={16} /> REGISTRAR CLIENTE</button>
-          </div>
-        </form>
-      </div>
-
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
-        <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-5">ID</th>
-                <th className="px-6 py-5">CLIENTE</th>
-                <th className="px-6 py-5">DOCUMENTO</th>
-                <th className="px-6 py-5">CONTACTO</th>
-                <th className="px-6 py-5 text-center">TIPO</th>
-                <th className="px-6 py-5 text-right">GESTIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {clients.length === 0 ? (
-                <tr><td colSpan="6" className="px-6 py-20 text-center text-slate-300 font-black">SIN CLIENTES</td></tr>
-              ) : (
-                clients.map(c => (
-                  <tr key={c.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{c.id}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-black text-[#134b60]">{c.name}</p>
-                      <p className="text-[9px] text-slate-400 lowercase">{c.email}</p>
-                    </td>
-                    <td className="px-6 py-4 font-mono">{c.docNumber} <span className="text-[9px] text-slate-400 font-sans">({c.docType})</span></td>
-                    <td className="px-6 py-4 font-mono">
-                      <p className="text-slate-600"><span className="text-[9px] text-slate-400 font-sans">CEL:</span> {c.mobile}</p>
-                      <p className="text-[10px] text-slate-400"><span className="text-[9px] text-slate-400 font-sans">TEL:</span> {c.phone} {c.extension && `EXT: ${c.extension}`}</p>
-                    </td>
-                    <td className="px-6 py-4 text-center"><span className="bg-[#e9f4f8] text-[#2596be] px-3 py-1.5 rounded-xl text-[9px] border border-[#2596be]/25 inline-block font-black">{c.typeName}</span></td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
-                        <button onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+              {newClient.autoDiscountActive && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCUENTO SUBTOTAL (%)</label>
+                    <input 
+                      type="number" 
+                      placeholder="0%" 
+                      value={newClient.discountPercentage} 
+                      onChange={e => setNewClient({...newClient, discountPercentage: e.target.value})} 
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RECURRENCIA (Nº ÓRDENES AL MES)</label>
+                    <input 
+                      type="number" 
+                      placeholder="Ej: 3" 
+                      value={newClient.recurrenceOrdersCount} 
+                      onChange={e => setNewClient({...newClient, recurrenceOrdersCount: e.target.value})} 
+                      className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
+                    />
+                  </div>
+                  <div className="flex items-center pt-5">
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center transition-all hover:bg-slate-50">
+                      <input 
+                        type="checkbox" 
+                        checked={newClient.topItemsActive} 
+                        onChange={e => setNewClient({...newClient, topItemsActive: e.target.checked})}
+                        className="w-4 h-4 accent-[#2596be] cursor-pointer"
+                      />
+                      <span className="text-[9px] font-black text-[#134b60] uppercase">APLICAR A ÍTEMS MÁS PEDIDOS</span>
+                    </label>
+                  </div>
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+
+            <div className="md:col-span-4 pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+              <button 
+                type="button" 
+                onClick={() => setNewClient(initialForm)}
+                className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+              >
+                <XCircle size={16} /> LIMPIAR FORMULARIO
+              </button>
+              <button 
+                type="submit" 
+                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+              >
+                <Plus size={16} /> REGISTRAR CLIENTE
+              </button>
+            </div>
+          </form>
         </div>
-      </div>
+      )}
+
+      {/* PESTAÑA 2: LISTADO Y BUSCADOR */}
+      {activeSubTab === 'list' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Buscador inteligente: ID, nombre o número de documento..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
+              />
+            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+              Mostrando {filteredClients.length} de {clients.length}
+            </span>
+          </div>
+
+          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+            <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
+              <table className="w-full text-left min-w-[1000px] uppercase">
+                <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-5">ID</th>
+                    <th className="px-6 py-5">CLIENTE</th>
+                    <th className="px-6 py-5">DOCUMENTO</th>
+                    <th className="px-6 py-5">CONTACTO</th>
+                    <th className="px-6 py-5 text-center">TIPO</th>
+                    <th className="px-6 py-5 text-right">GESTIÓN</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                  {filteredClients.length === 0 ? (
+                    <tr><td colSpan="6" className="px-6 py-20 text-center text-slate-300 font-black">SIN CLIENTES ENCONTRADOS</td></tr>
+                  ) : (
+                    filteredClients.map(c => (
+                      <tr 
+                        key={c.id} 
+                        onClick={() => { setSelectedClient(c); setModalType('clientDetail'); }}
+                        className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-4 font-mono text-[#2596be] font-black">{c.id}</td>
+                        <td className="px-6 py-4">
+                          <p className="font-black text-[#134b60]">{c.name}</p>
+                          <p className="text-[9px] text-slate-400 lowercase">{c.email}</p>
+                        </td>
+                        <td className="px-6 py-4 font-mono">{c.docNumber} <span className="text-[9px] text-slate-400 font-sans">({c.docType})</span></td>
+                        <td className="px-6 py-4 font-mono">
+                          <p className="text-slate-600"><span className="text-[9px] text-slate-400 font-sans">CEL:</span> {c.mobile}</p>
+                          <p className="text-[10px] text-slate-400"><span className="text-[9px] text-slate-400 font-sans">TEL:</span> {c.phone} {c.extension && `EXT: ${c.extension}`}</p>
+                        </td>
+                        <td className="px-6 py-4 text-center"><span className="bg-[#e9f4f8] text-[#2596be] px-3 py-1.5 rounded-xl text-[9px] border border-[#2596be]/25 inline-block font-black">{c.typeName}</span></td>
+                        <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
+                            <button onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE VISUALIZACIÓN DE CLIENTE (DETALLE) */}
+      {modalType === 'clientDetail' && selectedClient && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE CLIENTE #{selectedClient.id}</span>
+                <h3 className="text-xl font-black text-[#134b60]">{selectedClient.name}</h3>
+              </div>
+              <button onClick={() => setModalType(null)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs font-bold text-[#134b60]">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">DOCUMENTO</span>
+                <span className="font-mono text-[#2596be]">{selectedClient.docType}: {selectedClient.docNumber}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">TIPO DE CLIENTE</span>
+                <span className="font-black text-slate-700">{selectedClient.typeName}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">CORREO ELECTRÓNICO</span>
+                <span className="lowercase text-[10px]">{selectedClient.email}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">CELULAR / TELÉFONO</span>
+                <span className="font-mono text-[10px]">CEL: {selectedClient.mobile} / TEL: {selectedClient.phone}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">DIRECCIÓN</span>
+                <span className="text-[10px]">{selectedClient.address}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">CONTACTO</span>
+                <span className="text-[10px]">{selectedClient.contact || 'N/A'}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <button 
+                onClick={() => setModalType(null)} 
+                className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer active:scale-95"
+              >
+                CERRAR
+              </button>
+              <button 
+                onClick={() => {
+                  setEditData(selectedClient);
+                  setModalType('edit');
+                }} 
+                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+              >
+                <Edit size={14} /> EDITAR CLIENTE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
