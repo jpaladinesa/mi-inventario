@@ -3513,7 +3513,18 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const filteredClients = useMemo(() => searchClient ? clients.filter(c => c.docNumber.includes(searchClient) || c.name.toLowerCase().includes(searchClient.toLowerCase())).slice(0, 5) : [], [searchClient, clients]);
-
+  // Lógica para el buscador inteligente de usuarios
+  const [searchUserTerm, setSearchUserTerm] = useState('');
+  const filteredUsers = useMemo(() => {
+    if (!searchUserTerm) return users;
+    const term = searchUserTerm.toLowerCase();
+    return users.filter(u => 
+      (u.id && u.id.toLowerCase().includes(term)) ||
+      (u.name && u.name.toLowerCase().includes(term)) ||
+      (u.email && u.email.toLowerCase().includes(term)) ||
+      (u.role && u.role.toLowerCase().includes(term))
+    );
+  }, [users, searchUserTerm]);
   const getNextID = () => `US${String(users.length + 1).padStart(6, '0')}`;
 
   const handleAdd = (e) => {
@@ -3630,18 +3641,45 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
             />
           </div>
           
-          <div className="lg:col-span-5 pt-2">
+         <div className="lg:col-span-5 pt-4 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
+            <button 
+              type="button" 
+              onClick={() => {
+                setNewUser(initialForm);
+                setSearchClient('');
+              }}
+              className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm w-full sm:w-auto"
+            >
+              <XCircle size={16} /> LIMPIAR
+            </button>
             <button 
               type="submit" 
               disabled={!newUser.relatedId || !newUser.role} 
-              className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black text-[10px] shadow-xl shadow-[#2596be]/20 transition-all active:scale-95 tracking-widest flex justify-center items-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-[10px] uppercase shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest disabled:opacity-50 w-full sm:w-auto"
             >
-              <Plus size={16} /> CREAR ACCESO AL SISTEMA
+              <Plus size={16} /> CREAR ACCESO
             </button>
           </div>
         </form>
       </div>
 
+  {/* Barra de Búsqueda Inteligente */}
+      <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Buscador inteligente: ID, nombre, correo o rol..."
+            value={searchUserTerm}
+            onChange={(e) => setSearchUserTerm(e.target.value)}
+            className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
+          />
+        </div>
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+          Mostrando {filteredUsers.length} de {users.length}
+        </span>
+      </div>
+
+      {/* Tabla de Usuarios */}
       <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
         <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
           <table className="w-full text-left min-w-[1000px] uppercase">
@@ -3655,38 +3693,34 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {users.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-20 text-center text-slate-300 font-black">SIN ACCESOS</td>
+                  <td colSpan="5" className="px-6 py-20 text-center text-slate-300 font-black">SIN ACCESOS ENCONTRADOS</td>
                 </tr>
               ) : (
-                users.map(u => (
+                filteredUsers.map(u => (
                   <tr key={u.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
                     <td className="px-6 py-4 font-mono text-[#2596be] font-black">{u.id}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-black text-[#134b60]">{u.name}</p>
-                      {u.relatedId && <p className="text-[9px] text-slate-400 font-mono mt-0.5">ID REL: {u.relatedId}</p>}
-                    </td>
-                    <td className="px-6 py-4 font-mono lowercase text-slate-500">{u.email}</td>
+                    <td className="px-6 py-4">{u.name}</td>
+                    <td className="px-6 py-4">{u.email}</td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`px-3.5 py-1.5 rounded-xl text-[9px] font-black border inline-block ${u.role === 'ADMIN' ? 'bg-[#134b60] text-white border-[#134b60]' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                        {u.role}
-                      </span>
+                      <span className="px-3 py-1 bg-[#134b60] text-white rounded-lg text-[9px] font-black">{u.role}</span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-2">
                         <button 
-                          onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} 
-                          className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer active:scale-95"
+                          type="button"
+                          onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }}
+                          className="p-2.5 bg-[#e9f4f8] text-[#134b60] rounded-xl border border-[#2596be]/25 hover:bg-[#2596be] hover:text-white transition-all cursor-pointer"
                         >
-                          <Edit size={16}/>
+                          ✏️
                         </button>
                         <button 
-                          onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} 
-                          className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed" 
-                          disabled={u.role === 'ADMIN' && users.filter(usr=>usr.role==='ADMIN').length===1}
+                          type="button"
+                          onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }}
+                          className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
                         >
-                          <Trash2 size={16}/>
+                          🗑️
                         </button>
                       </div>
                     </td>
@@ -3697,7 +3731,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
           </table>
         </div>
       </div>
-
+                
       {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
@@ -3758,19 +3792,26 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
               </div>
 
               <div className="flex gap-4 mt-8">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer active:scale-95">CANCELAR</button>
-                <button 
-                  onClick={() => {
-                     if (modalType === 'edit') setModalType('updateConfirm');
-                     else if (modalType === 'updateConfirm') executeUpdate();
-                     else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-                     else if (modalType === 'deleteSecond') { setUsers(users.filter(p => p.id !== selectedUser.id)); setModalType(null); }
-                  }} 
-                  className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b] shadow-[#2596be]/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'}`}
-                >
-                  ACEPTAR
-                </button>
-              </div>
+        <button 
+          type="button" 
+          onClick={() => setModalType(null)} 
+          className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-all cursor-pointer"
+        >
+          CANCELAR
+        </button>
+        <button 
+          type="button" 
+          onClick={() => {
+            if (modalType === 'edit') setModalType('updateConfirm');
+            else if (modalType === 'updateConfirm') executeUpdate();
+            else if (modalType === 'deleteFirst') setModalType('deleteSecond');
+            else if (modalType === 'deleteSecond') { setUsers(users.filter(p => p.id !== selectedUser.id)); setModalType(null); }
+          }} 
+          className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95"
+        >
+          ACEPTAR
+        </button>
+      </div>
             </div>
           </div>
         </div>
