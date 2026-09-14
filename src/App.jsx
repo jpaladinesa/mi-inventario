@@ -3513,6 +3513,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const filteredClients = useMemo(() => searchClient ? clients.filter(c => c.docNumber.includes(searchClient) || c.name.toLowerCase().includes(searchClient.toLowerCase())).slice(0, 5) : [], [searchClient, clients]);
+  
   // Lógica para el buscador inteligente de usuarios
   const [searchUserTerm, setSearchUserTerm] = useState('');
   const filteredUsers = useMemo(() => {
@@ -3525,14 +3526,24 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
       (u.role && u.role.toLowerCase().includes(term))
     );
   }, [users, searchUserTerm]);
+  
   const getNextID = () => `US${String(users.length + 1).padStart(6, '0')}`;
 
   const handleAdd = (e) => {
     e.preventDefault();
     if (!newUser.relatedId) { setErrorMsg('DEBE SELECCIONAR UN CLIENTE DEL BUSCADOR PRIMERO.'); return; }
     if (users.some(u => u.email.toLowerCase() === newUser.email.toLowerCase())) { setErrorMsg('EL CORREO YA ESTÁ REGISTRADO EN EL SISTEMA.'); return; }
-    setUsers([...users, { ...newUser, id: getNextID(), name: newUser.name.toUpperCase() }]);
-    setNewUser(initialForm); setSearchClient(''); setErrorMsg('');
+
+    setUsers([...users, {
+      ...newUser,
+      id: getNextID(),
+      name: newUser.name.toUpperCase(),
+      isTemporaryPassword: true // Bandera que indica cambio obligatorio en el primer login
+    }]);
+
+    setNewUser(initialForm);
+    setSearchClient('');
+    setErrorMsg('');
   };
 
   const executeUpdate = () => {
@@ -3558,7 +3569,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
           </div>
         )}
 
-        <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
+        <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
           
           <div className="space-y-1 lg:col-span-2 relative">
             <label className="text-[9px] font-black text-slate-400 tracking-widest block">1. BUSCAR CLIENTE (DOC / NOMBRE)</label>
@@ -3602,46 +3613,153 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
             )}
           </div>
           
-          <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400 tracking-widest block">2. ASIGNAR ROL</label>
-            <select 
-              value={newUser.role} 
-              onChange={e => setNewUser({...newUser, role: e.target.value})} 
-              disabled={!newUser.relatedId} 
-              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
-              required
-            >
-              <option value="">SELECCIONE...</option>
-              <option value="CLIENTE">CLIENTE</option>
-              <option value="ADMIN">ADMINISTRADOR</option>
-            </select>
-          </div>
-          
-          <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400 tracking-widest block">3. CORREO (USUARIO)</label>
+          <div className="space-y-1 lg:col-span-1">
+            <label className="text-[9px] font-black text-slate-400 tracking-widest block">2. CORREO (USUARIO)</label>
             <input 
               type="email" 
               value={newUser.email} 
-              onChange={e => setNewUser({...newUser, email: e.target.value})} 
-              disabled={!newUser.relatedId} 
-              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs lowercase text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
+              disabled 
+              className="w-full px-4 py-3.5 bg-slate-200/60 border-2 border-transparent rounded-xl outline-none font-bold text-xs lowercase text-slate-500 cursor-not-allowed select-none transition-all shadow-sm" 
               required 
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400 tracking-widest block">4. CONTRASEÑA</label>
+          <div className="space-y-1 lg:col-span-1">
+            <label className="text-[9px] font-black text-slate-400 tracking-widest block">3. CONTRASEÑA</label>
             <input 
               type="text" 
               value={newUser.password} 
-              onChange={e => setNewUser({...newUser, password: e.target.value})} 
+              onChange={e => {setNewUser({...newUser, password: e.target.value}); setErrorMsg('');}}
               disabled={!newUser.relatedId} 
               className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
               required 
             />
           </div>
           
-         <div className="lg:col-span-5 pt-4 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
+          {/* Selector de Rol y Módulos */}
+          <div className="lg:col-span-12 space-y-3 pt-4 border-t border-slate-100">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              
+              {/* Rol del Usuario */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 tracking-widest block">2. ASIGNAR ROL</label>
+                <select
+                  value={newUser.role || 'operator'}
+                  onChange={(e) => {
+                    const newRole = e.target.value;
+                    let defaultModules = [];
+                    
+                    if (newRole === 'admin') {
+                      defaultModules = ['dashboard', 'orders', 'access', 'crm', 'clients', 'clientType', 'inventory', 'products', 'tax', 'promotions', 'client_home', 'client_order', 'client_orders'];
+                    } else if (newRole === 'client') {
+                      defaultModules = ['client_home', 'client_order', 'client_orders'];
+                    } else if (newRole === 'operator') {
+                      defaultModules = ['inventory', 'products', 'orders', 'clients'];
+                    } else if (newRole === 'seller') {
+                      defaultModules = ['crm', 'orders', 'clients', 'dashboard'];
+                    }
+
+                    setNewUser({...newUser, role: newRole, allowedModules: defaultModules});
+                  }}
+                  className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all cursor-pointer"
+                >
+                  <option value="admin">ADMINISTRADOR (ACCESO TOTAL)</option>
+                  <option value="operator">OPERADOR (LOGÍSTICA Y BODEGA)</option>
+                  <option value="seller">VENDEDOR (COMERCIAL)</option>
+                  <option value="client">CLIENTE (SOLO PORTAL CLIENTE)</option>
+                </select>
+              </div>
+
+              {/* Matriz de Módulos (Organizada en Secciones) */}
+              <div className="md:col-span-2 space-y-4 bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <label className="text-[9px] font-black text-[#2596be] tracking-widest block">
+                    {newUser.role === 'client' ? 'ACCESO RESTRINGIDO AL PORTAL CLIENTE' : 'CONFIGURACIÓN DE MÓDULOS PERMITIDOS'}
+                  </label>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase">
+                    Rol Actual: {newUser.role || 'operator'}
+                  </span>
+                </div>
+
+                {/* Bloque 1: Módulos del Sistema (Oculto o bloqueado si es rol cliente puro) */}
+                {newUser.role !== 'client' && (
+                  <div className="space-y-2">
+                    <span className="text-[8px] font-black text-slate-400 tracking-wider uppercase block">Módulos Administrativos / Operativos</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {[
+                        { key: 'dashboard', label: 'Dashboard' },
+                        { key: 'orders', label: 'Pedidos' },
+                        { key: 'access', label: 'Accesos' },
+                        { key: 'crm', label: 'CRM' },
+                        { key: 'clients', label: 'Gestión Clientes' },
+                        { key: 'clientType', label: 'Tipo Cliente' },
+                        { key: 'inventory', label: 'Inventario' },
+                        { key: 'products', label: 'Productos' },
+                        { key: 'tax', label: 'Impuestos' },
+                        { key: 'promotions', label: 'Promociones' }
+                      ].map((mod) => {
+                        const isChecked = (newUser.allowedModules || []).includes(mod.key);
+                        return (
+                          <label key={mod.key} className="flex items-center gap-2 text-[11px] font-bold cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const current = newUser.allowedModules || [];
+                                const updated = e.target.checked 
+                                  ? [...current, mod.key] 
+                                  : current.filter(m => m !== mod.key);
+                                setNewUser({...newUser, allowedModules: updated});
+                              }}
+                              className="w-4 h-4 accent-[#2596be] rounded cursor-pointer"
+                            />
+                            <span className="text-[#134b60]">{mod.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Bloque 2: Portal Cliente (Aparte, con sus 3 opciones independientes) */}
+                <div className={`space-y-2 ${newUser.role !== 'client' ? 'pt-3 border-t border-slate-200' : ''}`}>
+                  <span className="text-[8px] font-black text-[#2596be] tracking-wider uppercase block">Portal Cliente (Vista Externa)</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      { key: 'client_home', label: 'Inicio Portal' },
+                      { key: 'client_order', label: 'Hacer Pedido' },
+                      { key: 'client_orders', label: 'Mis Pedidos' }
+                    ].map((mod) => {
+                      const isChecked = (newUser.allowedModules || []).includes(mod.key);
+                      const isClientRole = newUser.role === 'client';
+
+                      return (
+                        <label key={mod.key} className={`flex items-center gap-2 text-[11px] font-bold select-none ${isClientRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            disabled={isClientRole}
+                            onChange={(e) => {
+                              if (isClientRole) return;
+                              const current = newUser.allowedModules || [];
+                              const updated = e.target.checked 
+                                ? [...current, mod.key] 
+                                : current.filter(m => m !== mod.key);
+                              setNewUser({...newUser, allowedModules: updated});
+                            }}
+                            className="w-4 h-4 accent-[#2596be] rounded cursor-pointer"
+                          />
+                          <span className={isClientRole ? 'text-slate-600 font-black' : 'text-[#134b60]'}>{mod.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="lg:col-span-5 pt-4 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
             <button 
               type="button" 
               onClick={() => {
@@ -3663,7 +3781,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
         </form>
       </div>
 
-  {/* Barra de Búsqueda Inteligente */}
+      {/* Barra de Búsqueda Inteligente */}
       <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
         <div className="relative flex-1">
           <input
@@ -3749,14 +3867,15 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
                 {modalType === 'edit' && (
                   <div className="space-y-4 max-h-[50vh] overflow-y-auto px-2 py-1 scrollbar-hide">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">CORREO ACCESO</label>
-                      <input 
-                        type="email" 
-                        value={editData.email} 
-                        onChange={(e) => setEditData({...editData, email: e.target.value})} 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all lowercase text-[#134b60]" 
+                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">CORREO ACCESO (BLOQUEADO)</label>
+                      <input
+                        type="email"
+                        value={editData.email || ''}
+                        disabled
+                        className="w-full px-4 py-3.5 bg-slate-200/60 border-2 border-slate-200 rounded-xl font-black text-xs text-slate-500 cursor-not-allowed select-none"
                       />
                     </div>
+    
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-slate-400 tracking-widest block">CONTRASEÑA</label>
                       <input 
@@ -3792,29 +3911,29 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
               </div>
 
               <div className="flex gap-4 mt-8">
-        <button 
-          type="button" 
-          onClick={() => setModalType(null)} 
-          className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-all cursor-pointer"
-        >
-          CANCELAR
-        </button>
-        <button 
-          type="button" 
-          onClick={() => {
-            if (modalType === 'edit') setModalType('updateConfirm');
-            else if (modalType === 'updateConfirm') executeUpdate();
-            else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-            else if (modalType === 'deleteSecond') { setUsers(users.filter(p => p.id !== selectedUser.id)); setModalType(null); }
-          }} 
-          className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95"
-        >
-          ACEPTAR
-        </button>
-      </div>
+                <button 
+                  type="button" 
+                  onClick={() => setModalType(null)} 
+                  className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  CANCELAR
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (modalType === 'edit') setModalType('updateConfirm');
+                    else if (modalType === 'updateConfirm') executeUpdate();
+                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
+                    else if (modalType === 'deleteSecond') { setUsers(users.filter(p => p.id !== selectedUser.id)); setModalType(null); }
+                  }} 
+                  className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95"
+                >
+                  ACEPTAR
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </div> 
       )}
       <Footer />
     </div>
