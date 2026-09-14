@@ -836,7 +836,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                   </div>
                 )}
                 {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
-                {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DE {selectedProd?.name}.</p></div>}
+              {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DE {selectedProd?.name}.</p></div>}
               </div>
               <div className="flex gap-4 mt-10">
                 <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
@@ -845,7 +845,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setProducts(products.filter(p => p.id !== selectedProd.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+              }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
               </div>
             </div>
           </div>
@@ -3538,7 +3538,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
       ...newUser,
       id: getNextID(),
       name: newUser.name.toUpperCase(),
-      isTemporaryPassword: true // Bandera que indica cambio obligatorio en el primer login
+      isTemporaryPassword: true
     }]);
 
     setNewUser(initialForm);
@@ -3555,391 +3555,263 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
       <div className="border-b-4 border-[#2596be] w-fit pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE ACCESOS</h2>
+        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE ACCESOS Y USUARIOS</h2>
       </div>
 
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6">
-        <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase">
-          <Fingerprint size={18} className="text-[#2596be]" /> NUEVO USUARIO / CREDENCIAL
-        </h3>
-        
-        {errorMsg && (
-          <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl animate-pulse tracking-wide shadow-sm">
-            {errorMsg}
-          </div>
-        )}
+      {errorMsg && <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl animate-pulse">{errorMsg}</div>}
 
-        <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
-          
-          <div className="space-y-1 lg:col-span-2 relative">
-            <label className="text-[9px] font-black text-slate-400 tracking-widest block">1. BUSCAR CLIENTE (DOC / NOMBRE)</label>
-            <div className="relative">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* FORMULARIO NUEVO USUARIO */}
+        <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm h-fit space-y-6">
+          <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase">
+            <UserPlus size={18} className="text-[#2596be]" /> NUEVO ACCESO
+          </h3>
+          <form className="space-y-5" onSubmit={handleAdd}>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ROL</label>
+              <select 
+                value={newUser.role} 
+                onChange={(e) => setNewUser({...newUser, role: e.target.value})} 
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all"
+                required
+              >
+                <option value="">SELECCIONE ROL</option>
+                <option value="ADMIN">ADMINISTRADOR</option>
+                <option value="CLIENT">CLIENTE</option>
+              </select>
+            </div>
+
+            <div className="space-y-1 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VINCULAR CLIENTE</label>
               <input 
                 type="text" 
                 value={searchClient} 
-                onChange={e => {setSearchClient(e.target.value); setNewUser({...newUser, relatedId: '', name: ''});}} 
-                className="w-full px-4 py-3.5 pr-10 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all shadow-sm" 
-                placeholder="ESCRIBA PARA BUSCAR..." 
+                onChange={(e) => setSearchClient(e.target.value)} 
+                placeholder="BUSCAR CLIENTE POR NIT O NOMBRE..." 
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
+              />
+              {filteredClients.length > 0 && !newUser.relatedId && (
+                <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-50 overflow-hidden uppercase text-xs font-bold">
+                  {filteredClients.map(c => (
+                    <div 
+                      key={c.id} 
+                      onClick={() => {
+                        setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email});
+                        setSearchClient(`${c.docNumber} - ${c.name}`);
+                      }}
+                      className="px-4 py-3 hover:bg-[#e9f4f8] cursor-pointer text-[#134b60] border-b border-slate-50"
+                    >
+                      <span className="font-mono text-[#2596be] mr-2">{c.docNumber}</span>
+                      <span>{c.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE</label>
+              <input 
+                type="text" 
+                value={newUser.name} 
+                onChange={(e) => setNewUser({...newUser, name: e.target.value.toUpperCase()})} 
+                placeholder="NOMBRE COMPLETO" 
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
                 required 
               />
-              {searchClient && (
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    setSearchClient('');
-                    setNewUser(initialForm);
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 transition-colors cursor-pointer"
-                  title="Limpiar selección"
-                >
-                  <X size={16} />
-                </button>
-              )}
             </div>
-            
-            {filteredClients.length > 0 && !newUser.relatedId && (
-              <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
-                {filteredClients.map(c => (
-                  <button 
-                    key={c.id} 
-                    type="button" 
-                    onClick={() => { setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email, role: 'CLIENTE'}); setSearchClient(`${c.docNumber} - ${c.name}`); }} 
-                    className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer"
-                  >
-                    {c.docNumber} - {c.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div className="space-y-1 lg:col-span-1">
-            <label className="text-[9px] font-black text-slate-400 tracking-widest block">2. CORREO (USUARIO)</label>
-            <input 
-              type="email" 
-              value={newUser.email} 
-              disabled 
-              className="w-full px-4 py-3.5 bg-slate-200/60 border-2 border-transparent rounded-xl outline-none font-bold text-xs lowercase text-slate-500 cursor-not-allowed select-none transition-all shadow-sm" 
-              required 
-            />
-          </div>
 
-          <div className="space-y-1 lg:col-span-1">
-            <label className="text-[9px] font-black text-slate-400 tracking-widest block">3. CONTRASEÑA</label>
-            <input 
-              type="text" 
-              value={newUser.password} 
-              onChange={e => {setNewUser({...newUser, password: e.target.value}); setErrorMsg('');}}
-              disabled={!newUser.relatedId} 
-              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
-              required 
-            />
-          </div>
-          
-          {/* Selector de Rol y Módulos */}
-          <div className="lg:col-span-12 space-y-3 pt-4 border-t border-slate-100">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-              
-              {/* Rol del Usuario */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 tracking-widest block">2. ASIGNAR ROL</label>
-                <select
-                  value={newUser.role || 'operator'}
-                  onChange={(e) => {
-                    const newRole = e.target.value;
-                    let defaultModules = [];
-                    
-                    if (newRole === 'admin') {
-                      defaultModules = ['dashboard', 'orders', 'access', 'crm', 'clients', 'clientType', 'inventory', 'products', 'tax', 'promotions', 'client_home', 'client_order', 'client_orders'];
-                    } else if (newRole === 'client') {
-                      defaultModules = ['client_home', 'client_order', 'client_orders'];
-                    } else if (newRole === 'operator') {
-                      defaultModules = ['inventory', 'products', 'orders', 'clients'];
-                    } else if (newRole === 'seller') {
-                      defaultModules = ['crm', 'orders', 'clients', 'dashboard'];
-                    }
-
-                    setNewUser({...newUser, role: newRole, allowedModules: defaultModules});
-                  }}
-                  className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all cursor-pointer"
-                >
-                  <option value="admin">ADMINISTRADOR (ACCESO TOTAL)</option>
-                  <option value="operator">OPERADOR (LOGÍSTICA Y BODEGA)</option>
-                  <option value="seller">VENDEDOR (COMERCIAL)</option>
-                  <option value="client">CLIENTE (SOLO PORTAL CLIENTE)</option>
-                </select>
-              </div>
-
-              {/* Matriz de Módulos (Organizada en Secciones) */}
-              <div className="md:col-span-2 space-y-4 bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-                  <label className="text-[9px] font-black text-[#2596be] tracking-widest block">
-                    {newUser.role === 'client' ? 'ACCESO RESTRINGIDO AL PORTAL CLIENTE' : 'CONFIGURACIÓN DE MÓDULOS PERMITIDOS'}
-                  </label>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase">
-                    Rol Actual: {newUser.role || 'operator'}
-                  </span>
-                </div>
-
-                {/* Bloque 1: Módulos del Sistema (Oculto o bloqueado si es rol cliente puro) */}
-                {newUser.role !== 'client' && (
-                  <div className="space-y-2">
-                    <span className="text-[8px] font-black text-slate-400 tracking-wider uppercase block">Módulos Administrativos / Operativos</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {[
-                        { key: 'dashboard', label: 'Dashboard' },
-                        { key: 'orders', label: 'Pedidos' },
-                        { key: 'access', label: 'Accesos' },
-                        { key: 'crm', label: 'CRM' },
-                        { key: 'clients', label: 'Gestión Clientes' },
-                        { key: 'clientType', label: 'Tipo Cliente' },
-                        { key: 'inventory', label: 'Inventario' },
-                        { key: 'products', label: 'Productos' },
-                        { key: 'tax', label: 'Impuestos' },
-                        { key: 'promotions', label: 'Promociones' }
-                      ].map((mod) => {
-                        const isChecked = (newUser.allowedModules || []).includes(mod.key);
-                        return (
-                          <label key={mod.key} className="flex items-center gap-2 text-[11px] font-bold cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                const current = newUser.allowedModules || [];
-                                const updated = e.target.checked 
-                                  ? [...current, mod.key] 
-                                  : current.filter(m => m !== mod.key);
-                                setNewUser({...newUser, allowedModules: updated});
-                              }}
-                              className="w-4 h-4 accent-[#2596be] rounded cursor-pointer"
-                            />
-                            <span className="text-[#134b60]">{mod.label}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Bloque 2: Portal Cliente (Aparte, con sus 3 opciones independientes) */}
-                <div className={`space-y-2 ${newUser.role !== 'client' ? 'pt-3 border-t border-slate-200' : ''}`}>
-                  <span className="text-[8px] font-black text-[#2596be] tracking-wider uppercase block">Portal Cliente (Vista Externa)</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {[
-                      { key: 'client_home', label: 'Inicio Portal' },
-                      { key: 'client_order', label: 'Hacer Pedido' },
-                      { key: 'client_orders', label: 'Mis Pedidos' }
-                    ].map((mod) => {
-                      const isChecked = (newUser.allowedModules || []).includes(mod.key);
-                      const isClientRole = newUser.role === 'client';
-
-                      return (
-                        <label key={mod.key} className={`flex items-center gap-2 text-[11px] font-bold select-none ${isClientRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`}>
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            disabled={isClientRole}
-                            onChange={(e) => {
-                              if (isClientRole) return;
-                              const current = newUser.allowedModules || [];
-                              const updated = e.target.checked 
-                                ? [...current, mod.key] 
-                                : current.filter(m => m !== mod.key);
-                              setNewUser({...newUser, allowedModules: updated});
-                            }}
-                            className="w-4 h-4 accent-[#2596be] rounded cursor-pointer"
-                          />
-                          <span className={isClientRole ? 'text-slate-600 font-black' : 'text-[#134b60]'}>{mod.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
+              <input 
+                type="email" 
+                value={newUser.email} 
+                onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
+                placeholder="CORREO@DOMINIO.COM" 
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs lowercase text-[#134b60] transition-all" 
+                required 
+              />
             </div>
-          </div>
-          
-          <div className="lg:col-span-5 pt-4 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
-            <button 
-              type="button" 
-              onClick={() => {
-                setNewUser(initialForm);
-                setSearchClient('');
-              }}
-              className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm w-full sm:w-auto"
-            >
-              <XCircle size={16} /> LIMPIAR
-            </button>
-            <button 
-              type="submit" 
-              disabled={!newUser.relatedId || !newUser.role} 
-              className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-[10px] uppercase shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest disabled:opacity-50 w-full sm:w-auto"
-            >
-              <Plus size={16} /> CREAR ACCESO
-            </button>
-          </div>
-        </form>
-      </div>
 
-      {/* Barra de Búsqueda Inteligente */}
-      <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="Buscador inteligente: ID, nombre, correo o rol..."
-            value={searchUserTerm}
-            onChange={(e) => setSearchUserTerm(e.target.value)}
-            className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
-          />
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CONTRASEÑA TEMPORAL</label>
+              <input 
+                type="password" 
+                value={newUser.password} 
+                onChange={(e) => setNewUser({...newUser, password: e.target.value})} 
+                placeholder="••••••••" 
+                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" 
+                required 
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => { setNewUser(initialForm); setSearchClient(''); setErrorMsg(''); }}
+                className="w-full sm:w-auto px-6 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+              >
+                <XCircle size={16} /> LIMPIAR
+              </button>
+              <button 
+                type="submit"
+                className="w-full sm:w-auto px-6 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+              >
+                <Plus size={16} /> CREAR ACCESO
+              </button>
+            </div>
+          </form>
         </div>
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-          Mostrando {filteredUsers.length} de {users.length}
-        </span>
-      </div>
 
-      {/* Tabla de Usuarios */}
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-5">ID USUARIO</th>
-                <th className="px-6 py-5">NOMBRE ASIGNADO</th>
-                <th className="px-6 py-5">CORREO ACCESO</th>
-                <th className="px-6 py-5 text-center">ROL</th>
-                <th className="px-6 py-5 text-right">GESTIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-20 text-center text-slate-300 font-black">SIN ACCESOS ENCONTRADOS</td>
-                </tr>
-              ) : (
-                filteredUsers.map(u => (
-                  <tr key={u.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{u.id}</td>
-                    <td className="px-6 py-4">{u.name}</td>
-                    <td className="px-6 py-4">{u.email}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="px-3 py-1 bg-[#134b60] text-white rounded-lg text-[9px] font-black">{u.role}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-end gap-2">
-                        <button 
-                          type="button"
-                          onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }}
-                          className="p-2.5 bg-[#e9f4f8] text-[#134b60] rounded-xl border border-[#2596be]/25 hover:bg-[#2596be] hover:text-white transition-all cursor-pointer"
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }}
-                          className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
+        {/* TABLA DE USUARIOS */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Buscador inteligente: ID, nombre, correo o rol..."
+                value={searchUserTerm}
+                onChange={(e) => setSearchUserTerm(e.target.value)}
+                className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
+              />
+            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+              Mostrando {filteredUsers.length} de {users.length}
+            </span>
+          </div>
+
+          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+            <div className="max-h-[450px] overflow-y-auto overflow-x-auto scrollbar-hide">
+              <table className="w-full text-left uppercase min-w-[700px]">
+                <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-5">ID</th>
+                    <th className="px-6 py-5">NOMBRE / CORREO</th>
+                    <th className="px-6 py-5 text-center">ROL</th>
+                    <th className="px-6 py-5 text-right">GESTIÓN</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="px-6 py-16 text-center text-slate-300 font-black">SIN ACCESOS REGISTRADOS</td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                        <td className="px-6 py-4 font-mono text-[#2596be] font-black">{u.id}</td>
+                        <td className="px-6 py-4">
+                          <p className="font-black text-[#134b60]">{u.name}</p>
+                          <p className="text-[9px] text-slate-400 lowercase">{u.email}</p>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-3 py-1 rounded-xl text-[9px] font-black ${u.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button 
+                              onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} 
+                              className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl transition-all hover:bg-[#2596be] hover:text-white shadow-sm cursor-pointer active:scale-95"
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button 
+                              onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} 
+                              className="p-2.5 bg-rose-50 text-rose-500 rounded-xl transition-all hover:bg-rose-500 hover:text-white shadow-sm cursor-pointer active:scale-95"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-                
-      {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
+
+      {/* MODALES DE EDICIÓN Y ELIMINACIÓN */}
+      {modalType && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
           <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
             <div className="p-8 text-[#134b60]">
-              <div className="flex flex-col items-center text-center gap-4 mb-6">
+              <div className="flex flex-col items-center text-center gap-4 mb-8">
                 <div className={`p-4 rounded-full shadow-inner ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                  <Fingerprint size={40} />
+                  {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
                 </div>
                 <h3 className="font-black text-xl uppercase tracking-tighter">
                   {modalType === 'edit' ? 'EDITAR ACCESO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR ACCESO'}
                 </h3>
               </div>
-              
+
               <div className="space-y-4">
                 {modalType === 'edit' && (
-                  <div className="space-y-4 max-h-[50vh] overflow-y-auto px-2 py-1 scrollbar-hide">
+                  <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">CORREO ACCESO (BLOQUEADO)</label>
-                      <input
-                        type="email"
-                        value={editData.email || ''}
-                        disabled
-                        className="w-full px-4 py-3.5 bg-slate-200/60 border-2 border-slate-200 rounded-xl font-black text-xs text-slate-500 cursor-not-allowed select-none"
-                      />
-                    </div>
-    
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">CONTRASEÑA</label>
-                      <input 
-                        type="text" 
-                        value={editData.password} 
-                        onChange={(e) => setEditData({...editData, password: e.target.value})} 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60]" 
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 tracking-widest block">ROL DEL USUARIO</label>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ROL</label>
                       <select 
                         value={editData.role} 
                         onChange={(e) => setEditData({...editData, role: e.target.value})} 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] transition-all text-[#134b60] cursor-pointer uppercase"
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-bold text-xs uppercase outline-none focus:border-[#2596be] text-[#134b60] transition-all"
                       >
-                        <option value="CLIENTE">CLIENTE</option>
                         <option value="ADMIN">ADMINISTRADOR</option>
+                        <option value="CLIENT">CLIENTE</option>
                       </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE</label>
+                      <input 
+                        type="text" 
+                        value={editData.name} 
+                        onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black uppercase text-xs outline-none focus:border-[#2596be] text-[#134b60] transition-all" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
+                      <input 
+                        type="email" 
+                        value={editData.email} 
+                        onChange={(e) => setEditData({...editData, email: e.target.value})} 
+                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] text-[#134b60] lowercase transition-all" 
+                      />
                     </div>
                   </div>
                 )}
                 {modalType === 'updateConfirm' && (
                   <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl shadow-sm">
-                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase tracking-wide">⚠️ SE MODIFICARÁN LAS CREDENCIALES DE ACCESO PARA ESTE USUARIO.</p>
+                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase tracking-wide">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p>
                   </div>
                 )}
                 {modalType === 'deleteSecond' && (
                   <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl shadow-sm">
-                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE ELIMINARÁ EL ACCESO AL SISTEMA. EL USUARIO NO PODRÁ INGRESAR. ELIMINACIÓN DE <span className="font-mono">{selectedUser?.name}</span>.</p>
+                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN TOTAL DE <span className="font-mono">{selectedUser?.id}</span>.</p>
                   </div>
                 )}
               </div>
 
               <div className="flex gap-4 mt-8">
-                <button 
-                  type="button" 
-                  onClick={() => setModalType(null)} 
-                  className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-all cursor-pointer"
-                >
-                  CANCELAR
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    if (modalType === 'edit') setModalType('updateConfirm');
-                    else if (modalType === 'updateConfirm') executeUpdate();
-                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-                    else if (modalType === 'deleteSecond') { setUsers(users.filter(p => p.id !== selectedUser.id)); setModalType(null); }
-                  }} 
-                  className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95"
-                >
-                  ACEPTAR
-                </button>
+                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
+                <button onClick={() => {
+                   if (modalType === 'edit') setModalType('updateConfirm');
+                   else if (modalType === 'updateConfirm') executeUpdate();
+                   else if (modalType === 'deleteFirst') setModalType('deleteSecond');
+                   else if (modalType === 'deleteSecond') { setUsers(users.filter(u => u.id !== selectedUser.id)); setModalType(null); }
+                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b] shadow-[#2596be]/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'}`}>ACEPTAR</button>
               </div>
             </div>
           </div>
-        </div> 
+        </div>
       )}
       <Footer />
     </div>
   );
 };
-
 // --- MÓDULO DE PROMOCIONES ---
 const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) => {
   const initialForm = { name: '', targetClients: [], startDateOnly: '', startTimeOnly: '', startDate: '', durationHours: '', screenTimeSeconds: '', text: '', image: '' };
@@ -5299,26 +5171,70 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   );
 };
 
-export default function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [globalLogo, setGlobalLogo] = useState("logo pestaña.jpg");
-  const [users, setUsers] = useState([  
-        { id: 'US000001', name: 'ADMINISTRADOR PRINCIPAL', email: '1@1', password: '1', role: 'ADMIN', relatedId: null }
-  ]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+const ForcePasswordChangeView = ({ currentUser, users, setUsers, setCurrentUser, logoImage }) => {
+  const [newPassword, setNewPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleLogin = (email, password) => {
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-    if (user) {
-      setCurrentUser(user);
-      return true;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Validación estricta que quitamos del panel de administrador
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    
+    if (!passwordRegex.test(newPassword)) {
+      setErrorMsg('LA CONTRASEÑA DEBE TENER MÍNIMO 8 CARACTERES, COMBINANDO MAYÚSCULAS, MINÚSCULAS, NÚMEROS Y SÍMBOLOS.');
+      return;
     }
-    return false;
+
+    // 1. Actualizamos la lista global de usuarios
+    const updatedUsers = users.map(u => 
+      u.id === currentUser.id 
+        ? { ...u, password: newPassword, isTemporaryPassword: false } 
+        : u
+    );
+    setUsers(updatedUsers);
+
+    // 2. Actualizamos la sesión actual para desbloquear la entrada al Dashboard
+    setCurrentUser({ ...currentUser, password: newPassword, isTemporaryPassword: false });
   };
 
-  return currentUser ? (
-    <Dashboard currentUser={currentUser} onLogout={() => setCurrentUser(null)} users={users} setUsers={setUsers} globalLogo={globalLogo} setGlobalLogo={setGlobalLogo} />
-  ) : (
-    <Login onLogin={handleLogin} logoImage={globalLogo} />
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f8fafc]">
+      <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md flex flex-col items-center gap-6 border-t-8 border-[#2596be] animate-in zoom-in-95 duration-500">
+        {logoImage && <img src={logoImage} alt="Logo" className="h-16 object-contain mb-2" />}
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-black text-[#134b60]">CAMBIO OBLIGATORIO</h2>
+          <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">
+            HOLA {currentUser.name}, POR MOTIVOS DE SEGURIDAD DEBES ASIGNAR UNA NUEVA CONTRASEÑA DEFINITIVA PARA PODER INGRESAR AL PORTAL.
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="w-full p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl tracking-wide text-center uppercase">
+            {errorMsg}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 tracking-widest block">NUEVA CONTRASEÑA DEFINITIVA</label>
+            <input 
+              type="text" 
+              value={newPassword}
+              onChange={(e) => { setNewPassword(e.target.value); setErrorMsg(''); }}
+              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
+              placeholder="Escribe tu nueva contraseña..."
+              required
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl shadow-[#2596be]/20 active:scale-95"
+          >
+            GUARDAR Y ENTRAR AL PORTAL
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
