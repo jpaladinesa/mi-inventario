@@ -5238,24 +5238,22 @@ const ForcePasswordChangeView = ({ currentUser, users, setUsers, setCurrentUser,
     </div>
   );
 };
-// --- COMPONENTE RAÍZ (APP) ---
+// --- COMPONENTE RAÍZ (APP) - MODO LIBRE DESARROLLO ---
 const App = () => {
-  const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('inventrack_currentUser');
-    return saved ? JSON.parse(saved) : null;
-  });
-  
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('inventrack_currentUser', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('inventrack_currentUser');
-    }
-  }, [currentUser]);
+  // Usuario administrador por defecto para desarrollo libre
+  const mockAdminUser = {
+    id: "US000001",
+    name: "ADMINISTRADOR",
+    email: "admin@distribucionescastilla.com",
+    role: "ADMIN",
+    isTemporaryPassword: false
+  };
+
+  const [currentUser, setCurrentUser] = useState(mockAdminUser);
 
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('inventrack_users');
-    return saved ? JSON.parse(saved) : [];
+    return saved ? JSON.parse(saved) : [mockAdminUser];
   });
   useEffect(() => {
     localStorage.setItem('inventrack_users', JSON.stringify(users));
@@ -5269,25 +5267,9 @@ const App = () => {
   }, [globalLogo]);
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('inventrack_currentUser');
+    // En modo libre recargamos o mantenemos el admin
+    setCurrentUser(mockAdminUser);
   };
-
-  if (!currentUser) {
-    return <Login onLogin={setCurrentUser} users={users} logoImage={globalLogo} />;
-  }
-
-  if (currentUser.isTemporaryPassword) {
-    return (
-      <ForcePasswordChangeView 
-        currentUser={currentUser} 
-        users={users} 
-        setUsers={setUsers} 
-        setCurrentUser={setCurrentUser} 
-        logoImage={globalLogo} 
-      />
-    );
-  }
 
   return (
     <Dashboard 
