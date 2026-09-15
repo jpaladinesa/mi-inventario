@@ -5238,3 +5238,67 @@ const ForcePasswordChangeView = ({ currentUser, users, setUsers, setCurrentUser,
     </div>
   );
 };
+// --- COMPONENTE RAÍZ (APP) ---
+const App = () => {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('inventrack_currentUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+  
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('inventrack_currentUser', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('inventrack_currentUser');
+    }
+  }, [currentUser]);
+
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('inventrack_users');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_users', JSON.stringify(users));
+  }, [users]);
+
+  const [globalLogo, setGlobalLogo] = useState(() => {
+    return localStorage.getItem('inventrack_globalLogo') || '';
+  });
+  useEffect(() => {
+    localStorage.setItem('inventrack_globalLogo', globalLogo);
+  }, [globalLogo]);
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('inventrack_currentUser');
+  };
+
+  if (!currentUser) {
+    return <Login onLogin={setCurrentUser} users={users} logoImage={globalLogo} />;
+  }
+
+  if (currentUser.isTemporaryPassword) {
+    return (
+      <ForcePasswordChangeView 
+        currentUser={currentUser} 
+        users={users} 
+        setUsers={setUsers} 
+        setCurrentUser={setCurrentUser} 
+        logoImage={globalLogo} 
+      />
+    );
+  }
+
+  return (
+    <Dashboard 
+      onLogout={handleLogout} 
+      currentUser={currentUser} 
+      users={users} 
+      setUsers={setUsers} 
+      globalLogo={globalLogo} 
+      setGlobalLogo={setGlobalLogo} 
+    />
+  );
+};
+
+export default App;
