@@ -273,18 +273,21 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
     </div>
   );
 };
-// --- MÓDULO DE PRODUCTOS ---
-  const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
+// --- CONSTANTE DE IMAGEN POR DEFECTO (CASTILLA) ---
+const DEFAULT_CASTILLA_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'><rect width='500' height='500' fill='%23134b60'/><text x='50%' y='43%' dominant-baseline='middle' text-anchor='middle' fill='%232596be' font-family='sans-serif' font-size='32' font-weight='black'>DISTRIBUCIONES</text><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-size='38' font-weight='black'>CASTILLA</text></svg>";
+
+// --- MÓDULO DE PRODUCTOS CON SOPORTE DE IMAGEN OPTIMIZADA ---
+const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
   const [activeSubTab, setActiveSubTab] = useState('create');
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const [searchTerm, setSearchTerm] = useState('');
-  const filteredProducts = products.filter(p => 
-
-  p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-  (p.unitName && p.unitName.toLowerCase().includes(searchTerm.toLowerCase()))
-);
+  
+  const filteredProducts = products.filter(p =>
+    p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (p.unitName && p.unitName.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
   
   const getNextNumericID = () => {
     if (products.length === 0) return '00001';
@@ -296,7 +299,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
     return String(max + 1).padStart(5, '0');
   };
 
-  const initialForm = { id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' };
+  const initialForm = { id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '', image: '' };
   const [newProd, setNewProd] = useState(initialForm);
   
   useEffect(() => {
@@ -315,6 +318,32 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
     'MILIMETRO', 'CENTIMETRO', 'METRO',
     'FRASCO', 'BOTELLA'
   ];
+
+  // Validador y lector de imagen con restricciones (JPG/WebP y máx 500 KB)
+  const handleProductImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('FORMATO NO VÁLIDO. USE EXCLUSIVAMENTE IMÁGENES JPG O WEBP.');
+      e.target.value = '';
+      return;
+    }
+
+    const maxSize = 500 * 1024; // 500 KB máximo
+    if (file.size > maxSize) {
+      alert('LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.');
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewProd(prev => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const getCalculatedValues = (cost, utility, taxId) => {
     const c = parseFloat(cost) || 0;
@@ -346,12 +375,13 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
         ...newProd, 
         name: cleanName, 
         taxName: taxObj?.name || '0%', 
-        taxValue: taxObj?.value || 0 
+        taxValue: taxObj?.value || 0,
+        image: newProd.image || DEFAULT_CASTILLA_IMAGE // Asigna Castilla por defecto si no subió foto
     };
 
     try {
         setProducts([...products, nuevoProductoData]);
-        setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' }); 
+        setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '', image: '' }); 
         setErrorMsg('');
     } catch (error) {
         setErrorMsg('HUBO UN ERROR AL COMUNICARSE CON EL SERVIDOR');
@@ -448,7 +478,8 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           taxName: taxObj?.name || '0%',
           taxValue: taxObj?.value || 0,
           cost: parsedCost,
-          utility: parsedUtility
+          utility: parsedUtility,
+          image: DEFAULT_CASTILLA_IMAGE // Imagen Castilla por defecto para cargas masivas
         });
       }
 
@@ -498,6 +529,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           </div>
         </div>
       </div>
+
       {activeSubTab === 'create' && (
       <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6">
         <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><ShoppingCart size={18} className="text-[#2596be]" /> REGISTRO MANUAL DE PRODUCTO</h3>
@@ -515,14 +547,14 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
               {newProd.name && newProd.name.length >= 100 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse">Límite 100 alcanzado</span>}
             </div>
 
-            <div className="space-y-1 lg:col-span-1">
+            <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">U. MEDIDA</label>
               <select value={newProd.unitName} onChange={e => setNewProd({...newProd, unitName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all" required>
                  {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
             </div>
 
-            <div className="space-y-1 lg:col-span-1">
+            <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IVA</label>
               <select value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all">
                  <option value="">SELECCIONE</option>
@@ -530,22 +562,52 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
               </select>
             </div>
 
-            <div className="space-y-1 lg:col-span-1">
+            <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
               <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
-            <div className="space-y-1 lg:col-span-1">
+            <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
               <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
+
+            {/* Selector de Imagen Opcional (Cuadrada, JPG/WebP, máx 500 KB) */}
+            <div className="space-y-1 lg:col-span-6 bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                <img 
+                  src={newProd.image || DEFAULT_CASTILLA_IMAGE} 
+                  alt="Previsualización" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 w-full space-y-1">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">
+                  IMAGEN DEL PRODUCTO (OPCIONAL - MÁX 500 KB - JPG/WEBP)
+                </label>
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/webp" 
+                  onChange={handleProductImageChange}
+                  className="w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-[#2596be] file:text-white hover:file:bg-[#1e7a9b] cursor-pointer"
+                />
+              </div>
+              {newProd.image && (
+                <button 
+                  type="button" 
+                  onClick={() => setNewProd(prev => ({ ...prev, image: '' }))}
+                  className="px-3 py-2 bg-rose-50 text-rose-500 rounded-xl text-[9px] font-black hover:bg-rose-500 hover:text-white transition-colors cursor-pointer shrink-0"
+                >
+                  QUITAR FOTO
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Fila de Botones Compactos y Alineados */}
           <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button 
               type="button" 
-              onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '' })}
+              onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '', image: '' })}
               className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
             >
               <XCircle size={16} /> LIMPIAR FORMULARIO
@@ -564,6 +626,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
           <div className="bg-amber-50 border-2 border-amber-100 px-6 py-4 rounded-2xl"><p className="text-[8px] text-amber-500 font-black mb-1">VALOR IVA</p><p className="text-lg font-black text-amber-700">{formatCurrency(currentCalcs.taxAmount)}</p></div>
           <div className="bg-[#e9f4f8] px-6 py-4 rounded-2xl border-2 border-[#2596be]/30"><p className="text-[8px] text-[#2596be] font-black mb-1">PRECIO SUGERIDO FINAL</p><p className="text-xl font-black text-[#134b60]">{formatCurrency(currentCalcs.finalPrice)}</p></div>
         </div>
+
         {/* --- ÚLTIMOS 5 PRODUCTOS REGISTRADOS --- */}
         <div className="pt-6 border-t border-slate-100 space-y-4">
           <h4 className="font-black text-[#134b60] text-[10px] uppercase tracking-wider flex items-center gap-2">
@@ -574,6 +637,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
               <table className="w-full text-left min-w-[1000px] uppercase">
                 <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest">
                   <tr>
+                    <th className="px-6 py-5">FOTO</th>
                     <th className="px-6 py-5">CÓDIGO ID</th>
                     <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
                     <th className="px-6 py-5 text-center">STOCK DISP.</th>
@@ -585,7 +649,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                 <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
                   {products.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td>
+                      <td colSpan="7" className="px-6 py-16 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td>
                     </tr>
                   ) : (
                     products.slice(-5).reverse().map(p => {
@@ -593,10 +657,13 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
                       const availableStock = calculateAvailableStock(p.id, inventory, orders);
                       return (
                         <tr 
-                              key={p.id} 
-                              onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
-                              className="hover:bg-white transition-colors cursor-pointer"
-                            >
+                            key={p.id} 
+                            onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
+                            className="hover:bg-white transition-colors cursor-pointer"
+                        >
+                          <td className="px-6 py-3">
+                            <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
+                          </td>
                           <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
                           <td className="px-6 py-4">
                             <p className="font-black text-[#134b60]">{p.name}</p>
@@ -622,314 +689,316 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
 
       </div>
     )}
+
     {activeSubTab === 'list' && (
-  <div className="space-y-6 animate-in fade-in duration-300">
-    {/* Buscador Inteligente */}
-    <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
-      <div className="relative flex-1">
-        <input
-          type="text"
-          placeholder="Buscador inteligente: ID, nombre o unidad..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
-        />
-      </div>
-      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-        Mostrando {filteredProducts.length} de {products.length}
-      </span>
-    </div>
-  
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
-        <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left min-w-[1200px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-5">CÓDIGO ID</th>
-                <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
-                <th className="px-6 py-5 text-center">STOCK DISP.</th>
-                <th className="px-6 py-5 text-right">VALOR BASE</th>
-                <th className="px-6 py-5 text-right">IVA</th>
-                <th className="px-6 py-5 text-right">FINAL</th>
-                <th className="px-6 py-5 text-right">GESTIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {filteredProducts.length === 0 ? (
-                <tr><td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td></tr>
-              ) : (
-                filteredProducts.map(p => {
-                  const c = getCalculatedValues(p.cost, p.utility, p.taxId);
-                  const availableStock = calculateAvailableStock(p.id, inventory, orders);
-                  return (
-                    <tr 
-                              key={p.id} 
-                              onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
-                              className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
-                            >
-                      <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
-                      <td className="px-6 py-4">
-                        <p className="font-black text-[#134b60]">{p.name}</p>
-                        <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
-                          {availableStock.toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
-                      <td className="px-6 py-4 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
-                      <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
-                          <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
-                        </div>
-                        
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Buscador inteligente: ID, nombre o unidad..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
+            />
+          </div>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+            Mostrando {filteredProducts.length} de {products.length}
+          </span>
         </div>
+      
+        <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+          <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left min-w-[1200px] uppercase">
+              <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-5">FOTO</th>
+                  <th className="px-6 py-5">CÓDIGO ID</th>
+                  <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
+                  <th className="px-6 py-5 text-center">STOCK DISP.</th>
+                  <th className="px-6 py-5 text-right">VALOR BASE</th>
+                  <th className="px-6 py-5 text-right">IVA</th>
+                  <th className="px-6 py-5 text-right">FINAL</th>
+                  <th className="px-6 py-5 text-right">GESTIÓN</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                {filteredProducts.length === 0 ? (
+                  <tr><td colSpan="8" className="px-6 py-20 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td></tr>
+                ) : (
+                  filteredProducts.map(p => {
+                    const c = getCalculatedValues(p.cost, p.utility, p.taxId);
+                    const availableStock = calculateAvailableStock(p.id, inventory, orders);
+                    return (
+                      <tr 
+                            key={p.id} 
+                            onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
+                            className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
+                          >
+                        <td className="px-6 py-3">
+                          <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
+                        </td>
+                        <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
+                        <td className="px-6 py-4">
+                          <p className="font-black text-[#134b60]">{p.name}</p>
+                          <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                            {availableStock.toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
+                        <td className="px-6 py-4 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
+                        <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
+                            <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     )}
-      
 
-      {modalType === 'bulkUpload' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-            <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
-                {!csvPreview ? (
-                  <>
-                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
-                    <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO DE PRODUCTOS (CSV)</h3>
-                    <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO: ID, NOMBRE, UNIDAD, COSTO, UTILIDAD, IVA(%)</p>
-                    
-                    <button onClick={downloadTemplate} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                        <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
-                    </button>
+    {modalType === 'bulkUpload' && (
+      <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
+          <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
+              {!csvPreview ? (
+                <>
+                  <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
+                  <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO DE PRODUCTOS (CSV)</h3>
+                  <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO: ID, NOMBRE, UNIDAD, COSTO, UTILIDAD, IVA(%)</p>
+                  
+                  <button onClick={downloadTemplate} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                      <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
+                  </button>
 
-                    <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
-                        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                        <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
-                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">SELECCIONAR ARCHIVO CSV</span>
-                    </label>
-                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs hover:bg-slate-200 uppercase transition-colors cursor-pointer">CANCELAR</button>
-                  </>
-                ) : (
-                  <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                      <div>
-                        <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE PRODUCTOS</h3>
-                        <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
-                      </div>
-                      <div className="flex gap-3 text-right">
-                        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
-                          {csvPreview.validRows.length} VÁLIDOS
-                        </span>
-                        <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${csvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                          {csvPreview.errors.length} ERRORES
-                        </span>
-                      </div>
+                  <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
+                      <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                      <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
+                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">SELECCIONAR ARCHIVO CSV</span>
+                  </label>
+                  <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs hover:bg-slate-200 uppercase transition-colors cursor-pointer">CANCELAR</button>
+                </>
+              ) : (
+                <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE PRODUCTOS</h3>
+                      <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
                     </div>
-
-                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
-                      <table className="w-full text-left uppercase">
-                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest z-10">
-                          <tr>
-                            <th className="px-4 py-3">ID</th>
-                            <th className="px-4 py-3">PRODUCTO</th>
-                            <th className="px-4 py-3 text-center">UNIDAD</th>
-                            <th className="px-4 py-3 text-right">COSTO</th>
-                            <th className="px-4 py-3 text-center">UTILIDAD</th>
-                            <th className="px-4 py-3 text-center">IVA</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
-                          {csvPreview.validRows.length === 0 ? (
-                            <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-300">NO HAY REGISTROS VÁLIDOS</td></tr>
-                          ) : (
-                            csvPreview.validRows.map((row, idx) => (
-                              <tr key={idx} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                                <td className="px-4 py-3 font-mono text-[#2596be] font-black">{row.id}</td>
-                                <td className="px-4 py-3">{row.name}</td>
-                                <td className="px-4 py-3 text-center">{row.unitName}</td>
-                                <td className="px-4 py-3 text-right font-mono">{row.cost}</td>
-                                <td className="px-4 py-3 text-center">{row.utility}%</td>
-                                <td className="px-4 py-3 text-center text-amber-600">{row.taxName}</td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {csvPreview.errors.length > 0 && (
-                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
-                        <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
-                        {csvPreview.errors.map((err, idx) => (
-                          <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex gap-4 pt-2">
-                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all cursor-pointer">CANCELAR</button>
-                      <button 
-                        onClick={() => {
-                          setProducts([...csvPreview.validRows, ...products]);
-                          setCsvPreview(null);
-                          setModalType(null);
-                        }} 
-                        disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
-                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
-                      >
-                        CONFIRMAR E IMPORTAR {csvPreview.validRows.length} REGISTROS
-                      </button>
+                    <div className="flex gap-3 text-right">
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
+                        {csvPreview.validRows.length} VÁLIDOS
+                      </span>
+                      <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${csvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                        {csvPreview.errors.length} ERRORES
+                      </span>
                     </div>
                   </div>
-                )}
-            </div>
-        </div>
-      )}
 
-      {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
-            <div className="p-8 text-[#134b60]">
-              <div className="flex flex-col items-center text-center gap-4 mb-8">
-                <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
+                  <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
+                    <table className="w-full text-left uppercase">
+                      <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest z-10">
+                        <tr>
+                          <th className="px-4 py-3">ID</th>
+                          <th className="px-4 py-3">PRODUCTO</th>
+                          <th className="px-4 py-3 text-center">UNIDAD</th>
+                          <th className="px-4 py-3 text-right">COSTO</th>
+                          <th className="px-4 py-3 text-center">UTILIDAD</th>
+                          <th className="px-4 py-3 text-center">IVA</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
+                        {csvPreview.validRows.length === 0 ? (
+                          <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-300">NO HAY REGISTROS VÁLIDOS</td></tr>
+                        ) : (
+                          csvPreview.validRows.map((row, idx) => (
+                            <tr key={idx} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                              <td className="px-4 py-3 font-mono text-[#2596be] font-black">{row.id}</td>
+                              <td className="px-4 py-3">{row.name}</td>
+                              <td className="px-4 py-3 text-center">{row.unitName}</td>
+                              <td className="px-4 py-3 text-right font-mono">{row.cost}</td>
+                              <td className="px-4 py-3 text-center">{row.utility}%</td>
+                              <td className="px-4 py-3 text-center text-amber-600">{row.taxName}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {csvPreview.errors.length > 0 && (
+                    <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
+                      <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
+                      {csvPreview.errors.map((err, idx) => (
+                        <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 pt-2">
+                    <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all cursor-pointer">CANCELAR</button>
+                    <button 
+                      onClick={() => {
+                        setProducts([...csvPreview.validRows, ...products]);
+                        setCsvPreview(null);
+                        setModalType(null);
+                      }} 
+                      disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
+                      className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
+                    >
+                      CONFIRMAR E IMPORTAR {csvPreview.validRows.length} REGISTROS
+                    </button>
+                  </div>
                 </div>
-                <h3 className="font-black text-xl uppercase tracking-tighter">
-                  {modalType === 'edit' ? 'EDITAR PRODUCTO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR PRODUCTO'}
-                </h3>
+              )}
+          </div>
+      </div>
+    )}
+
+    {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
+      <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
+        <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
+          <div className="p-8 text-[#134b60]">
+            <div className="flex flex-col items-center text-center gap-4 mb-8">
+              <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
+                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
               </div>
-              <div className="space-y-4">
-                {modalType === 'edit' && (
-                  <div className="space-y-4 max-h-[50vh] overflow-y-auto px-2 py-1 scrollbar-hide">
-                    <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400">CÓDIGO ID (SOLO LECTURA)</label>
-                        <input type="text" value={editData.id} disabled className="w-full px-4 py-3 bg-slate-100 border-2 border-transparent rounded-xl font-black text-sm text-center text-slate-400" />
-                    </div>
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">NOMBRE PRODUCTO</label><input type="text" maxLength={100} value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase" /></div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400">UNIDAD</label>
-                      <select value={editData.unitName} onChange={(e) => setEditData({...editData, unitName: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase">
+              <h3 className="font-black text-xl uppercase tracking-tighter">
+                {modalType === 'edit' ? 'EDITAR PRODUCTO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR PRODUCTO'}
+              </h3>
+            </div>
+            <div className="space-y-4">
+              {modalType === 'edit' && (
+                <div className="space-y-4 max-h-[50vh] overflow-y-auto px-2 py-1 scrollbar-hide">
+                  <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400">CÓDIGO ID (SOLO LECTURA)</label>
+                      <input type="text" value={editData.id} disabled className="w-full px-4 py-3 bg-slate-100 border-2 border-transparent rounded-xl font-black text-sm text-center text-slate-400" />
+                  </div>
+                  <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">NOMBRE PRODUCTO</label><input type="text" maxLength={100} value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase" /></div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400">UNIDAD</label>
+                    <select value={editData.unitName} onChange={(e) => setEditData({...editData, unitName: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase">
                          {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400">IVA</label>
-                      <select value={editData.taxId} onChange={(e) => setEditData({...editData, taxId: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase">
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400">IVA</label>
+                    <select value={editData.taxId} onChange={(e) => setEditData({...editData, taxId: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase">
                          <option value="">SELECCIONE</option>
                          {taxes.map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">COSTO</label><input type="number" value={editData.cost} onChange={(e) => setEditData({...editData, cost: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" /></div>
-                      <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">UTILIDAD %</label><input type="number" value={editData.utility} onChange={(e) => setEditData({...editData, utility: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" /></div>
-                    </div>
+                    </select>
                   </div>
-                )}
-                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">COSTO</label><input type="number" value={editData.cost} onChange={(e) => setEditData({...editData, cost: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" /></div>
+                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">UTILIDAD %</label><input type="number" value={editData.utility} onChange={(e) => setEditData({...editData, utility: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" /></div>
+                  </div>
+                </div>
+              )}
+              {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
               {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DE {selectedProd?.name}.</p></div>}
-              </div>
-              <div className="flex gap-4 mt-10">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
-                <button onClick={() => {
+            </div>
+            <div className="flex gap-4 mt-10">
+              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
+              <button onClick={() => {
                    if (modalType === 'edit') setModalType('updateConfirm');
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setProducts(products.filter(p => p.id !== selectedProd.id)); setModalType(null); }
               }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
-              </div>
             </div>
           </div>
         </div>
-      )}
-      <Footer />
-      {/* --- MODAL DE DETALLE DE PRODUCTO --- */}
-      {modalType === 'productDetail' && selectedProd && (() => {
-        const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
-        const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
-        return (
-          <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-xl text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
-              
-              {/* Encabezado del Modal */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+      </div>
+    )}
+    
+    <Footer />
+
+    {/* --- MODAL DE DETALLE DE PRODUCTO CON FOTO --- */}
+    {modalType === 'productDetail' && selectedProd && (() => {
+      const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
+      const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
+      return (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-xl text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-4">
+                <img src={selectedProd.image || DEFAULT_CASTILLA_IMAGE} alt={selectedProd.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-200 shadow-sm" />
                 <div>
                   <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE PRODUCTO #{selectedProd.id}</span>
                   <h3 className="text-xl font-black text-[#134b60]">{selectedProd.name}</h3>
                 </div>
-                <button 
-                  onClick={() => setModalType(null)}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
               </div>
-
-              {/* Información General en Tarjetas */}
-              <div className="grid grid-cols-2 gap-4 text-xs font-bold text-[#134b60]">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="text-[9px] text-slate-400 font-black block mb-1">UNIDAD DE MEDIDA</span>
-                  {selectedProd.unitName}
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-                  <span className="text-[9px] text-slate-400 font-black block mb-1">STOCK DISPONIBLE</span>
-                  <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
-                    {availableStock.toFixed(2)}
-                  </span>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="text-[9px] text-slate-400 font-black block mb-1">COSTO BASE</span>
-                  <span className="font-mono">{formatCurrency(selectedProd.cost)}</span>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="text-[9px] text-slate-400 font-black block mb-1">UTILIDAD APLICADA</span>
-                  <span className="font-mono">{selectedProd.utility}%</span>
-                </div>
-              </div>
-
-              {/* Desglose Financiero */}
-              <div className="bg-[#e9f4f8] p-5 rounded-2xl border-2 border-[#2596be]/30 space-y-3">
-                <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
-                  <span className="text-[9px] text-[#2596be] font-black">SUBTOTAL (COSTO + UTILIDAD):</span>
-                  <span className="font-mono">{formatCurrency(c.subtotal)}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
-                  <span className="text-[9px] text-amber-600 font-black">VALOR IMPUESTO (IVA):</span>
-                  <span className="font-mono text-amber-600">{formatCurrency(c.taxAmount)}</span>
-                </div>
-                <div className="border-t border-[#2596be]/20 pt-3 flex justify-between items-center text-sm font-black text-[#134b60]">
-                  <span>PRECIO FINAL SUGERIDO:</span>
-                  <span className="font-mono text-base text-[#2596be]">{formatCurrency(c.finalPrice)}</span>
-                </div>
-              </div>
-
-              {/* Botón de Cierre */}
-              <div className="flex justify-end pt-2">
-                <button 
-                  onClick={() => setModalType(null)}
-                  className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95"
-                >
-                  CERRAR DETALLE
-                </button>
-              </div>
-
+              <button 
+                onClick={() => setModalType(null)}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs font-bold text-[#134b60]">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">UNIDAD DE MEDIDA</span>
+                {selectedProd.unitName}
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">STOCK DISPONIBLE</span>
+                <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                  {availableStock.toFixed(2)}
+                </span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">COSTO BASE</span>
+                <span className="font-mono">{formatCurrency(selectedProd.cost)}</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[9px] text-slate-400 font-black block mb-1">UTILIDAD APLICADA</span>
+                <span className="font-mono">{selectedProd.utility}%</span>
+              </div>
+            </div>
+
+            <div className="bg-[#e9f4f8] p-5 rounded-2xl border-2 border-[#2596be]/30 space-y-3">
+              <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
+                <span className="text-[9px] text-[#2596be] font-black">SUBTOTAL (COSTO + UTILIDAD):</span>
+                <span className="font-mono">{formatCurrency(c.subtotal)}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
+                <span className="text-[9px] text-amber-600 font-black">VALOR IMPUESTO (IVA):</span>
+                <span className="font-mono text-amber-600">{formatCurrency(c.taxAmount)}</span>
+              </div>
+              <div className="border-t border-[#2596be]/20 pt-3 flex justify-between items-center text-sm font-black text-[#134b60]">
+                <span>PRECIO FINAL SUGERIDO:</span>
+                <span className="font-mono text-base text-[#2596be]">{formatCurrency(c.finalPrice)}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button 
+                onClick={() => setModalType(null)}
+                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95"
+              >
+                CERRAR DETALLE
+              </button>
+            </div>
+
           </div>
-        );
-      })()}
-    </div>
+        </div>
+      );
+    })()}
+  </div>
   );
 };
-
 // --- MÓDULO DE INVENTARIO ---
 const InventoryView = ({ inventory, setInventory, products, orders }) => {
   const [selectedProd, setSelectedProd] = useState(null);
