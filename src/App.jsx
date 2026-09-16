@@ -999,6 +999,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   </div>
   );
 };
+
 // --- MÓDULO DE INVENTARIO ---
 const InventoryView = ({ inventory, setInventory, products, orders }) => {
   const [selectedProd, setSelectedProd] = useState(null);
@@ -2006,9 +2007,11 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   );
 };
   
-// --- MÓDULO DE SOLICITUD DE PEDIDO (BOTONES COMPACTOS) ---
+// --- MÓDULO DE SOLICITUD DE PEDIDO (CORREGIDO Y OPTIMIZADO) ---
 const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
+  const [activeOrderTab, setActiveOrderTab] = useState('catalog'); // 'catalog' o 'cart'
+  
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('repeatOrderItems');
     if (saved) {
@@ -2023,88 +2026,128 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   });
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [observation, setObservation] = useState('');
-  const [selectedProd, setSelectedProd] = useState(null);
+  const [cardQuantities, setCardQuantities] = useState({}); // Cantidad por tarjeta
   const [modalType, setModalType] = useState(null);
-  const [editItem, setEditItem] = useState(null);
+  const [zoomImageProd, setZoomImageProd] = useState(null); // Producto para el modal de zoom
   const [lastSavedOrder, setLastSavedOrder] = useState(null);
   const [generalObservation, setGeneralObservation] = useState('');
+
+  // Contenedor persistente para el intervalo de mantener presionado (sin usar useRef)
+  const [holdIntervalRef] = useState(() => ({ current: null }));
 
   const activeClientRecord = currentUser.role === 'ADMIN' ? clients.find(c => c.id === adminOrderClient) : clients.find(c => c.id === currentUser.relatedId);
   const activeClientType = clientTypes.find(ct => ct.id === activeClientRecord?.typeId);
   const customUtility = activeClientType ? parseFloat(activeClientType.value) : null;
   const isSearchDisabled = currentUser.role === 'ADMIN' && !adminOrderClient;
 
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm || (selectedProd && (`${selectedProd.id} - ${selectedProd.name}` === searchTerm))) return [];
+  // Cálculo del precio final unitario adaptado por tipo de cliente
+  const getProductFinalPrice = (prod) => {
+    const utilityToUse = customUtility !== null ? customUtility : parseFloat(prod.utility);
+    const base = parseFloat(prod.cost) * (1 + (utilityToUse / 100));
+    const iva = base * ((parseFloat(prod.taxValue) || 0) / 100);
+    return base + iva;
+  };
+
+  // Catálogo filtrado en tiempo real
+  const catalogProducts = useMemo(() => {
+    if (!searchTerm) return products;
     const term = searchTerm.toUpperCase();
     return products.filter(p => 
       p.id.toUpperCase().includes(term) || p.name.toUpperCase().includes(term)
-    ).slice(0, 6);
-  }, [searchTerm, products, selectedProd]);
-
-  const financialData = useMemo(() => {
-    if (!selectedProd) return { base: 0, iva: 0, totalUnit: 0, selectionTotal: 0 };
-    const utilityToUse = customUtility !== null ? customUtility : parseFloat(selectedProd.utility);
-    const base = parseFloat(selectedProd.cost) * (1 + (utilityToUse / 100));
-    const iva = base * ((parseFloat(selectedProd.taxValue) || 0) / 100);
-    const totalUnit = base + iva;
-    const q = parseInt(quantity, 10) || 0;
-    return { base, iva, totalUnit, selectionTotal: totalUnit * q };
-  }, [selectedProd, quantity, customUtility]);
+    );
+  }, [searchTerm, products]);
 
   const cartFinancials = useMemo(() => cart.reduce((acc, item) => acc + (item.totalPricePerUnit * item.quantity), 0), [cart]);
 
-  const availableStock = selectedProd ? calculateAvailableStock(selectedProd.id, inventory, orders) - cart.filter(c => c.productId === selectedProd.id).reduce((sum, c) => sum + c.quantity, 0) : 0;
-  const parsedQtyNum = parseInt(quantity, 10) || 0;
-  const isOverStock = selectedProd && parsedQtyNum > availableStock;
-
-  const handleProductSelect = (prod) => {
-    setSearchTerm(`${prod.id} - ${prod.name}`);
-    setSelectedProd(prod);
+  // Manejador de contador local por tarjeta (+ y -)
+  const updateCardQty = (productId, delta) => {
+    setCardQuantities(prev => {
+      const current = parseInt(prev[productId], 10) || 1;
+      const next = Math.max(1, current + delta);
+      return { ...prev, [productId]: next };
+    });
   };
 
-  const resetSearchState = () => { 
-    setSearchTerm(''); 
-    setQuantity(''); 
-    setSelectedProd(null); 
-    setObservation(''); 
+  // Funciones para mantener presionado el botón (incremento automático lento a 350ms)
+  const startHolding = (productId, delta) => {
+    updateCardQty(productId, delta);
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    holdIntervalRef.current = setInterval(() => {
+      updateCardQty(productId, delta);
+    }, 350); 
   };
 
-  const handleAddToOrder = (e) => {
-    e.preventDefault();
-    const parsedQty = parseInt(quantity, 10);
-    if (!selectedProd || isNaN(parsedQty) || parsedQty <= 0) return;
+  const stopHolding = () => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+  };
 
-    const warningText = "SUJETO A DISPONIBILIDAD CON ASESOR";
-    let currentObs = observation.toUpperCase();
-    
-    if (parsedQty > availableStock) {
-        currentObs = currentObs ? `${currentObs} | ${warningText}` : warningText;
+  // Manejadores para edición manual directa en el input
+  const handleQtyInputChange = (productId, value) => {
+    const cleanVal = value.replace(/\D/g, '');
+    setCardQuantities(prev => ({
+      ...prev,
+      [productId]: cleanVal === '' ? '' : parseInt(cleanVal, 10)
+    }));
+  };
+
+  const handleQtyInputBlur = (productId) => {
+    const current = cardQuantities[productId];
+    if (current === '' || isNaN(current) || current < 1) {
+      setCardQuantities(prev => ({
+        ...prev,
+        [productId]: 1
+      }));
+    }
+  };
+
+  // Agregar producto desde su tarjeta al carrito y resetear contador a 1
+  const handleAddCardToCart = (prod) => {
+    const qtyToAdd = parseInt(cardQuantities[prod.id], 10) || 1;
+    const unitPrice = getProductFinalPrice(prod);
+    const availableStock = calculateAvailableStock(prod.id, inventory, orders) - cart.filter(c => c.productId === prod.id).reduce((sum, c) => sum + c.quantity, 0);
+
+    let warningText = "";
+    if (qtyToAdd > availableStock) {
+      warningText = "SUJETO A DISPONIBILIDAD CON ASESOR";
     }
 
-    const existing = cart.find(c => c.productId === selectedProd.id);
-    if (existing) { 
-      setCart(cart.map(c => c.productId === selectedProd.id ? { 
-        ...c, 
-        quantity: c.quantity + parsedQty,
-        observation: currentObs ? (c.observation ? `${c.observation} | ${currentObs}` : currentObs) : c.observation
-      } : c)); 
+    const existing = cart.find(c => c.productId === prod.id);
+    if (existing) {
+      setCart(cart.map(c => c.productId === prod.id ? {
+        ...c,
+        quantity: c.quantity + qtyToAdd,
+        observation: warningText ? (c.observation ? `${c.observation} | ${warningText}` : warningText) : c.observation
+      } : c));
+    } else {
+      setCart([...cart, {
+        tempId: Date.now() + Math.random(),
+        productId: prod.id,
+        name: prod.name,
+        unit: prod.unitName,
+        quantity: qtyToAdd,
+        taxValue: prod.taxValue,
+        totalPricePerUnit: unitPrice,
+        observation: warningText
+      }]);
     }
-    else { 
-        setCart([...cart, { 
-            tempId: Date.now(), 
-            productId: selectedProd.id, 
-            name: selectedProd.name, 
-            unit: selectedProd.unitName, 
-            quantity: parsedQty, 
-            taxValue: selectedProd.taxValue, 
-            totalPricePerUnit: financialData.totalUnit,
-            observation: currentObs
-        }]); 
-    }
-    resetSearchState();
+
+    // Resetear contador de esta tarjeta a 1 y dejar las demás intactas
+    setCardQuantities(prev => ({ ...prev, [prod.id]: 1 }));
+  };
+
+  // Actualizar observación específica de un ítem en el carrito
+  const updateItemObservation = (tempId, newObs) => {
+    setCart(cart.map(item => item.tempId === tempId ? { ...item, observation: newObs.toUpperCase() } : item));
+  };
+
+  // Actualizar cantidad desde el carrito
+  const updateItemQuantity = (tempId, newQty) => {
+    const qty = parseInt(newQty, 10);
+    if (isNaN(qty) || qty <= 0) return;
+    setCart(cart.map(item => item.tempId === tempId ? { ...item, quantity: qty } : item));
   };
 
   const saveOrder = () => {
@@ -2167,7 +2210,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
           discount: 0,
           deliveredQuantity: item.quantity,
           pendingQuantity: 0,
-          deliveryObservation: ''
+          deliveryObservation: item.observation || ''
         })),
         totalItems: cart.length, 
         totalValue: finalCalculatedTotal,
@@ -2177,14 +2220,31 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     setOrders([newOrder, ...orders]);
     setCart([]); 
     setGeneralObservation('');
+    setActiveOrderTab('catalog'); 
     setLastSavedOrder(newOrder);
     setModalType('orderSuccess');
   };
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
         <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">HACER PEDIDO</h2>
+        
+        {/* Pestañas de Navegación Superiores */}
+        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+          <button 
+            onClick={() => setActiveOrderTab('catalog')} 
+            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeOrderTab === 'catalog' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+          >
+            🛍️ CATÁLOGO DE PRODUCTOS
+          </button>
+          <button 
+            onClick={() => setActiveOrderTab('cart')} 
+            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer relative ${activeOrderTab === 'cart' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+          >
+            🛒 VER CARRITO ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+          </button>
+        </div>
       </div>
       
       {currentUser.role === 'ADMIN' && (
@@ -2202,16 +2262,6 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
           </select>
         </div>
       )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100 shadow-sm"><p className="text-[8px] text-slate-500 font-black mb-1">VALOR BASE</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(financialData.base)}</p></div>
-        <div className="bg-indigo-50 p-6 rounded-3xl border-2 border-indigo-100 shadow-sm"><p className="text-[8px] text-indigo-500 font-black mb-1">IVA UNITARIO</p><p className="text-lg font-black text-indigo-800">{formatCurrency(financialData.iva)}</p></div>
-        <div className="bg-emerald-50 p-6 rounded-3xl border-2 border-emerald-100 shadow-sm"><p className="text-[8px] text-emerald-500 font-black mb-1">TOTAL UNITARIO</p><p className="text-lg font-black text-emerald-800">{formatCurrency(financialData.totalUnit)}</p></div>
-        <div className="bg-amber-50 p-6 rounded-3xl border-2 border-amber-100 shadow-sm"><p className="text-[8px] text-amber-600 font-black mb-1">COSTO SELECCIÓN</p><p className="text-lg font-black text-amber-800">{formatCurrency(financialData.selectionTotal)}</p></div>
-        <div className="bg-[#e9f4f8] p-6 rounded-3xl border-2 border-[#2596be]/30 shadow-sm relative overflow-hidden">
-            <p className="text-[8px] text-[#2596be] font-black mb-1">TOTAL ACUMULADO</p><p className="text-lg font-black text-[#134b60]">{formatCurrency(cartFinancials)}</p>
-        </div>
-      </div>
 
       {/* --- BANNER DE ENVÍO GRATIS Y PROGRESO --- */}
       <div className={`p-6 rounded-3xl border-2 transition-all shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60]'}`}>
@@ -2247,210 +2297,350 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
         </div>
       </div>
 
-      <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full relative">
-        {isSearchDisabled && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
-            <p className="bg-[#134b60] text-white px-6 py-3 rounded-full font-black text-xs uppercase shadow-xl animate-pulse">
-              SELECCIONE UN CLIENTE ARRIBA PARA COMENZAR
-            </p>
-          </div>
-        )}
-        <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase">
-          <ShoppingCart size={18} className="text-[#2596be]" /> BÚSQUEDA INTELIGENTE DE PRODUCTOS
-        </h3>
-        <form className="space-y-6" onSubmit={handleAddToOrder}>
-          <div className="space-y-1">
-            <label className="text-[9px] font-black text-[#2596be] uppercase tracking-widest">BUSCAR POR CÓDIGO O NOMBRE</label>
-            <div className="relative">
+      {/* ======================================================== */}
+      {/* PESTAÑA 1: CATÁLOGO DE PRODUCTOS                         */}
+      {/* ======================================================== */}
+      {activeOrderTab === 'catalog' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
+            <div className="relative flex-1">
               <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text" 
                 value={searchTerm} 
                 disabled={isSearchDisabled} 
-                onChange={e => {setSearchTerm(e.target.value); setSelectedProd(null);}} 
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all" 
-                placeholder="ESCRIBE EL CÓDIGO O EL NOMBRE DEL PRODUCTO..." 
+                onChange={e => setSearchTerm(e.target.value)} 
+                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-2xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
+                placeholder="BUSCAR RÁPIDO POR CÓDIGO O NOMBRE EN EL CATÁLOGO..." 
               />
-              {filteredProducts.length > 0 && !selectedProd && (
-                <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
-                  {filteredProducts.map(p => (
-                    <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3.5 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer flex justify-between items-center">
-                      <span><strong className="text-[#2596be] font-mono">#{p.id}</strong> - {p.name}</span>
-                      <span className="text-[9px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">{p.unitName}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+              {catalogProducts.length} PRODUCTOS
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-4 border-t border-slate-50 items-end">
-            <div className="space-y-1 md:col-span-2">
-              <label className="text-[9px] font-black uppercase tracking-widest text-[#2596be]">CANTIDAD</label>
-              <div className="relative">
-                <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                  type="text" 
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  disabled={!selectedProd || isSearchDisabled} 
-                  value={quantity} 
-                  onChange={e => {
-                    const val = e.target.value.replace(/\D/g, '');
-                    if (val.length <= 10) {
-                      setQuantity(val);
-                    }
-                  }} 
-                  className="w-full pl-10 pr-3 py-4 rounded-xl outline-none font-black text-lg text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" 
-                  placeholder="0" 
-                  required 
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-1 relative md:col-span-5">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OBSERVACIÓN (OPCIONAL)</label>
-              <div className="relative">
-                <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
-                  type="text" 
-                  maxLength={50} 
-                  disabled={!selectedProd || isSearchDisabled} 
-                  value={observation} 
-                  onChange={e => setObservation(e.target.value)} 
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-30 transition-all" 
-                  placeholder="EJ: EMPAQUE DOBLE..." 
-                />
-              </div>
-              {observation.length >= 50 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse uppercase">Límite 50 alcanzado</span>}
-            </div>
-
-            <div className="md:col-span-3">
-              <button 
-                type="submit" 
-                disabled={!selectedProd || !quantity || parseInt(quantity, 10) <= 0 || isSearchDisabled} 
-                className="w-full bg-[#2596be] text-white font-black rounded-xl hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] cursor-pointer"
-              >
-                <Plus size={18} /> AGREGAR
-              </button>
-            </div>
-
-            <div className="md:col-span-2">
-              <button 
-                type="button" 
-                onClick={resetSearchState}
-                disabled={isSearchDisabled}
-                className="w-full bg-slate-200 text-slate-700 font-black rounded-xl hover:bg-slate-300 transition-all text-xs uppercase flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] cursor-pointer"
-              >
-                LIMPIAR
-              </button>
-            </div>
-
-            {isOverStock && (
-              <div className="md:col-span-12 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-2xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
-                <AlertTriangle size={20} className="animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest">
-                  AVISO: CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 relative">
+            {isSearchDisabled && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+                <p className="bg-[#134b60] text-white px-6 py-3 rounded-full font-black text-xs uppercase shadow-xl animate-pulse">
+                  SELECCIONE UN CLIENTE ARRIBA PARA COMENZAR
+                </p>
               </div>
             )}
-          </div>
-        </form>
-      </div>
 
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden w-full flex flex-col">
-        <div className="p-6 border-b border-[#e9f4f8] flex justify-between items-center bg-[#e9f4f8]/30">
-          <h4 className="text-[10px] font-black text-[#2596be] uppercase tracking-tighter">PRE-RESUMEN DE SOLICITUD</h4>
-        </div>
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left min-w-[1000px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-5">CÓDIGO (ID)</th>
-                <th className="px-6 py-5">PRODUCTO</th>
-                <th className="px-6 py-5 text-center">U. MEDIDA</th>
-                <th className="px-6 py-5 text-center">CANTIDAD</th>
-                <th className="px-6 py-5 text-right">UNITARIO</th>
-                <th className="px-6 py-5 text-right">SUBTOTAL</th>
-                <th className="px-6 py-5 text-right">GESTIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {cart.length === 0 ? (
-                <tr><td colSpan="7" className="px-6 py-16 text-center text-slate-300 font-black">CARRITO VACÍO</td></tr>
-              ) : (
-                cart.map(item => (
-                  <tr key={item.tempId} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{item.productId}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-black text-[#134b60]">{item.name}</p>
-                      {item.observation && <p className="text-[9px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
-                    </td>
-                    <td className="px-6 py-4 text-center font-black">{item.unit}</td>
-                    <td className="px-6 py-4 text-center font-mono text-emerald-600 font-black">{item.quantity}</td>
-                    <td className="px-6 py-4 text-right text-slate-500 font-mono">{formatCurrency(item.totalPricePerUnit)}</td>
-                    <td className="px-6 py-4 text-right text-[#134b60] font-black font-mono">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
-                    <td className="px-6 py-4 text-right flex justify-end gap-2">
-                      <button onClick={() => { setEditItem(item); setModalType('editCart'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14} /></button>
-                      <button onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14} /></button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {cart.length > 0 && (
-          <div className="p-8 bg-slate-50 border-t border-slate-100 flex flex-col gap-6">
-            <div className="w-full">
-              <div className="flex justify-between items-end mb-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">OBSERVACIÓN GENERAL DEL PEDIDO (OPCIONAL)</label>
-                <span className={`text-[10px] font-black tracking-widest ${generalObservation.length >= 500 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
-                  {generalObservation.length} / 500
-                </span>
+            {catalogProducts.length === 0 ? (
+              <div className="col-span-full py-20 text-center text-slate-400 font-black text-xs bg-white rounded-3xl border-2 border-[#e9f4f8]">
+                NO SE ENCONTRARON PRODUCTOS
               </div>
-              <textarea 
-                maxLength={500}
-                value={generalObservation} 
-                onChange={e => setGeneralObservation(e.target.value.toUpperCase())} 
-                className="w-full p-4 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all resize-none min-h-[90px]" 
-                placeholder="ESPECIFICACIONES DE ENTREGA, NOTAS PARA EL ASESOR O PRODUCTOS ADICIONALES NO ENCONTRADOS..."
-              />
-            </div>
-            
-            {/* Botones Reiniciar y Enviar Solicitud compactos y alineados a la derecha */}
-            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
-              <button 
-                onClick={() => { setCart([]); setGeneralObservation(''); }} 
-                className="px-6 py-3.5 border-2 border-rose-200 text-rose-500 rounded-xl font-black text-xs hover:bg-rose-50 transition-all uppercase cursor-pointer"
-              >
-                REINICIAR
-              </button>
-              <button 
-                onClick={() => setModalType('confirmSaveOrder')} 
-                className="px-8 py-3.5 bg-[#2596be] text-white rounded-xl font-black text-xs shadow-lg shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-              >
-                ENVIAR SOLICITUD
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+            ) : (
+              catalogProducts.map(p => {
+                const unitPrice = getProductFinalPrice(p);
+                const currentQty = cardQuantities[p.id] !== undefined ? cardQuantities[p.id] : 1;
+                const availableStock = calculateAvailableStock(p.id, inventory, orders) - cart.filter(c => c.productId === p.id).reduce((sum, c) => sum + c.quantity, 0);
 
-      {modalType === 'editCart' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-8 text-[#134b60]">
-            <h3 className="font-black text-xl text-center mb-6 tracking-tighter">AJUSTAR CANTIDAD</h3>
-            <input type="number" step="1" min="1" value={editItem?.quantity} onChange={e => setEditItem({...editItem, quantity: parseInt(e.target.value, 10) || 1})} className="w-full p-6 bg-slate-50 border-2 border-slate-200 text-[#134b60] rounded-2xl text-center font-black text-3xl outline-none focus:border-[#2596be]" />
-            <div className="flex gap-4 pt-6">
-              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
-              <button onClick={() => { setCart(cart.map(c => c.tempId === editItem.tempId ? editItem : c)); setModalType(null); }} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs uppercase shadow-xl shadow-[#2596be]/25 hover:bg-[#1e7a9b] transition-all cursor-pointer active:scale-95">ACEPTAR</button>
-            </div>
+                return (
+                  <div 
+                    key={p.id}
+                    className="bg-white p-5 rounded-3xl border-2 border-slate-200 hover:border-[#2596be] transition-all flex flex-col justify-between text-left shadow-sm group hover:shadow-md"
+                  >
+                    <div>
+                      <div 
+                        onClick={() => setZoomImageProd(p)}
+                        className="w-full h-48 rounded-2xl overflow-hidden bg-slate-100 mb-4 border border-slate-200 relative cursor-pointer group-hover:scale-[1.02] transition-transform shadow-inner"
+                        title="Hacer clic para ampliar imagen"
+                      >
+                        <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-black text-[10px]">
+                          🔍 AMPLIAR IMAGEN
+                        </div>
+                        <span className="absolute top-2 left-2 bg-[#134b60] text-white font-mono text-[9px] font-black px-2.5 py-1 rounded-lg shadow">#{p.id}</span>
+                        <span className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-[#134b60] font-black text-[9px] px-2.5 py-1 rounded-lg shadow-sm">
+                          STOCK: {availableStock.toFixed(0)}
+                        </span>
+                      </div>
+                      <p className="text-xs font-black text-[#134b60] line-clamp-2 leading-tight uppercase mb-1">{p.name}</p>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-4">UNIDAD: {p.unitName}</p>
+                    </div>
+
+                    <div className="space-y-4 pt-3 border-t border-slate-100">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[8px] text-slate-400 font-bold uppercase">VALOR UNITARIO:</span>
+                        <span className="text-xs font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shrink-0">
+                          <button 
+                            type="button" 
+                            onMouseDown={() => startHolding(p.id, -1)}
+                            onMouseUp={stopHolding}
+                            onMouseLeave={stopHolding}
+                            onTouchStart={() => startHolding(p.id, -1)}
+                            onTouchEnd={stopHolding}
+                            className="px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                          >
+                            -
+                          </button>
+                          
+                          <input 
+                            type="text"
+                            inputMode="numeric"
+                            value={currentQty}
+                            onChange={(e) => handleQtyInputChange(p.id, e.target.value)}
+                            onBlur={() => handleQtyInputBlur(p.id)}
+                            className="w-14 text-center text-xs font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
+                          />
+
+                          <button 
+                            type="button" 
+                            onMouseDown={() => startHolding(p.id, 1)}
+                            onMouseUp={stopHolding}
+                            onMouseLeave={stopHolding}
+                            onTouchStart={() => startHolding(p.id, 1)}
+                            onTouchEnd={stopHolding}
+                            className="px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button 
+                          type="button" 
+                          onClick={() => handleAddCardToCart(p)}
+                          disabled={isSearchDisabled}
+                          className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-[#2596be]/20 transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <Plus size={14} /> AGREGAR
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
 
+      {/* ======================================================== */}
+      {/* PESTAÑA 2: CARRITO DE COMPRAS                            */}
+      {/* ======================================================== */}
+      {activeOrderTab === 'cart' && (
+        <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden w-full flex flex-col animate-in fade-in duration-300">
+          <div className="p-6 border-b border-[#e9f4f8] flex justify-between items-center bg-[#e9f4f8]/30">
+            <h4 className="text-[11px] font-black text-[#2596be] uppercase tracking-tighter flex items-center gap-2">
+              <ShoppingCart size={16} /> CARRITO DE COMPRAS ({cart.length} ÍTEMS)
+            </h4>
+            <span className="text-sm font-black text-[#134b60] font-mono">
+              TOTAL: {formatCurrency(cartFinancials)}
+            </span>
+          </div>
+
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left min-w-[1000px] uppercase">
+              <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-5">CÓDIGO (ID)</th>
+                  <th className="px-6 py-5">PRODUCTO Y OBSERVACIÓN DEL ÍTEM</th>
+                  <th className="px-6 py-5 text-center">U. MEDIDA</th>
+                  <th className="px-6 py-5 text-center">CANTIDAD</th>
+                  <th className="px-6 py-5 text-right">UNITARIO</th>
+                  <th className="px-6 py-5 text-right">SUBTOTAL</th>
+                  <th className="px-6 py-5 text-right">GESTIÓN</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                {cart.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">
+                      TU CARRITO ESTÁ VACÍO. AGREGA PRODUCTOS DESDE LA PESTAÑA DE CATÁLOGO.
+                    </td>
+                  </tr>
+                ) : (
+                  cart.map(item => (
+                    <tr key={item.tempId} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                      <td className="px-6 py-4 font-mono text-[#2596be] font-black">{item.productId}</td>
+                      
+                      <td className="px-6 py-4 space-y-2">
+                        <p className="font-black text-[#134b60]">{item.name}</p>
+                        <input 
+                          type="text" 
+                          maxLength={50}
+                          placeholder="AGREGAR NOTA U OBSERVACIÓN A ESTE PRODUCTO..."
+                          value={item.observation || ''}
+                          onChange={e => updateItemObservation(item.tempId, e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-xl text-[9px] font-bold uppercase text-[#134b60] outline-none transition-all shadow-sm"
+                        />
+                      </td>
+
+                      <td className="px-6 py-4 text-center font-black">{item.unit}</td>
+                      
+                      <td className="px-6 py-4 text-center">
+                        <input 
+                          type="number" 
+                          min="1"
+                          value={item.quantity}
+                          onChange={e => updateItemQuantity(item.tempId, e.target.value)}
+                          className="w-20 px-3 py-2 text-center bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-xl font-mono text-emerald-600 font-black text-xs outline-none"
+                        />
+                      </td>
+
+                      <td className="px-6 py-4 text-right text-slate-500 font-mono">{formatCurrency(item.totalPricePerUnit)}</td>
+                      <td className="px-6 py-4 text-right text-[#134b60] font-black font-mono">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
+                      
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} 
+                          className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"
+                          title="Eliminar producto"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {cart.length > 0 && (
+            <div className="p-8 bg-slate-50 border-t border-slate-100 flex flex-col gap-6">
+              <div className="w-full">
+                <div className="flex justify-between items-end mb-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">OBSERVACIÓN GENERAL DEL PEDIDO (OPCIONAL)</label>
+                  <span className={`text-[10px] font-black tracking-widest ${generalObservation.length >= 500 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                    {generalObservation.length} / 500
+                  </span>
+                </div>
+                <textarea 
+                  maxLength={500}
+                  value={generalObservation} 
+                  onChange={e => setGeneralObservation(e.target.value.toUpperCase())} 
+                  className="w-full p-4 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all resize-none min-h-[90px]" 
+                  placeholder="ESPECIFICACIONES DE ENTREGA, NOTAS PARA EL ASESOR O PRODUCTOS ADICIONALES..."
+                />
+              </div>
+              
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                <button 
+                  onClick={() => { setCart([]); setGeneralObservation(''); }} 
+                  className="px-6 py-3.5 border-2 border-rose-200 text-rose-500 rounded-xl font-black text-xs hover:bg-rose-50 transition-all uppercase cursor-pointer"
+                >
+                  REINICIAR CARRITO
+                </button>
+                <button 
+                  onClick={() => setModalType('confirmSaveOrder')} 
+                  className="px-8 py-3.5 bg-[#2596be] text-white rounded-xl font-black text-xs shadow-lg shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  HACER PEDIDO AHORA
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL DE ZOOM / AMPLIACIÓN DE IMAGEN                     */}
+      {/* ======================================================== */}
+      {zoomImageProd && (() => {
+        const unitPrice = getProductFinalPrice(zoomImageProd);
+        const currentQty = cardQuantities[zoomImageProd.id] !== undefined ? cardQuantities[zoomImageProd.id] : 1;
+        const availableStock = calculateAvailableStock(zoomImageProd.id, inventory, orders) - cart.filter(c => c.productId === zoomImageProd.id).reduce((sum, c) => sum + c.quantity, 0);
+
+        return (
+          <div className="fixed inset-0 bg-[#134b60]/85 backdrop-blur-md z-[120] flex items-center justify-center p-4 print:hidden uppercase">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center relative border-2 border-[#e9f4f8] animate-in zoom-in-95 duration-300 space-y-6">
+              <button 
+                onClick={() => setZoomImageProd(null)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-500 transition-colors cursor-pointer font-black"
+              >
+                ✕
+              </button>
+              
+              <div>
+                <span className="text-[10px] font-mono font-black text-[#2596be] block mb-1">CÓDIGO #{zoomImageProd.id}</span>
+                <h3 className="text-lg font-black text-[#134b60]">{zoomImageProd.name}</h3>
+                <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">UNIDAD: {zoomImageProd.unitName}</p>
+              </div>
+              
+              <div className="w-full h-56 rounded-2xl overflow-hidden bg-slate-100 border-2 border-slate-200 shadow-inner relative">
+                <img src={zoomImageProd.image || DEFAULT_CASTILLA_IMAGE} alt={zoomImageProd.name} className="w-full h-full object-cover" />
+                <span className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-[#134b60] font-black text-[9px] px-2.5 py-1 rounded-lg shadow-sm">
+                  STOCK: {availableStock.toFixed(0)}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <span className="text-[9px] text-slate-400 font-bold uppercase">VALOR UNITARIO:</span>
+                <span className="text-sm font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                    <button 
+                      type="button" 
+                      onMouseDown={() => startHolding(zoomImageProd.id, -1)}
+                      onMouseUp={stopHolding}
+                      onMouseLeave={stopHolding}
+                      onTouchStart={() => startHolding(zoomImageProd.id, -1)}
+                      onTouchEnd={stopHolding}
+                      className="px-4 py-3 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                    >
+                      -
+                    </button>
+                    
+                    <input 
+                      type="text"
+                      inputMode="numeric"
+                      value={currentQty}
+                      onChange={(e) => handleQtyInputChange(zoomImageProd.id, e.target.value)}
+                      onBlur={() => handleQtyInputBlur(zoomImageProd.id)}
+                      className="w-16 text-center text-sm font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
+                    />
+
+                    <button 
+                      type="button" 
+                      onMouseDown={() => startHolding(zoomImageProd.id, 1)}
+                      onMouseUp={stopHolding}
+                      onMouseLeave={stopHolding}
+                      onTouchStart={() => startHolding(zoomImageProd.id, 1)}
+                      onTouchEnd={stopHolding}
+                      className="px-4 py-3 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button 
+                    onClick={() => setZoomImageProd(null)}
+                    className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer"
+                  >
+                    CERRAR
+                  </button>
+                  <button 
+                    onClick={() => {
+                      handleAddCardToCart(zoomImageProd);
+                      setZoomImageProd(null);
+                    }}
+                    disabled={isSearchDisabled}
+                    className="flex-1 py-3.5 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    <Plus size={14} /> AGREGAR
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* --- MODAL DE CONFIRMACIÓN --- */}
       {modalType === 'confirmSaveOrder' && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
@@ -2462,12 +2652,13 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
             <p className="text-[10px] text-slate-400 font-black mb-8">TOTAL ESTIMADO: <span className="text-[#2596be] font-mono">{formatCurrency(cartFinancials)}</span></p>
             <div className="flex gap-4">
               <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-2xl font-black text-xs uppercase transition-colors cursor-pointer">VOLVER</button>
-              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CREAR SOLICITUD</button>
+              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CONFIRMAR PEDIDO</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* --- MODAL DE ÉXITO --- */}
       {modalType === 'orderSuccess' && lastSavedOrder && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
@@ -2482,10 +2673,13 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
               <p className="text-xl font-black text-emerald-600 font-mono">{formatCurrency(lastSavedOrder.totalValue)}</p>
             </div>
             <button 
-              onClick={() => { setModalType(null); setLastSavedOrder(null); }} 
+              onClick={() => { 
+                setModalType(null); 
+                setLastSavedOrder(null); 
+              }} 
               className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95"
             >
-              CERRAR
+              CERRAR Y VOLVER AL CATÁLOGO
             </button>
           </div>
         </div>
