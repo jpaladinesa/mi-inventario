@@ -1936,7 +1936,8 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
     </div>
   );
 };
-// --- MÓDULO DE SOLICITUD DE PEDIDO ---
+  
+// --- MÓDULO DE SOLICITUD DE PEDIDO (BOTONES COMPACTOS) ---
 const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
   const [cart, setCart] = useState(() => {
@@ -1951,8 +1952,8 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     }
     return [];
   });
-  const [searchID, setSearchID] = useState('');
-  const [searchName, setSearchName] = useState('');
+  
+  const [searchTerm, setSearchTerm] = useState('');
   const [quantity, setQuantity] = useState('');
   const [observation, setObservation] = useState('');
   const [selectedProd, setSelectedProd] = useState(null);
@@ -1967,14 +1968,12 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   const isSearchDisabled = currentUser.role === 'ADMIN' && !adminOrderClient;
 
   const filteredProducts = useMemo(() => {
-    if (!searchName || selectedProd?.name === searchName) return [];
-    return products.filter(p => p.name.toUpperCase().includes(searchName.toUpperCase())).slice(0, 5);
-  }, [searchName, products, selectedProd]);
-
-  const filteredIDs = useMemo(() => {
-    if (!searchID || selectedProd?.id === searchID) return [];
-    return products.filter(p => p.id.includes(searchID)).slice(0, 5);
-  }, [searchID, products, selectedProd]);
+    if (!searchTerm || (selectedProd && (`${selectedProd.id} - ${selectedProd.name}` === searchTerm))) return [];
+    const term = searchTerm.toUpperCase();
+    return products.filter(p => 
+      p.id.toUpperCase().includes(term) || p.name.toUpperCase().includes(term)
+    ).slice(0, 6);
+  }, [searchTerm, products, selectedProd]);
 
   const financialData = useMemo(() => {
     if (!selectedProd) return { base: 0, iva: 0, totalUnit: 0, selectionTotal: 0 };
@@ -1982,31 +1981,37 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     const base = parseFloat(selectedProd.cost) * (1 + (utilityToUse / 100));
     const iva = base * ((parseFloat(selectedProd.taxValue) || 0) / 100);
     const totalUnit = base + iva;
-    const q = parseFloat(quantity) || 0;
+    const q = parseInt(quantity, 10) || 0;
     return { base, iva, totalUnit, selectionTotal: totalUnit * q };
   }, [selectedProd, quantity, customUtility]);
 
   const cartFinancials = useMemo(() => cart.reduce((acc, item) => acc + (item.totalPricePerUnit * item.quantity), 0), [cart]);
 
   const availableStock = selectedProd ? calculateAvailableStock(selectedProd.id, inventory, orders) - cart.filter(c => c.productId === selectedProd.id).reduce((sum, c) => sum + c.quantity, 0) : 0;
-  const isOverStock = selectedProd && parseFloat(quantity) > availableStock;
+  const parsedQtyNum = parseInt(quantity, 10) || 0;
+  const isOverStock = selectedProd && parsedQtyNum > availableStock;
 
   const handleProductSelect = (prod) => {
-    setSearchID(prod.id);
-    setSearchName(prod.name);
+    setSearchTerm(`${prod.id} - ${prod.name}`);
     setSelectedProd(prod);
   };
 
-  const resetSearchState = () => { setSearchID(''); setSearchName(''); setQuantity(''); setSelectedProd(null); setObservation(''); };
+  const resetSearchState = () => { 
+    setSearchTerm(''); 
+    setQuantity(''); 
+    setSelectedProd(null); 
+    setObservation(''); 
+  };
 
   const handleAddToOrder = (e) => {
     e.preventDefault();
-    if (!selectedProd || !quantity || parseFloat(quantity) <= 0) return;
+    const parsedQty = parseInt(quantity, 10);
+    if (!selectedProd || isNaN(parsedQty) || parsedQty <= 0) return;
 
     const warningText = "SUJETO A DISPONIBILIDAD CON ASESOR";
     let currentObs = observation.toUpperCase();
     
-    if (parseFloat(quantity) > availableStock) {
+    if (parsedQty > availableStock) {
         currentObs = currentObs ? `${currentObs} | ${warningText}` : warningText;
     }
 
@@ -2014,7 +2019,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     if (existing) { 
       setCart(cart.map(c => c.productId === selectedProd.id ? { 
         ...c, 
-        quantity: c.quantity + parseFloat(quantity),
+        quantity: c.quantity + parsedQty,
         observation: currentObs ? (c.observation ? `${c.observation} | ${currentObs}` : currentObs) : c.observation
       } : c)); 
     }
@@ -2024,7 +2029,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
             productId: selectedProd.id, 
             name: selectedProd.name, 
             unit: selectedProd.unitName, 
-            quantity: parseFloat(quantity), 
+            quantity: parsedQty, 
             taxValue: selectedProd.taxValue, 
             totalPricePerUnit: financialData.totalUnit,
             observation: currentObs
@@ -2182,78 +2187,59 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
           </div>
         )}
         <h3 className="font-black text-[#134b60] mb-8 flex items-center gap-2 text-[11px] uppercase">
-          <ShoppingCart size={18} className="text-[#2596be]" /> BÚSQUEDA TÉCNICA
+          <ShoppingCart size={18} className="text-[#2596be]" /> BÚSQUEDA INTELIGENTE DE PRODUCTOS
         </h3>
         <form className="space-y-6" onSubmit={handleAddToOrder}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-[#2596be] uppercase tracking-widest">CÓDIGO (ID)</label>
-              <div className="relative">
-                <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                  type="text" 
-                  value={searchID} 
-                  disabled={isSearchDisabled} 
-                  onChange={e => {setSearchID(e.target.value); setSelectedProd(null);}} 
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all" 
-                  placeholder="EJ: 00001" 
-                />
-                {filteredIDs.length > 0 && !selectedProd && (
-                  <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
-                    {filteredIDs.map(p => (
-                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer">
-                        {p.id} - {p.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PRODUCTO (NOMBRE)</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  value={searchName} 
-                  disabled={isSearchDisabled} 
-                  onChange={e => {setSearchName(e.target.value); setSelectedProd(null);}} 
-                  className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all" 
-                  placeholder="BUSCAR POR NOMBRE..." 
-                />
-                {filteredProducts.length > 0 && !selectedProd && (
-                  <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
-                    {filteredProducts.map(p => (
-                      <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer">
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-[#2596be] uppercase tracking-widest">BUSCAR POR CÓDIGO O NOMBRE</label>
+            <div className="relative">
+              <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text" 
+                value={searchTerm} 
+                disabled={isSearchDisabled} 
+                onChange={e => {setSearchTerm(e.target.value); setSelectedProd(null);}} 
+                className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all" 
+                placeholder="ESCRIBE EL CÓDIGO O EL NOMBRE DEL PRODUCTO..." 
+              />
+              {filteredProducts.length > 0 && !selectedProd && (
+                <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-[60] overflow-hidden">
+                  {filteredProducts.map(p => (
+                    <button key={p.id} type="button" onClick={() => handleProductSelect(p)} className="w-full text-left px-4 py-3.5 hover:bg-[#e9f4f8] text-[10px] font-black uppercase border-b border-slate-50 text-[#134b60] transition-colors cursor-pointer flex justify-between items-center">
+                      <span><strong className="text-[#2596be] font-mono">#{p.id}</strong> - {p.name}</span>
+                      <span className="text-[9px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">{p.unitName}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-50">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-4 border-t border-slate-50 items-end">
+            <div className="space-y-1 md:col-span-2">
               <label className="text-[9px] font-black uppercase tracking-widest text-[#2596be]">CANTIDAD</label>
               <div className="relative">
-                <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
-                  type="number" 
-                  step="1" 
-                  min="1" 
+                  type="text" 
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   disabled={!selectedProd || isSearchDisabled} 
                   value={quantity} 
-                  onChange={e => setQuantity(e.target.value)} 
-                  className="w-full pl-12 pr-4 py-4 rounded-xl outline-none font-black text-xl text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" 
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (val.length <= 10) {
+                      setQuantity(val);
+                    }
+                  }} 
+                  className="w-full pl-10 pr-3 py-4 rounded-xl outline-none font-black text-lg text-center disabled:opacity-30 focus:ring-4 focus:ring-[#2596be]/20 transition-all bg-slate-50 border-2 border-slate-100 text-[#134b60]" 
                   placeholder="0" 
                   required 
                 />
               </div>
             </div>
             
-            <div className="space-y-1 relative">
+            <div className="space-y-1 relative md:col-span-5">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OBSERVACIÓN (OPCIONAL)</label>
               <div className="relative">
                 <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -2270,16 +2256,29 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
               {observation.length >= 50 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse uppercase">Límite 50 alcanzado</span>}
             </div>
 
-            <button 
-              type="submit" 
-              disabled={!selectedProd || !quantity || isSearchDisabled} 
-              className="w-full bg-[#2596be] text-white font-black rounded-xl hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] self-end cursor-pointer"
-            >
-              <Plus size={20} /> AGREGAR
-            </button>
+            <div className="md:col-span-3">
+              <button 
+                type="submit" 
+                disabled={!selectedProd || !quantity || parseInt(quantity, 10) <= 0 || isSearchDisabled} 
+                className="w-full bg-[#2596be] text-white font-black rounded-xl hover:bg-[#1e7a9b] transition-all text-xs uppercase shadow-xl shadow-[#2596be]/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] cursor-pointer"
+              >
+                <Plus size={18} /> AGREGAR
+              </button>
+            </div>
+
+            <div className="md:col-span-2">
+              <button 
+                type="button" 
+                onClick={resetSearchState}
+                disabled={isSearchDisabled}
+                className="w-full bg-slate-200 text-slate-700 font-black rounded-xl hover:bg-slate-300 transition-all text-xs uppercase flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 h-[56px] cursor-pointer"
+              >
+                LIMPIAR
+              </button>
+            </div>
 
             {isOverStock && (
-              <div className="md:col-span-3 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-2xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
+              <div className="md:col-span-12 p-4 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-2xl flex items-center justify-center gap-3 mt-2 animate-in fade-in duration-300">
                 <AlertTriangle size={20} className="animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-widest">
                   AVISO: CONSULTA DISPONIBILIDAD DE ESTE PRODUCTO CON TU ASESOR
@@ -2350,9 +2349,21 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                 placeholder="ESPECIFICACIONES DE ENTREGA, NOTAS PARA EL ASESOR O PRODUCTOS ADICIONALES NO ENCONTRADOS..."
               />
             </div>
-            <div className="flex flex-col md:flex-row gap-4">
-              <button onClick={() => { setCart([]); setGeneralObservation(''); }} className="flex-1 py-4 border-2 border-rose-200 text-rose-500 rounded-2xl font-black text-xs hover:bg-rose-50 transition-all uppercase cursor-pointer">REINICIAR</button>
-              <button onClick={() => setModalType('confirmSaveOrder')} className="flex-1 py-4 px-8 bg-[#2596be] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">ENVIAR SOLICITUD</button>
+            
+            {/* Botones Reiniciar y Enviar Solicitud compactos y alineados a la derecha */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+              <button 
+                onClick={() => { setCart([]); setGeneralObservation(''); }} 
+                className="px-6 py-3.5 border-2 border-rose-200 text-rose-500 rounded-xl font-black text-xs hover:bg-rose-50 transition-all uppercase cursor-pointer"
+              >
+                REINICIAR
+              </button>
+              <button 
+                onClick={() => setModalType('confirmSaveOrder')} 
+                className="px-8 py-3.5 bg-[#2596be] text-white rounded-xl font-black text-xs shadow-lg shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              >
+                ENVIAR SOLICITUD
+              </button>
             </div>
           </div>
         )}
@@ -2362,7 +2373,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-8 text-[#134b60]">
             <h3 className="font-black text-xl text-center mb-6 tracking-tighter">AJUSTAR CANTIDAD</h3>
-            <input type="number" step="0.01" value={editItem?.quantity} onChange={e => setEditItem({...editItem, quantity: parseFloat(e.target.value)})} className="w-full p-6 bg-slate-50 border-2 border-slate-200 text-[#134b60] rounded-2xl text-center font-black text-3xl outline-none focus:border-[#2596be]" />
+            <input type="number" step="1" min="1" value={editItem?.quantity} onChange={e => setEditItem({...editItem, quantity: parseInt(e.target.value, 10) || 1})} className="w-full p-6 bg-slate-50 border-2 border-slate-200 text-[#134b60] rounded-2xl text-center font-black text-3xl outline-none focus:border-[#2596be]" />
             <div className="flex gap-4 pt-6">
               <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
               <button onClick={() => { setCart(cart.map(c => c.tempId === editItem.tempId ? editItem : c)); setModalType(null); }} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs uppercase shadow-xl shadow-[#2596be]/25 hover:bg-[#1e7a9b] transition-all cursor-pointer active:scale-95">ACEPTAR</button>
@@ -2414,6 +2425,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     </div>
   );
 };
+
 // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
 const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus, setActiveTab }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
