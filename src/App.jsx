@@ -276,12 +276,47 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
 // --- CONSTANTE DE IMAGEN POR DEFECTO (CASTILLA) ---
 const DEFAULT_CASTILLA_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'><rect width='500' height='500' fill='%23134b60'/><text x='50%' y='43%' dominant-baseline='middle' text-anchor='middle' fill='%232596be' font-family='sans-serif' font-size='32' font-weight='black'>DISTRIBUCIONES</text><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-size='38' font-weight='black'>CASTILLA</text></svg>";
 
-// --- MÓDULO DE PRODUCTOS CON SOPORTE DE IMAGEN OPTIMIZADA ---
+// --- MÓDULO DE PRODUCTOS CON SOPORTE DE DECIMALES Y VALIDACIONES ESTRICTAS ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
+  const [priceCsvPreview, setPriceCsvPreview] = useState(null); 
+  const [priceSuccessModal, setPriceSuccessModal] = useState(null); 
   const [activeSubTab, setActiveSubTab] = useState('create');
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [selectedPriceIds, setSelectedPriceIds] = useState([]);
+  const [batchEdits, setBatchEdits] = useState({}); 
+  const [debouncedBatchEdits, setDebouncedBatchEdits] = useState({}); 
+  const [batchError, setBatchError] = useState(''); 
+  const [activePriceSubView, setActivePriceSubView] = useState('editor'); 
+  const [priceConfirmModal, setPriceConfirmModal] = useState(null);
+  
+  const [priceLogs, setPriceLogs] = useState(() => {
+    const saved = localStorage.getItem('castillaPriceLogs');
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.filter(log => {
+        if (!log.moveId || !log.moveId.startsWith('CP')) return false;
+        const num = parseInt(log.moveId.replace('CP', ''), 10);
+        return !isNaN(num) && num < 1000000;
+      });
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedBatchEdits(batchEdits);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [batchEdits]);
+
+  useEffect(() => {
+    localStorage.setItem('castillaPriceLogs', JSON.stringify(priceLogs));
+  }, [priceLogs]);
   
   const filteredProducts = products.filter(p =>
     p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -297,6 +332,22 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         if (!isNaN(num) && num > max) max = num;
     });
     return String(max + 1).padStart(5, '0');
+  };
+
+  const getNextLogID = (currentLogs) => {
+    const cpLogs = currentLogs.filter(log => {
+      if (!log.moveId || !log.moveId.startsWith('CP')) return false;
+      const num = parseInt(log.moveId.replace('CP', ''), 10);
+      return !isNaN(num) && num < 1000000;
+    });
+
+    if (cpLogs.length === 0) return 'CP000001';
+    let max = 0;
+    cpLogs.forEach(log => {
+      const num = parseInt(log.moveId.replace('CP', ''), 10);
+      if (!isNaN(num) && num > max) max = num;
+    });
+    return `CP${String(max + 1).padStart(6, '0')}`;
   };
 
   const initialForm = { id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '', image: '' };
@@ -319,7 +370,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     'FRASCO', 'BOTELLA'
   ];
 
-  // Validador y lector de imagen con restricciones (JPG/WebP y máx 500 KB)
   const handleProductImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -331,7 +381,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       return;
     }
 
-    const maxSize = 500 * 1024; // 500 KB máximo
+    const maxSize = 500 * 1024;
     if (file.size > maxSize) {
       alert('LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.');
       e.target.value = '';
@@ -376,7 +426,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         name: cleanName, 
         taxName: taxObj?.name || '0%', 
         taxValue: taxObj?.value || 0,
-        image: newProd.image || DEFAULT_CASTILLA_IMAGE // Asigna Castilla por defecto si no subió foto
+        image: newProd.image || DEFAULT_CASTILLA_IMAGE 
     };
 
     try {
@@ -398,6 +448,353 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         taxValue: taxObj?.value || 0
     } : p));
     setModalType(null);
+  };
+
+  const exportCatalogCSV = (onlySelected = false) => {
+    const itemsToExport = onlySelected 
+      ? products.filter(p => selectedPriceIds.includes(p.id))
+      : products;
+
+    if (itemsToExport.length === 0) {
+      alert('NO HAY PRODUCTOS PARA EXPORTAR.');
+      return;
+    }
+
+    let csvContent = "ID;NOMBRE;UNIDAD;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE\n";
+    itemsToExport.forEach(p => {
+      const taxObj = taxes.find(t => t.id === p.taxId);
+      const taxVal = taxObj ? taxObj.value : (p.taxValue || 0);
+      csvContent += `${p.id};${p.name};${p.unitName};${p.cost};${p.utility};${taxVal}\n`;
+    });
+
+    const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = onlySelected ? "Catalogo_Precios_Seleccionados.csv" : "Catalogo_Maestro_Castilla.csv";
+    link.click();
+  };
+
+  // --- VALIDACIÓN ESTRICTA PARA ACTUALIZACIÓN MASIVA DE PRECIOS (SOPORTA DECIMALES) ---
+  const handlePriceFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("El archivo es demasiado pesado. El límite máximo es 5 MB.");
+      return;
+    }
+
+    const fileSizeFormatted = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` 
+      : `${(file.size / 1024).toFixed(2)} KB`;
+
+    setCsvFileMeta({ name: file.name, size: fileSizeFormatted });
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target.result;
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      
+      const validRows = [];
+      const errors = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // IMPORTANTE: Separar estrictamente por punto y coma (;) para no romper números con decimales (ej: 1500,50)
+        const parts = line.split(';').map(p => p ? p.trim() : '');
+        if (parts.length < 5) {
+          errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
+          continue;
+        }
+
+        const [id, csvName, csvUnit, cost, utility, csvTax] = parts;
+        const cleanId = String(id || '').padStart(5, '0');
+
+        const existingProd = products.find(p => p.id === cleanId || p.id === id);
+        if (!existingProd) {
+          errors.push(`Línea ${i + 1}: El ID '${id}' no existe en el catálogo.`);
+          continue;
+        }
+
+        // 1. Validar que no cambien el ID
+        if (cleanId !== existingProd.id && id !== existingProd.id) {
+          errors.push(`Línea ${i + 1} (ID ${id}): No está permitido cambiar el ID del producto.`);
+          continue;
+        }
+
+        // 2. Validar que no cambien el Nombre
+        if (csvName && existingProd.name && csvName.toUpperCase().trim() !== existingProd.name.toUpperCase().trim()) {
+          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies el nombre. Mantén '${existingProd.name}'.`);
+          continue;
+        }
+
+        // 3. Validar que no cambien la Unidad de Medida
+        if (csvUnit && existingProd.unitName && csvUnit.toUpperCase().trim() !== existingProd.unitName.toUpperCase().trim()) {
+          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies la unidad de medida. Mantén '${existingProd.unitName}'.`);
+          continue;
+        }
+
+        // 4. Validar que no cambien el Impuesto (IVA)
+        const existingTaxObj = taxes.find(t => t.id === existingProd.taxId);
+        const existingTaxVal = existingTaxObj ? existingTaxObj.value : (existingProd.taxValue || 0);
+        if (csvTax !== undefined && csvTax !== '') {
+          const parsedCsvTax = parseFloat(String(csvTax).replace(',', '.'));
+          if (!isNaN(parsedCsvTax) && parsedCsvTax !== existingTaxVal) {
+            errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies el impuesto. Mantén el valor original (${existingTaxVal}%).`);
+            continue;
+          }
+        }
+
+        // 5. Costo Obligatorio (Soporta decimales con punto o coma)
+        if (cost === undefined || cost === '') {
+          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): El costo es obligatorio.`);
+          continue;
+        }
+        const cleanCostStr = String(cost).replace(/\s/g, '').replace(',', '.');
+        const parsedCost = parseFloat(cleanCostStr);
+        if (isNaN(parsedCost)) {
+          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): El costo '${cost}' no es un número válido.`);
+          continue;
+        }
+
+        // 6. Utilidad Opcional (Soporta decimales con punto o coma)
+        let parsedUtility = parseFloat(existingProd.utility) || 0;
+        if (utility !== undefined && utility !== '') {
+          const cleanUtilStr = String(utility).replace(/\s/g, '').replace(',', '.');
+          const uNum = parseFloat(cleanUtilStr);
+          if (isNaN(uNum)) {
+            errors.push(`Línea ${i + 1} (ID ${existingProd.id}): La utilidad '${utility}' no es válida.`);
+            continue;
+          }
+          parsedUtility = uNum;
+        }
+
+        const hasChanged = parsedCost !== parseFloat(existingProd.cost) || parsedUtility !== parseFloat(existingProd.utility);
+        if (!hasChanged) continue;
+
+        const oldCalcs = getCalculatedValues(existingProd.cost, existingProd.utility, existingProd.taxId);
+        const newCalcs = getCalculatedValues(parsedCost, parsedUtility, existingProd.taxId);
+
+        validRows.push({
+          id: existingProd.id,
+          name: existingProd.name,
+          oldCost: existingProd.cost,
+          newCost: parsedCost,
+          oldUtility: existingProd.utility,
+          newUtility: parsedUtility,
+          taxId: existingProd.taxId,
+          oldFinalPrice: oldCalcs.finalPrice,
+          newFinalPrice: newCalcs.finalPrice,
+          isPriceDrop: newCalcs.finalPrice < oldCalcs.finalPrice,
+          isUtilityDrop: parsedUtility < (parseFloat(existingProd.utility) || 0)
+        });
+      }
+
+      if (validRows.length === 1) {
+        errors.push(`⚠️ ESTE MÓDULO ES PARA CAMBIOS MASIVOS. El archivo solo contiene 1 cambio; para un solo producto, usa la edición directa o la bandeja inferior.`);
+      } else if (validRows.length === 0 && errors.length === 0) {
+        errors.push(`⚠️ El archivo no contiene ningún cambio de costo o utilidad frente al catálogo actual.`);
+      }
+
+      setPriceCsvPreview({
+        validRows,
+        errors
+      });
+    };
+
+    reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
+  };
+
+  const executePriceBulkUpdate = () => {
+    if (!priceCsvPreview || priceCsvPreview.validRows.length === 0) return;
+    const timestamp = new Date().toLocaleString();
+    let updatedProducts = [...products];
+    const newLogs = [];
+    let currentLogsList = [...priceLogs];
+    const updatedCount = priceCsvPreview.validRows.length;
+
+    priceCsvPreview.validRows.forEach(row => {
+      updatedProducts = updatedProducts.map(p => {
+        if (p.id === row.id) {
+          return {
+            ...p,
+            cost: row.newCost,
+            utility: row.newUtility
+          };
+        }
+        return p;
+      });
+
+      const nextMoveId = getNextLogID(currentLogsList);
+      const logEntry = {
+        moveId: nextMoveId,
+        productId: row.id,
+        productName: row.name,
+        oldCost: row.oldCost,
+        newCost: row.newCost,
+        oldUtility: row.oldUtility,
+        newUtility: row.newUtility,
+        timestamp,
+        user: 'ADMINISTRADOR',
+        mode: 'CARGUE MASIVO CSV'
+      };
+
+      newLogs.push(logEntry);
+      currentLogsList = [logEntry, ...currentLogsList];
+    });
+
+    setProducts(updatedProducts);
+    setPriceLogs(prev => [...newLogs, ...prev]);
+    setPriceCsvPreview(null);
+    setModalType(null);
+    setPriceSuccessModal({ count: updatedCount });
+  };
+
+  const toggleSelectPriceItem = (id) => {
+    setSelectedPriceIds(prev => {
+      const isSelected = prev.includes(id);
+      const newSelected = isSelected ? prev.filter(item => item !== id) : [...prev, id];
+      
+      if (!isSelected) {
+        const prod = products.find(p => p.id === id);
+        if (prod && !batchEdits[id]) {
+          setBatchEdits(bPrev => ({
+            ...bPrev,
+            [id]: { cost: '', utility: String(prod.utility || '') }
+          }));
+        }
+      } else {
+        setBatchError('');
+      }
+      return newSelected;
+    });
+  };
+
+  const removeItemFromBatch = (idToRemove) => {
+    setSelectedPriceIds(prev => prev.filter(id => id !== idToRemove));
+    setBatchEdits(prev => {
+      const copy = { ...prev };
+      delete copy[idToRemove];
+      return copy;
+    });
+    setDebouncedBatchEdits(prev => {
+      const copy = { ...prev };
+      delete copy[idToRemove];
+      return copy;
+    });
+    setBatchError('');
+  };
+
+  const handleBatchEditChange = (productId, field, value) => {
+    const cleanVal = value.replace(/\D/g, '');
+    if (field === 'cost' && cleanVal.length > 7) return;
+    if (field === 'utility' && cleanVal.length > 4) return;
+
+    setBatchEdits(prev => ({
+      ...prev,
+      [productId]: {
+        cost: field === 'cost' ? cleanVal : (prev[productId]?.cost || ''),
+        utility: field === 'utility' ? cleanVal : (prev[productId]?.utility !== undefined ? prev[productId].utility : '')
+      }
+    }));
+    setBatchError('');
+  };
+
+  const prepareBatchUpdateConfirmation = () => {
+    if (selectedPriceIds.length === 0) return;
+    
+    const hasIncompleteItems = selectedPriceIds.some(id => {
+      const edits = batchEdits[id] || {};
+      return !edits.cost || edits.cost === '' || edits.utility === undefined || edits.utility === '';
+    });
+
+    if (hasIncompleteItems) {
+      setBatchError('TODOS LOS PRODUCTOS EN LA BANDEJA DEBEN TENER UN NUEVO COSTO Y UTILIDAD DEFINIDOS. SI NO VAS A MODIFICAR ALGUNO, QUÍTALO DE LA LISTA USANDO LA "X".');
+      return;
+    }
+
+    setBatchError('');
+    
+    const itemsToUpdate = selectedPriceIds.map(id => {
+      const p = products.find(prod => prod.id === id);
+      const edits = batchEdits[id] || {};
+      const finalCost = parseFloat(edits.cost);
+      const finalUtility = parseFloat(edits.utility);
+
+      const oldCalcs = getCalculatedValues(p.cost, p.utility, p.taxId);
+      const newCalcs = getCalculatedValues(finalCost, finalUtility, p.taxId);
+      
+      const isPriceDrop = newCalcs.finalPrice < oldCalcs.finalPrice;
+      const oldUtilNum = parseFloat(p.utility) || 0;
+      const isUtilityDrop = finalUtility < oldUtilNum;
+
+      return {
+        id: p.id,
+        name: p.name,
+        oldCost: p.cost,
+        newCost: finalCost,
+        oldUtility: p.utility,
+        newUtility: finalUtility,
+        oldFinalPrice: oldCalcs.finalPrice,
+        newFinalPrice: newCalcs.finalPrice,
+        isPriceDrop,
+        isUtilityDrop,
+        taxId: p.taxId
+      };
+    });
+
+    setPriceConfirmModal({ items: itemsToUpdate });
+  };
+
+  const executeConfirmedBatchUpdates = () => {
+    if (!priceConfirmModal) return;
+    const timestamp = new Date().toLocaleString();
+    const newLogs = [];
+    let updatedProducts = [...products];
+
+    let currentLogsList = [...priceLogs];
+
+    priceConfirmModal.items.forEach(item => {
+      updatedProducts = updatedProducts.map(p => {
+        if (p.id === item.id) {
+          return {
+            ...p,
+            cost: item.newCost,
+            utility: item.newUtility
+          };
+        }
+        return p;
+      });
+
+      const nextMoveId = getNextLogID(currentLogsList);
+
+      const logEntry = {
+        moveId: nextMoveId,
+        productId: item.id,
+        productName: item.name,
+        oldCost: item.oldCost,
+        newCost: item.newCost,
+        oldUtility: item.oldUtility,
+        newUtility: item.newUtility,
+        timestamp,
+        user: 'ADMINISTRADOR',
+        mode: 'SELECCIÓN Y LOTE INFERIOR'
+      };
+
+      newLogs.push(logEntry);
+      currentLogsList = [logEntry, ...currentLogsList];
+    });
+
+    setProducts(updatedProducts);
+    setPriceLogs(prev => [...newLogs, ...prev]);
+    setSelectedPriceIds([]);
+    setBatchEdits({});
+    setDebouncedBatchEdits({});
+    setBatchError('');
+    setPriceConfirmModal(null);
   };
 
   const handleFileUpload = (e) => {
@@ -428,7 +825,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         const line = lines[i].trim();
         if (!line) continue;
 
-        const parts = line.split(/[,;]/).map(p => p ? p.trim() : '');
+        const parts = line.split(';').map(p => p ? p.trim() : '');
         if (parts.length < 5) {
           errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
           continue;
@@ -455,19 +852,19 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           continue;
         }
 
-        const parsedCost = parseFloat(cost);
+        const parsedCost = parseFloat(String(cost).replace(',', '.'));
         if (isNaN(parsedCost)) {
           errors.push(`Línea ${i + 1} (Columna Costo): El valor '${cost}' no es un número válido.`);
           continue;
         }
 
-        const parsedUtility = parseFloat(utility);
+        const parsedUtility = parseFloat(String(utility).replace(',', '.'));
         if (isNaN(parsedUtility)) {
           errors.push(`Línea ${i + 1} (Columna Utilidad): El valor '${utility}' no es un número válido.`);
           continue;
         }
 
-        const parsedTax = taxPercentage ? parseFloat(taxPercentage) : 0;
+        const parsedTax = taxPercentage ? parseFloat(String(taxPercentage).replace(',', '.')) : 0;
         const taxObj = taxes.find(t => t.value === parsedTax) || taxes[0];
 
         validRows.push({
@@ -479,7 +876,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           taxValue: taxObj?.value || 0,
           cost: parsedCost,
           utility: parsedUtility,
-          image: DEFAULT_CASTILLA_IMAGE // Imagen Castilla por defecto para cargas masivas
+          image: DEFAULT_CASTILLA_IMAGE 
         });
       }
 
@@ -495,7 +892,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   };
 
   const downloadTemplate = () => {
-    const csvContent = "ID;NOMBRE;UNIDAD;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE\n00001;PRODUCTO DE EJEMPLO 1;UNIDAD;10000;30;19\n00002;PRODUCTO DE EJEMPLO 2;CAJA;50000;20;5\n";
+    const csvContent = "ID;NOMBRE;UNIDAD;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE\n00001;PRODUCTO DE EJEMPLO 1;UNIDAD;10000,50;30;19\n00002;PRODUCTO DE EJEMPLO 2;CAJA;50000;20;5\n";
     const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -508,23 +905,37 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
         <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PRODUCTOS</h2>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95">
-            <UploadCloud size={16}/> CARGUE MASIVO EXCEL
+            <UploadCloud size={16}/> CARGUE NUEVOS (CSV)
+          </button>
+          
+          <button onClick={() => setModalType('bulkPriceUpload')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-emerald-600/20 transition-all cursor-pointer active:scale-95">
+            <FileSpreadsheet size={16}/> ACTUALIZAR PRECIOS (CSV)
+          </button>
+
+          <button onClick={() => exportCatalogCSV(false)} className="bg-[#2596be] hover:bg-[#1e7a9b] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95">
+            <Download size={16}/> EXPORTAR CATÁLOGO
           </button>
           
           <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
             <button 
               onClick={() => setActiveSubTab('create')} 
-              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
             >
-              ➕ NUEVO REGISTRO
+              ➕ NUEVO
             </button>
             <button 
               onClick={() => setActiveSubTab('list')} 
-              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
             >
-              📋 LISTADO Y BUSCADOR ({products.length})
+              📋 CATÁLOGO ({products.length})
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('prices')} 
+              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'prices' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            >
+              💲 PRECIOS Y LOGS
             </button>
           </div>
         </div>
@@ -564,15 +975,14 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
             <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
-              <input type="text" inputMode="numeric" value={newProd.cost} onChange={e => setNewProd({...newProd, cost: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
+              <input type="text" inputMode="numeric" maxLength={7} value={newProd.cost} onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 7) setNewProd({...newProd, cost: v}); }} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
             <div className="space-y-1 lg:col-span-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
-              <input type="text" inputMode="numeric" value={newProd.utility} onChange={e => setNewProd({...newProd, utility: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
+              <input type="text" inputMode="numeric" maxLength={4} value={newProd.utility} onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 4) setNewProd({...newProd, utility: v}); }} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
 
-            {/* Selector de Imagen Opcional (Cuadrada, JPG/WebP, máx 500 KB) */}
             <div className="space-y-1 lg:col-span-6 bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col sm:flex-row items-center gap-4">
               <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                 <img 
@@ -627,7 +1037,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           <div className="bg-[#e9f4f8] px-6 py-4 rounded-2xl border-2 border-[#2596be]/30"><p className="text-[8px] text-[#2596be] font-black mb-1">PRECIO SUGERIDO FINAL</p><p className="text-xl font-black text-[#134b60]">{formatCurrency(currentCalcs.finalPrice)}</p></div>
         </div>
 
-        {/* --- ÚLTIMOS 5 PRODUCTOS REGISTRADOS --- */}
         <div className="pt-6 border-t border-slate-100 space-y-4">
           <h4 className="font-black text-[#134b60] text-[10px] uppercase tracking-wider flex items-center gap-2">
             <History size={16} className="text-[#2596be]" /> ÚLTIMOS 5 PRODUCTOS REGISTRADOS RECIENTEMENTE
@@ -648,9 +1057,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
                   {products.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-16 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td>
-                    </tr>
+                    <tr><td colSpan="7" className="px-6 py-16 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td></tr>
                   ) : (
                     products.slice(-5).reverse().map(p => {
                       const c = getCalculatedValues(p.cost, p.utility, p.taxId);
@@ -660,7 +1067,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                             key={p.id} 
                             onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
                             className="hover:bg-white transition-colors cursor-pointer"
-                        >
+                          >
                           <td className="px-6 py-3">
                             <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
                           </td>
@@ -686,14 +1093,13 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
             </div>
           </div>
         </div>
-
       </div>
-    )}
+      )}
 
-    {activeSubTab === 'list' && (
+      {activeSubTab === 'list' && (
       <div className="space-y-6 animate-in fade-in duration-300">
-        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
-          <div className="relative flex-1">
+        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative flex-1 w-full">
             <input
               type="text"
               placeholder="Buscador inteligente: ID, nombre o unidad..."
@@ -702,9 +1108,11 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
             />
           </div>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-            Mostrando {filteredProducts.length} de {products.length}
-          </span>
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <button onClick={() => exportCatalogCSV(false)} className="px-5 py-3 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-2xl font-black text-[10px] uppercase shadow-lg transition-all flex items-center gap-2 cursor-pointer">
+              <Download size={14} /> EXPORTAR TODO (CSV)
+            </button>
+          </div>
         </div>
       
         <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
@@ -731,33 +1139,33 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     const availableStock = calculateAvailableStock(p.id, inventory, orders);
                     return (
                       <tr 
-                            key={p.id} 
-                            onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
-                            className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
-                          >
-                        <td className="px-6 py-3">
-                          <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
-                        </td>
-                        <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
-                        <td className="px-6 py-4">
-                          <p className="font-black text-[#134b60]">{p.name}</p>
-                          <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
-                            {availableStock.toFixed(2)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
-                        <td className="px-6 py-4 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
-                        <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
-                            <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
-                          </div>
-                        </td>
-                      </tr>
+                          key={p.id} 
+                          onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
+                          className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
+                        >
+                      <td className="px-6 py-3">
+                        <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
+                      </td>
+                      <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
+                      <td className="px-6 py-4">
+                        <p className="font-black text-[#134b60]">{p.name}</p>
+                        <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                          {availableStock.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
+                      <td className="px-6 py-4 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
+                      <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
+                          <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
+                        </div>
+                      </td>
+                    </tr>
                     );
                   })
                 )}
@@ -766,15 +1174,392 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           </div>
         </div>
       </div>
-    )}
+      )}
 
+      {activeSubTab === 'prices' && (
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex bg-[#e9f4f8] p-1.5 rounded-2xl w-full md:w-auto">
+            <button 
+              onClick={() => setActivePriceSubView('editor')} 
+              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activePriceSubView === 'editor' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-500 hover:text-[#134b60]'}`}
+            >
+              🔍 BUSCADOR Y SELECCIÓN
+            </button>
+            <button 
+              onClick={() => setActivePriceSubView('logs')} 
+              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activePriceSubView === 'logs' ? 'bg-[#134b60] text-white shadow-md' : 'text-slate-500 hover:text-[#134b60]'}`}
+            >
+              📜 HISTORIAL / BITÁCORA ({priceLogs.length})
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {selectedPriceIds.length > 0 && (
+              <button 
+                onClick={() => exportCatalogCSV(true)}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-[10px] uppercase shadow-md transition-all cursor-pointer flex items-center gap-2"
+              >
+                <Download size={14} /> EXPORTAR SELECCIONADOS ({selectedPriceIds.length})
+              </button>
+            )}
+            {activePriceSubView === 'editor' && (
+              <div className="relative flex-1 md:max-w-xs">
+                <input
+                  type="text"
+                  placeholder="Buscador inteligente..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-2.5 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm uppercase"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {activePriceSubView === 'editor' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+              <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <span className="text-[10px] font-black text-[#134b60]">1. MARCA LOS PRODUCTOS QUE DESEAS MODIFICAR ({filteredProducts.length} ENCONTRADOS)</span>
+                <span className="text-[10px] font-black text-[#2596be]">{selectedPriceIds.length} SELECCIONADOS</span>
+              </div>
+              <div className="max-h-[300px] overflow-y-auto overflow-x-auto scrollbar-hide">
+                <table className="w-full text-left min-w-[1000px] uppercase">
+                  <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-3 text-center w-12">CHECK</th>
+                      <th className="px-4 py-3">CÓDIGO ID</th>
+                      <th className="px-4 py-3">PRODUCTO / UNIDAD</th>
+                      <th className="px-4 py-3 text-right">COSTO ACTUAL</th>
+                      <th className="px-4 py-3 text-right">UTILIDAD %</th>
+                      <th className="px-4 py-3 text-right">PRECIO FINAL ACTUAL</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                    {filteredProducts.length === 0 ? (
+                      <tr><td colSpan="6" className="px-6 py-10 text-center text-slate-300 font-black">NO HAY PRODUCTOS ENCONTRADOS</td></tr>
+                    ) : (
+                      filteredProducts.map(p => {
+                        const isSelected = selectedPriceIds.includes(p.id);
+                        const c = getCalculatedValues(p.cost, p.utility, p.taxId);
+                        return (
+                          <tr 
+                            key={p.id} 
+                            onClick={() => toggleSelectPriceItem(p.id)}
+                            className={`hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer ${isSelected ? 'bg-[#e9f4f8]/80' : ''}`}
+                          >
+                            <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                              <input 
+                                type="checkbox" 
+                                checked={isSelected}
+                                onChange={() => toggleSelectPriceItem(p.id)}
+                                className="cursor-pointer w-4 h-4 accent-[#2596be]"
+                              />
+                            </td>
+                            <td className="px-4 py-3 font-mono text-[#2596be] font-black">{p.id}</td>
+                            <td className="px-4 py-3">
+                              <p className="font-black text-[#134b60]">{p.name}</p>
+                              <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-500">{formatCurrency(p.cost)}</td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-500">{p.utility}%</td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {selectedPriceIds.length > 0 && (
+              <div className="bg-white rounded-3xl border-4 border-[#2596be] shadow-xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+                <div className="p-5 bg-[#134b60] text-white flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <span className="w-7 h-7 rounded-full bg-[#2596be] flex items-center justify-center font-black text-xs">{selectedPriceIds.length}</span>
+                    <h3 className="text-xs font-black tracking-wider uppercase">2. BANDEJA INFERIOR: CAMBIA AQUÍ LOS NUEVOS COSTOS Y UTILIDADES</h3>
+                  </div>
+                  <button 
+                    onClick={() => { setSelectedPriceIds([]); setBatchError(''); }}
+                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[9px] font-black transition-all cursor-pointer"
+                  >
+                    LIMPIAR SELECCIÓN
+                  </button>
+                </div>
+
+                {batchError && (
+                  <div className="mx-6 mt-4 p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl animate-pulse">
+                    {batchError}
+                  </div>
+                )}
+
+                <div className="max-h-[400px] overflow-y-auto overflow-x-auto scrollbar-hide p-4">
+                  <table className="w-full text-left min-w-[1100px] uppercase table-fixed">
+                    <thead className="bg-slate-100 text-[#134b60] text-[9px] font-black tracking-widest">
+                      <tr>
+                        <th className="px-4 py-3 w-[26%]">ID / PRODUCTO</th>
+                        <th className="px-4 py-3 text-center w-[32%]">COSTO (ACTUAL ➔ NUEVO)</th>
+                        <th className="px-4 py-3 text-center w-[32%]">UTILIDAD % (ACTUAL ➔ NUEVA)</th>
+                        <th className="px-4 py-3 text-right w-[10%]">QUITAR</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                      {selectedPriceIds.map(id => {
+                        const p = products.find(prod => prod.id === id);
+                        if (!p) return null;
+                        const edits = batchEdits[id] || { cost: '', utility: String(p.utility || '') };
+                        const debEdits = debouncedBatchEdits[id] || { cost: '', utility: String(p.utility || '') };
+
+                        const debCost = debEdits.cost !== '' && debEdits.cost !== undefined ? debEdits.cost : p.cost;
+                        const debUtil = debEdits.utility !== '' && debEdits.utility !== undefined ? debEdits.utility : p.utility;
+
+                        const oldC = getCalculatedValues(p.cost, p.utility, p.taxId);
+                        const debC = getCalculatedValues(debCost, debUtil, p.taxId);
+                        
+                        const isPriceDrop = debEdits.cost !== '' && debEdits.cost !== undefined && debC.finalPrice < oldC.finalPrice;
+                        const oldUtilNum = parseFloat(p.utility) || 0;
+                        const newUtilNum = debEdits.utility !== '' && debEdits.utility !== undefined ? parseFloat(debEdits.utility) : oldUtilNum;
+                        const isUtilityDrop = debEdits.utility !== '' && debEdits.utility !== undefined && newUtilNum < oldUtilNum;
+
+                        return (
+                          <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-4 align-middle w-[26%] truncate">
+                              <p className="font-mono text-[#2596be] font-black">#{p.id}</p>
+                              <p className="font-black text-[#134b60] truncate">{p.name}</p>
+                            </td>
+                            <td className="px-4 py-4 text-center align-middle w-[32%]">
+                              <div className="flex items-center justify-start gap-3 max-w-[240px] mx-auto">
+                                <span className="font-mono text-slate-500 font-bold text-xs w-24 text-left">{formatCurrency(p.cost)}</span>
+                                <span className="text-[#2596be] font-black shrink-0">➔</span>
+                                <input 
+                                  type="text"
+                                  inputMode="numeric"
+                                  maxLength={7}
+                                  value={edits.cost}
+                                  placeholder="NUEVO"
+                                  onChange={(e) => handleBatchEditChange(p.id, 'cost', e.target.value)}
+                                  className="w-28 px-2 py-2 bg-white border-2 border-[#2596be]/50 focus:border-[#2596be] rounded-xl font-mono text-xs text-center text-[#134b60] outline-none shadow-sm font-black placeholder:text-slate-300 placeholder:font-normal"
+                                />
+                              </div>
+                              {isPriceDrop && (
+                                <span className="block text-[8px] text-amber-600 font-black mt-1 text-center animate-pulse">
+                                  ⚠️ ATENCIÓN: Precio final menor al actual
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-center align-middle w-[32%]">
+                              <div className="flex items-center justify-start gap-3 max-w-[180px] mx-auto">
+                                <span className="font-mono text-slate-500 font-bold text-xs w-12 text-left">{p.utility}%</span>
+                                <span className="text-[#2596be] font-black shrink-0">➔</span>
+                                <input 
+                                  type="text"
+                                  inputMode="numeric"
+                                  maxLength={4}
+                                  value={edits.utility}
+                                  placeholder="NUEVA"
+                                  onChange={(e) => handleBatchEditChange(p.id, 'utility', e.target.value)}
+                                  className="w-20 px-2 py-2 bg-white border-2 border-[#2596be]/50 focus:border-[#2596be] rounded-xl font-mono text-xs text-center text-[#134b60] outline-none shadow-sm font-black placeholder:text-slate-300 placeholder:font-normal"
+                                />
+                              </div>
+                              {isUtilityDrop && (
+                                <span className="block text-[8px] text-amber-600 font-black mt-1 text-center animate-pulse">
+                                  ⚠️ ATENCIÓN: Utilidad menor a la actual
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-right align-middle w-[10%]">
+                              <button 
+                                onClick={() => removeItemFromBatch(p.id)}
+                                className="p-2 bg-rose-50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
+                                title="Quitar de la bandeja"
+                              >
+                                <X size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                  <button 
+                    onClick={prepareBatchUpdateConfirmation}
+                    className="px-8 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95"
+                  >
+                    APLICAR CAMBIOS DE LA BANDEJA ({selectedPriceIds.length})
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activePriceSubView === 'logs' && (
+          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
+            <div className="max-h-[550px] overflow-y-auto overflow-x-auto scrollbar-hide">
+              <table className="w-full text-left min-w-[1100px] uppercase">
+                <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-4">ID MOVIMIENTO</th>
+                    <th className="px-6 py-4">PRODUCTO</th>
+                    <th className="px-6 py-4 text-center">COSTO (ANTES → AHORA)</th>
+                    <th className="px-6 py-4 text-center">UTILIDAD % (ANTES → AHORA)</th>
+                    <th className="px-6 py-4">FECHA Y HORA</th>
+                    <th className="px-6 py-4">MODO / USUARIO</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
+                  {priceLogs.length === 0 ? (
+                    <tr><td colSpan="6" className="px-6 py-20 text-center text-slate-300 font-black">NO HAY REGISTROS EN LA BITÁCORA DE PRECIOS</td></tr>
+                  ) : (
+                    priceLogs.map(log => (
+                      <tr key={log.moveId} className="hover:bg-[#e9f4f8]/30 transition-colors">
+                        <td className="px-6 py-4 font-mono text-[#2596be] font-black">{log.moveId}</td>
+                        <td className="px-6 py-4">
+                          <p className="font-black text-[#134b60]">{log.productName}</p>
+                          <p className="text-[9px] text-slate-400 font-mono">ID: {log.productId}</p>
+                        </td>
+                        <td className="px-6 py-4 text-center font-mono">
+                          <span className="text-slate-400">{formatCurrency(log.oldCost)}</span>
+                          <span className="mx-2 text-[#2596be]">→</span>
+                          <span className="text-[#134b60] font-black">{formatCurrency(log.newCost)}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center font-mono">
+                          <span className="text-slate-400">{log.oldUtility}%</span>
+                          <span className="mx-2 text-[#2596be]">→</span>
+                          <span className="text-[#134b60] font-black">{log.newUtility}%</span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-500 font-mono text-[10px]">{log.timestamp}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 bg-[#e9f4f8] text-[#2596be] rounded-xl text-[9px] font-black inline-block mb-1">{log.mode}</span>
+                          <p className="text-[9px] text-slate-400 font-bold">{log.user}</p>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+      )}
+
+      {/* --- MODAL DE ÉXITO MASIVO CORPORATIVO --- */}
+      {priceSuccessModal && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[120] flex items-center justify-center p-4 uppercase">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center border-2 border-[#e9f4f8] space-y-6 animate-in fade-in duration-300">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <div>
+              <span className="text-[10px] font-mono font-black text-emerald-600">PROCESO EXITOSO</span>
+              <h3 className="text-lg font-black text-[#134b60]">ACTUALIZACIÓN MASIVA COMPLETADA</h3>
+            </div>
+            <p className="text-xs text-slate-500 font-bold leading-relaxed">
+              ¡ACTUALIZACIÓN MASIVA EXITOSA! SE MODIFICARON <span className="text-[#2596be] font-black">{priceSuccessModal.count} PRECIOS</span> Y SE REGISTRARON CORRECTAMENTE EN LA BITÁCORA.
+            </p>
+            <button 
+              onClick={() => setPriceSuccessModal(null)}
+              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95"
+            >
+              ENTENDIDO
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL DE DOBLE CONFIRMACIÓN --- */}
+      {priceConfirmModal && (
+        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4 uppercase">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-left border-2 border-[#e9f4f8] space-y-6">
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
+              <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                <AlertTriangle size={28} />
+              </div>
+              <div>
+                <span className="text-[10px] font-mono font-black text-amber-600">SEGURIDAD DEL SISTEMA</span>
+                <h3 className="text-lg font-black text-[#134b60]">CONFIRMAR ACTUALIZACIÓN DE PRECIOS</h3>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 font-bold leading-relaxed">
+              Estás a punto de aplicar los cambios en los precios de los productos seleccionados. Revisa el resumen final antes de proceder.
+            </p>
+
+            <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
+              <table className="w-full text-left uppercase">
+                <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3">PRODUCTO</th>
+                    <th className="px-4 py-3 text-center">COSTO (ANTES → NUEVO)</th>
+                    <th className="px-4 py-3 text-center">PRECIO FINAL (ANTES → NUEVO)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
+                  {priceConfirmModal.items.map((item, idx) => (
+                    <tr key={idx} className={`hover:bg-slate-50 ${item.isPriceDrop || item.isUtilityDrop ? 'bg-amber-50/60' : ''}`}>
+                      <td className="px-4 py-3 font-black">
+                        {item.name}
+                        {item.isPriceDrop && (
+                          <span className="block text-[8px] text-amber-600 font-black mt-0.5">
+                            ⚠️ ATENCIÓN: Precio final menor al actual
+                          </span>
+                        )}
+                        {item.isUtilityDrop && (
+                          <span className="block text-[8px] text-amber-600 font-black mt-0.5">
+                            ⚠️ ATENCIÓN: Utilidad menor a la actual
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center font-mono">
+                        <span className="text-slate-400">{formatCurrency(item.oldCost)}</span>
+                        <span className="mx-1 text-[#2596be]">→</span>
+                        <span className="text-[#134b60]">{formatCurrency(item.newCost)}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center font-mono">
+                        <span className="text-slate-400">{formatCurrency(item.oldFinalPrice)}</span>
+                        <span className="mx-1 text-[#2596be]">→</span>
+                        <span className={item.isPriceDrop ? 'text-amber-600 font-black' : 'text-[#134b60]'}>
+                          {formatCurrency(item.newFinalPrice)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex gap-4 pt-2">
+              <button 
+                onClick={() => setPriceConfirmModal(null)}
+                className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                CANCELAR
+              </button>
+              <button 
+                onClick={executeConfirmedBatchUpdates}
+                className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95"
+              >
+                SÍ, CONFIRMAR Y APLICAR CAMBIOS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    {/* --- MODAL DE CARGUE NUEVOS PRODUCTOS --- */}
     {modalType === 'bulkUpload' && (
       <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
           <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
               {!csvPreview ? (
                 <>
                   <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
-                  <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO DE PRODUCTOS (CSV)</h3>
+                  <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO DE NUEVOS PRODUCTOS</h3>
                   <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO: ID, NOMBRE, UNIDAD, COSTO, UTILIDAD, IVA(%)</p>
                   
                   <button onClick={downloadTemplate} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
@@ -792,7 +1577,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                     <div>
-                      <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE PRODUCTOS</h3>
+                      <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE NUEVOS PRODUCTOS</h3>
                       <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
                     </div>
                     <div className="flex gap-3 text-right">
@@ -865,13 +1650,113 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
     )}
 
+    {/* --- MODAL DE CARGUE MASIVO PARA ACTUALIZACIÓN DE PRECIOS --- */}
+    {modalType === 'bulkPriceUpload' && (
+      <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
+          <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${priceCsvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
+              {!priceCsvPreview ? (
+                <>
+                  <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
+                  <h3 className="font-black text-xl mb-2 tracking-tighter">ACTUALIZACIÓN MASIVA DE PRECIOS (CSV)</h3>
+                  <p className="text-[10px] text-slate-400 font-bold mb-6">EXPORTA TU CATÁLOGO, MODIFICA COSTOS/UTILIDADES Y SÚBELO AQUÍ.</p>
+                  
+                  <button onClick={() => exportCatalogCSV(false)} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                      <Download size={14}/> 📥 DESCARGAR CATÁLOGO ACTUAL PARA EDITAR
+                  </button>
+
+                  <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
+                      <input type="file" accept=".csv" className="hidden" onChange={handlePriceFileUpload} />
+                      <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-emerald-600 mb-2 transition-colors"/>
+                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">SELECCIONAR ARCHIVO CSV MODIFICADO</span>
+                  </label>
+                  <button onClick={() => { setPriceCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs hover:bg-slate-200 uppercase transition-colors cursor-pointer">CANCELAR</button>
+                </>
+              ) : (
+                <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE CAMBIOS DE PRECIOS</h3>
+                      <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
+                    </div>
+                    <div className="flex gap-3 text-right">
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
+                        SE VAN A MODIFICAR {priceCsvPreview.validRows.length} PRECIOS
+                      </span>
+                      <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${priceCsvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                        {priceCsvPreview.errors.length} ERRORES / AVISOS
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
+                    <table className="w-full text-left uppercase">
+                      <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest z-10">
+                        <tr>
+                          <th className="px-4 py-3">PRODUCTO</th>
+                          <th className="px-4 py-3 text-center">COSTO (ANTES ➔ NUEVO)</th>
+                          <th className="px-4 py-3 text-center">UTILIDAD (ANTES ➔ NUEVA)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
+                        {priceCsvPreview.validRows.length === 0 ? (
+                          <tr><td colSpan="3" className="px-4 py-8 text-center text-slate-300">NO HAY CAMBIOS VÁLIDOS PARA APLICAR</td></tr>
+                        ) : (
+                          priceCsvPreview.validRows.map((row, idx) => (
+                            <tr key={idx} className={`hover:bg-slate-50 transition-colors ${row.isPriceDrop || row.isUtilityDrop ? 'bg-amber-50/50' : ''}`}>
+                              <td className="px-4 py-3 font-black">
+                                #{row.id} - {row.name}
+                                {row.isPriceDrop && <span className="block text-[8px] text-amber-600 font-black mt-0.5">⚠️ PRECIO FINAL MENOR AL ACTUAL</span>}
+                                {row.isUtilityDrop && <span className="block text-[8px] text-amber-600 font-black mt-0.5">⚠️ UTILIDAD MENOR A LA ACTUAL</span>}
+                              </td>
+                              <td className="px-4 py-3 text-center font-mono">
+                                <span className="text-slate-400">{formatCurrency(row.oldCost)}</span>
+                                <span className="mx-1 text-[#2596be]">➔</span>
+                                <span className="text-[#134b60]">{formatCurrency(row.newCost)}</span>
+                              </td>
+                              <td className="px-4 py-3 text-center font-mono">
+                                <span className="text-slate-400">{row.oldUtility}%</span>
+                                <span className="mx-1 text-[#2596be]">➔</span>
+                                <span className="text-[#134b60]">{row.newUtility}%</span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {priceCsvPreview.errors.length > 0 && (
+                    <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
+                      <p className="text-[10px] font-black text-rose-600 uppercase mb-2">ERRORES DETECTADOS (BLOQUEA LA IMPORTACIÓN):</p>
+                      {priceCsvPreview.errors.map((err, idx) => (
+                        <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 pt-2">
+                    <button onClick={() => setPriceCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all cursor-pointer">CANCELAR</button>
+                    <button 
+                      onClick={executePriceBulkUpdate}
+                      disabled={priceCsvPreview.validRows.length === 0 || priceCsvPreview.errors.length > 0}
+                      className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
+                    >
+                      CONFIRMAR Y ACTUALIZAR {priceCsvPreview.validRows.length} PRECIOS
+                    </button>
+                  </div>
+                </div>
+              )}
+          </div>
+      </div>
+    )}
+
     {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
       <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
         <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
           <div className="p-8 text-[#134b60]">
             <div className="flex flex-col items-center text-center gap-4 mb-8">
               <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
+                    {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
               </div>
               <h3 className="font-black text-xl uppercase tracking-tighter">
                 {modalType === 'edit' ? 'EDITAR PRODUCTO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR PRODUCTO'}
@@ -923,7 +1808,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     
     <Footer />
 
-    {/* --- MODAL DE DETALLE DE PRODUCTO CON FOTO --- */}
     {modalType === 'productDetail' && selectedProd && (() => {
       const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
       const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
