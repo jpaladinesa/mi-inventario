@@ -6039,44 +6039,44 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
-      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-72'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative shadow-2xl border-r border-[#194052]`}>
+  <div className="flex h-screen overflow-hidden bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
+      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-64'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative h-full shadow-2xl border-r border-[#194052]`}>
         
         {/* Botón flotante para minimizar / expandir */}
         <button 
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute -right-3.5 top-7 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
+          className="absolute -right-3.5 top-6 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
           title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
         >
           {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
 
-        {/* Cabecera del Logo */}
-        <div className={`p-5 border-b border-[#194052] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all`}>
-          <label htmlFor="logo-upload" className={`w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-3'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}>
+        {/* Cabecera del Logo Compacta */}
+        <div className={`p-3.5 border-b border-[#194052] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all shrink-0`}>
+          <label htmlFor="logo-upload" className={`w-9 h-9 bg-white rounded-xl flex items-center justify-center p-1 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-2'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}>
             {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
             <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-            <Package size={22} className="text-[#2596be] hidden" />
-            {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={16} className="text-[#134b60]" /></div>}
+            <Package size={18} className="text-[#2596be] hidden" />
+            {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={14} className="text-[#134b60]" /></div>}
           </label>
           
           {!sidebarCollapsed && (
             <>
-              <span className="font-black text-xs text-white tracking-tight mt-1.5 block">INVENTRACK</span>
-              <span className="text-[7px] text-[#e9f4f8] font-bold mt-0.5 opacity-50 uppercase tracking-[0.15em]">DISTRIBUCIONES CASTILLA</span>
+              <span className="font-black text-[11px] text-white tracking-tight mt-1 block">INVENTRACK</span>
+              <span className="text-[6px] text-[#e9f4f8] font-bold opacity-50 uppercase tracking-[0.1em]">DISTRIBUCIONES CASTILLA</span>
             </>
           )}
         </div>
 
-        {/* Badge de Rol Compacto */}
-        <div className="px-4 py-3">
+        {/* Badge de Rol Súper Compacto */}
+        <div className="px-3 py-2 shrink-0">
           <div 
-            className={`w-full py-2.5 rounded-xl text-[9px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3'} shadow-inner transition-all`}
+            className={`w-full py-2 rounded-xl text-[8px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-2.5'} shadow-inner transition-all`}
           >
             {role === 'ADMIN' ? (
-              <ShieldCheck size={15} className="text-[#2596be] shrink-0" />
+              <ShieldCheck size={14} className="text-[#2596be] shrink-0" />
             ) : (
-              <User size={15} className="text-[#2596be] shrink-0" />
+              <User size={14} className="text-[#2596be] shrink-0" />
             )}
             {!sidebarCollapsed && (
               <span className="truncate uppercase tracking-wider">
@@ -6086,23 +6086,23 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           </div>
         </div>
 
-        {/* Menú de Navegación */}
-        <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-4' : 'px-4 py-2'} space-y-1.5 overflow-y-auto scrollbar-hide`}>
+        {/* Menú de Navegación Compacto sin scroll innecesario */}
+        <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-2' : 'px-3 py-1'} space-y-0.5 overflow-y-auto scrollbar-hide`}>
           {role === 'ADMIN' && (
             <>
-              {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mb-1.5 opacity-60">Gestión General</div>}
+              {!sidebarCollapsed && <div className="text-[6px] text-slate-400 font-black uppercase tracking-widest px-2 mb-1 opacity-60">Gestión General</div>}
               {adminMenu.map((item) => (
                 <button 
                   key={item.id} 
                   onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
                   title={item.label} 
-                  className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
+                  className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
                 >
                   <span className="shrink-0">{item.icon}</span>
-                  {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
+                  {!sidebarCollapsed && <span className="text-[8px] tracking-wider uppercase">{item.label}</span>}
                 </button>
               ))}
-              {!sidebarCollapsed && <div className="text-[7px] text-slate-400 font-black uppercase tracking-widest px-3 mt-6 mb-1.5 border-t border-[#194052] pt-4 opacity-60">Portal Cliente</div>}
+              {!sidebarCollapsed && <div className="text-[6px] text-slate-400 font-black uppercase tracking-widest px-2 mt-2 mb-1 border-t border-[#194052] pt-2 opacity-60">Portal Cliente</div>}
             </>
           )}
 
@@ -6111,29 +6111,30 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
               key={item.id} 
               onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
               title={item.label} 
-              className={`flex items-center transition-all ${sidebarCollapsed ? 'w-11 h-11 mx-auto justify-center rounded-xl' : 'w-full gap-3.5 px-3.5 py-3 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
+              className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
             >
               <span className="shrink-0">{item.icon}</span>
-              {!sidebarCollapsed && <span className="text-[9px] tracking-wider uppercase">{item.label}</span>}
+              {!sidebarCollapsed && <span className="text-[8px] tracking-wider uppercase">{item.label}</span>}
             </button>
           ))}
         </nav>
 
-        {/* Botón de Cerrar Sesión en el Footer del Sidebar */}
-        <div className="p-4 border-t border-[#194052]">
+        {/* Botón de Salir Minimalista */}
+        <div className="px-3 py-2 border-t border-[#194052] shrink-0">
           <button 
             onClick={onLogout} 
-            title="Cerrar sesión"
-            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-3'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[9px] uppercase tracking-wider transition-all`}
+            title="Salir"
+            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-1.5' : 'gap-2 px-2.5 py-1.5'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[8px] uppercase tracking-wider transition-all`}
           >
-            <span className="shrink-0"><LogOut size={16} /></span>
-            {!sidebarCollapsed && <span>Cerrar Sesión</span>}
+            <span className="shrink-0"><LogOut size={13} /></span>
+            {!sidebarCollapsed && <span>SALIR</span>}
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-h-screen min-w-0">
-        <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden">
+      {/* Panel Derecho con altura completa y scroll independiente */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+        <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden shrink-0">
           {/* Lado izquierdo: Botón móvil y Mensaje de Bienvenida */}
           <div className="flex items-center gap-3">
             <button 
@@ -6281,6 +6282,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           </div>
         </header>
 
+        {/* Contenedor dinámico de vistas con su propio scroll independiente */}
         <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
           {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
           {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
@@ -6288,7 +6290,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           {activeTab === 'access' && <AccessManagementView users={users} setUsers={setUsers} clients={clients} />}
           {activeTab === 'crm' && <CRMView products={products} clients={clients} inventory={inventory} orders={orders} />}
           {activeTab === 'clients' && <ClientsView clients={clients} setClients={setClients} clientTypes={clientTypes} globalDiscountEngine={globalDiscountEngine} setGlobalDiscountEngine={setGlobalDiscountEngine} />}
-          {activeTab === 'products' && <ProductsView products={products} setProducts={setProducts} taxes={taxes} inventory={inventory} orders={orders} />}         
+          {activeTab === 'products' && <ProductsView products={products} setProducts={setProducts} taxes={taxes} inventory={inventory} orders={orders} />}        
           {activeTab === 'taxes' && <ConfigurationListView title="IMPUESTOS" items={taxes} setItems={setTaxes} prefix="CI" labelName="IMPUESTO" labelValue="PORCENTAJE" /> }
           {activeTab === 'client_types' && <ConfigurationListView title="TIPO CLIENTE" items={clientTypes} setItems={setClientTypes} prefix="TC" labelName="TIPO" labelValue="RECARGO" />}
           {activeTab === 'promotions' && <PromotionsManagementView promotions={promotions} setPromotions={setPromotions} clientTypes={clientTypes} />}
