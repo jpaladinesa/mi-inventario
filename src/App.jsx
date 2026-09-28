@@ -276,7 +276,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
 // --- CONSTANTE DE IMAGEN POR DEFECTO (CASTILLA) ---
 const DEFAULT_CASTILLA_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'><rect width='500' height='500' fill='%23134b60'/><text x='50%' y='43%' dominant-baseline='middle' text-anchor='middle' fill='%232596be' font-family='sans-serif' font-size='32' font-weight='black'>DISTRIBUCIONES</text><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-size='38' font-weight='black'>CASTILLA</text></svg>";
 
-// --- MÓDULO DE PRODUCTOS: DISEÑO ORGANIZADO Y SOPORTE DE DECIMALES ---
+// --- MÓDULO DE PRODUCTOS: DISEÑO MEJORADO, SUB-PESTAÑAS, OBSERVACIONES AMPLIABLES Y MINI-FOTOS ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
   const [priceCsvPreview, setPriceCsvPreview] = useState(null); 
@@ -321,7 +321,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const filteredProducts = products.filter(p =>
     p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (p.unitName && p.unitName.toLowerCase().includes(searchTerm.toLowerCase()))
+    (p.unitName && p.unitName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
   const getNextNumericID = () => {
@@ -350,7 +351,23 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     return `CP${String(max + 1).padStart(6, '0')}`;
   };
 
-  const initialForm = { id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '', image: '' };
+  const categoryOptions = [
+    'PAPELERIA', 'OFICINA', 'PIÑATERIA', 'ASEO',
+    'CAFETERIA', 'TECNOLOGIA', 'VARIOS', 'OTRO'
+  ];
+
+  const initialForm = { 
+    id: getNextNumericID(), 
+    name: '', 
+    unitName: 'UNIDAD', 
+    category: '', 
+    taxId: '', 
+    cost: '', 
+    utility: '', 
+    observations: '',
+    images: [] 
+  };
+  
   const [newProd, setNewProd] = useState(initialForm);
   
   useEffect(() => {
@@ -370,7 +387,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     'FRASCO', 'BOTELLA'
   ];
 
-  const handleProductImageChange = (e) => {
+  const handleSingleImageUpload = (index, e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -381,8 +398,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       return;
     }
 
-    const maxSize = 500 * 1024;
-    if (file.size > maxSize) {
+    if (file.size > 500 * 1024) {
       alert('LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.');
       e.target.value = '';
       return;
@@ -390,9 +406,22 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setNewProd(prev => ({ ...prev, image: reader.result }));
+      setNewProd(prev => {
+        const updatedImages = [...(prev.images || [])];
+        updatedImages[index] = reader.result;
+        return { ...prev, images: updatedImages };
+      });
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const removeImageAt = (index) => {
+    setNewProd(prev => {
+      const updatedImages = [...(prev.images || [])];
+      updatedImages.splice(index, 1);
+      return { ...prev, images: updatedImages };
+    });
   };
 
   const getCalculatedValues = (cost, utility, taxId) => {
@@ -413,25 +442,34 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       return;
     }
 
+    if (!newProd.category) {
+      setErrorMsg('DEBE SELECCIONAR UNA CATEGORÍA OBLIGATORIA.');
+      return;
+    }
+
     if (!newProd.taxId) {
       setErrorMsg('DEBE SELECCIONAR UN IMPUESTO VÁLIDO.');
       return;
     } 
+
     const cleanName = newProd.name.toUpperCase().trim();
     if (products.some(p => p.id === newProd.id)) { setErrorMsg('ESTE CÓDIGO ID YA EXISTE'); return; }
     
     const taxObj = taxes.find(t => t.id === newProd.taxId);
+    const finalImages = (newProd.images && newProd.images.length > 0) ? newProd.images : [DEFAULT_CASTILLA_IMAGE];
+
     const nuevoProductoData = { 
         ...newProd, 
         name: cleanName, 
         taxName: taxObj?.name || '0%', 
         taxValue: taxObj?.value || 0,
-        image: newProd.image || DEFAULT_CASTILLA_IMAGE 
+        images: finalImages,
+        image: finalImages[0] 
     };
 
     try {
         setProducts([...products, nuevoProductoData]);
-        setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '', image: '' }); 
+        setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] }); 
         setErrorMsg('');
     } catch (error) {
         setErrorMsg('HUBO UN ERROR AL COMUNICARSE CON EL SERVIDOR');
@@ -440,12 +478,15 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
   const executeUpdate = () => {
     const taxObj = taxes.find(t => t.id === editData.taxId);
+    const finalImages = (editData.images && editData.images.length > 0) ? editData.images : (editData.image ? [editData.image] : [DEFAULT_CASTILLA_IMAGE]);
     setProducts(products.map(p => p.id === selectedProd.id ? { 
         ...p,
         ...editData, 
         name: editData.name.toUpperCase().trim(),
         taxName: taxObj?.name || '0%',
-        taxValue: taxObj?.value || 0
+        taxValue: taxObj?.value || 0,
+        images: finalImages,
+        image: finalImages[0]
     } : p));
     setModalType(null);
   };
@@ -460,11 +501,12 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       return;
     }
 
-    let csvContent = "ID;NOMBRE;UNIDAD;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE\n";
+    let csvContent = "ID;NOMBRE;UNIDAD;CATEGORIA;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE;OBSERVACIONES\n";
     itemsToExport.forEach(p => {
       const taxObj = taxes.find(t => t.id === p.taxId);
       const taxVal = taxObj ? taxObj.value : (p.taxValue || 0);
-      csvContent += `${p.id};${p.name};${p.unitName};${p.cost};${p.utility};${taxVal}\n`;
+      const obs = (p.observations || '').replace(/;/g, ',');
+      csvContent += `${p.id};${p.name};${p.unitName};${p.category || 'VARIOS'};${p.cost};${p.utility};${taxVal};${obs}\n`;
     });
 
     const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -502,43 +544,18 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         if (!line) continue;
 
         const parts = line.split(';').map(p => p ? p.trim() : '');
-        if (parts.length < 5) {
+        if (parts.length < 6) {
           errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
           continue;
         }
 
-        const [id, csvName, csvUnit, cost, utility, csvTax] = parts;
+        const [id, csvName, csvUnit, csvCat, cost, utility, csvTax] = parts;
         const cleanId = String(id || '').padStart(5, '0');
 
         const existingProd = products.find(p => p.id === cleanId || p.id === id);
         if (!existingProd) {
           errors.push(`Línea ${i + 1}: El ID '${id}' no existe en el catálogo.`);
           continue;
-        }
-
-        if (cleanId !== existingProd.id && id !== existingProd.id) {
-          errors.push(`Línea ${i + 1} (ID ${id}): No está permitido cambiar el ID del producto.`);
-          continue;
-        }
-
-        if (csvName && existingProd.name && csvName.toUpperCase().trim() !== existingProd.name.toUpperCase().trim()) {
-          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies el nombre. Mantén '${existingProd.name}'.`);
-          continue;
-        }
-
-        if (csvUnit && existingProd.unitName && csvUnit.toUpperCase().trim() !== existingProd.unitName.toUpperCase().trim()) {
-          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies la unidad de medida. Mantén '${existingProd.unitName}'.`);
-          continue;
-        }
-
-        const existingTaxObj = taxes.find(t => t.id === existingProd.taxId);
-        const existingTaxVal = existingTaxObj ? existingTaxObj.value : (existingProd.taxValue || 0);
-        if (csvTax !== undefined && csvTax !== '') {
-          const parsedCsvTax = parseFloat(String(csvTax).replace(',', '.'));
-          if (!isNaN(parsedCsvTax) && parsedCsvTax !== existingTaxVal) {
-            errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies el impuesto. Mantén el valor original (${existingTaxVal}%).`);
-            continue;
-          }
         }
 
         if (cost === undefined || cost === '') {
@@ -548,7 +565,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         const cleanCostStr = String(cost).replace(/\s/g, '').replace(',', '.');
         const parsedCost = parseFloat(cleanCostStr);
         if (isNaN(parsedCost)) {
-          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): El costo '${cost}' no es un número válido.`);
+          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): El costo no es válido.`);
           continue;
         }
 
@@ -557,7 +574,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           const cleanUtilStr = String(utility).replace(/\s/g, '').replace(',', '.');
           const uNum = parseFloat(cleanUtilStr);
           if (isNaN(uNum)) {
-            errors.push(`Línea ${i + 1} (ID ${existingProd.id}): La utilidad '${utility}' no es válida.`);
+            errors.push(`Línea ${i + 1} (ID ${existingProd.id}): La utilidad no es válida.`);
             continue;
           }
           parsedUtility = uNum;
@@ -582,12 +599,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           isPriceDrop: newCalcs.finalPrice < oldCalcs.finalPrice,
           isUtilityDrop: parsedUtility < (parseFloat(existingProd.utility) || 0)
         });
-      }
-
-      if (validRows.length === 1) {
-        errors.push(`⚠️ ESTE MÓDULO ES PARA CAMBIOS MASIVOS. El archivo solo contiene 1 cambio; para un solo producto, usa la edición directa o la bandeja inferior.`);
-      } else if (validRows.length === 0 && errors.length === 0) {
-        errors.push(`⚠️ El archivo no contiene ningún cambio de costo o utilidad frente al catálogo actual.`);
       }
 
       setPriceCsvPreview({ validRows, errors });
@@ -697,7 +708,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     });
 
     if (hasIncompleteItems) {
-      setBatchError('TODOS LOS PRODUCTOS EN LA BANDEJA DEBEN TENER UN NUEVO COSTO Y UTILIDAD DEFINIDOS. SI NO VAS A MODIFICAR ALGUNO, QUÍTALO DE LA LISTA USANDO LA "X".');
+      setBatchError('TODOS LOS PRODUCTOS EN LA BANDEJA DEBEN TENER UN NUEVO COSTO Y UTILIDAD DEFINIDOS.');
       return;
     }
 
@@ -805,12 +816,12 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         if (!line) continue;
 
         const parts = line.split(';').map(p => p ? p.trim() : '');
-        if (parts.length < 5) {
+        if (parts.length < 6) {
           errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
           continue;
         }
 
-        const [id, name, unit, cost, utility, taxPercentage] = parts;
+        const [id, name, unit, category, cost, utility, taxPercentage, observations] = parts;
         const cleanId = String(id || '').trim();
         const cleanName = String(name || '').trim();
 
@@ -827,19 +838,31 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
         const existsInDB = products.some(p => p.id === cleanId.padStart(5, '0') || p.id === cleanId);
         if (existsInDB) {
-          errors.push(`Línea ${i + 1}: El producto con ID '${cleanId}' ya existe en el sistema.`);
+          errors.push(`Línea ${i + 1}: El producto con ID '${cleanId}' ya existe.`);
+          continue;
+        }
+
+        const cleanCat = String(category || '').toUpperCase();
+        if (!categoryOptions.includes(cleanCat)) {
+          errors.push(`Línea ${i + 1}: Categoría '${category}' no es válida.`);
           continue;
         }
 
         const parsedCost = parseFloat(String(cost).replace(',', '.'));
         if (isNaN(parsedCost)) {
-          errors.push(`Línea ${i + 1} (Columna Costo): El valor '${cost}' no es un número válido.`);
+          errors.push(`Línea ${i + 1}: El costo no es válido.`);
           continue;
         }
 
         const parsedUtility = parseFloat(String(utility).replace(',', '.'));
         if (isNaN(parsedUtility)) {
-          errors.push(`Línea ${i + 1} (Columna Utilidad): El valor '${utility}' no es un número válido.`);
+          errors.push(`Línea ${i + 1}: La utilidad no es válida.`);
+          continue;
+        }
+
+        const cleanObs = String(observations || '').toUpperCase();
+        if (cleanObs.length > 100) {
+          errors.push(`Línea ${i + 1}: Las observaciones superan los 100 caracteres.`);
           continue;
         }
 
@@ -850,12 +873,15 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           id: cleanId.padStart(5, '0'),
           name: cleanName.toUpperCase().substring(0, 100),
           unitName: unit ? unit.toUpperCase() : 'UNIDAD',
+          category: cleanCat,
           taxId: taxObj?.id || '',
           taxName: taxObj?.name || '0%',
           taxValue: taxObj?.value || 0,
           cost: parsedCost,
           utility: parsedUtility,
-          image: DEFAULT_CASTILLA_IMAGE 
+          observations: cleanObs,
+          images: [DEFAULT_CASTILLA_IMAGE],
+          image: DEFAULT_CASTILLA_IMAGE
         });
       }
 
@@ -867,7 +893,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   };
 
   const downloadTemplate = () => {
-    const csvContent = "ID;NOMBRE;UNIDAD;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE\n00001;PRODUCTO DE EJEMPLO 1;UNIDAD;10000,50;30;19\n00002;PRODUCTO DE EJEMPLO 2;CAJA;50000;20;5\n";
+    const csvContent = "ID;NOMBRE;UNIDAD;CATEGORIA;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE;OBSERVACIONES\n00001;PRODUCTO EJEMPLO 1;UNIDAD;PAPELERIA;10000,50;30;19;PRODUCTO FRAGIL\n00002;PRODUCTO EJEMPLO 2;CAJA;OFICINA;50000;20;5;ALTA ROTACION\n";
     const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -878,47 +904,48 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
       
-      {/* 1. ENCABEZADO PRINCIPAL CON TÍTULO Y BOTONES DE ACCIÓN */}
+      {/* 1. ENCABEZADO PRINCIPAL (TÍTULO A LA IZQUIERDA, SUB-PESTAÑAS A LA DERECHA) */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b-4 border-[#2596be] pb-6 gap-6">
         <div>
           <span className="text-[10px] font-mono font-black text-[#2596be] tracking-widest uppercase">MÓDULO ADMINISTRATIVO</span>
           <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PRODUCTOS</h2>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
-          <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95">
-            <UploadCloud size={16}/> CARGUE NUEVOS (CSV)
+        {/* SUB-PESTAÑAS UBICADAS AL COSTADO DERECHO */}
+        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8] w-fit">
+          <button 
+            onClick={() => setActiveSubTab('create')} 
+            className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+          >
+            ➕ NUEVO PRODUCTO
           </button>
-          
-          <button onClick={() => setModalType('bulkPriceUpload')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-emerald-600/20 transition-all cursor-pointer active:scale-95">
-            <FileSpreadsheet size={16}/> ACTUALIZAR PRECIOS (CSV)
+          <button 
+            onClick={() => setActiveSubTab('list')} 
+            className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+          >
+            📋 CATÁLOGO ({products.length})
           </button>
-
-          <button onClick={() => exportCatalogCSV(false)} className="bg-[#2596be] hover:bg-[#1e7a9b] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95">
-            <Download size={16}/> EXPORTAR CATÁLOGO
+          <button 
+            onClick={() => setActiveSubTab('prices')} 
+            className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase transition-all cursor-pointer ${activeSubTab === 'prices' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+          >
+            💲 PRECIOS Y LOGS
           </button>
         </div>
       </div>
 
-      {/* 2. BARRA DE PESTAÑAS DE NAVEGACIÓN INDEPENDIENTE */}
-      <div className="flex bg-white p-2 rounded-3xl shadow-sm border-2 border-[#e9f4f8] w-fit">
-        <button 
-          onClick={() => setActiveSubTab('create')} 
-          className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
-        >
-          ➕ NUEVO PRODUCTO
+      {/* 2. BOTONES DE ACCIÓN MÁS PEQUEÑOS EN LA ZONA IZQUIERDA */}
+      <div className="flex flex-wrap items-center gap-3 w-full justify-start">
+        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-3.5 py-2 rounded-xl text-[9px] font-black flex items-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95">
+          <UploadCloud size={14}/> CARGUE NUEVOS (CSV)
         </button>
-        <button 
-          onClick={() => setActiveSubTab('list')} 
-          className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
-        >
-          📋 CATÁLOGO ({products.length})
+        
+        <button onClick={() => setModalType('bulkPriceUpload')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-[9px] font-black flex items-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95">
+          <FileSpreadsheet size={14}/> ACTUALIZAR PRECIOS (CSV)
         </button>
-        <button 
-          onClick={() => setActiveSubTab('prices')} 
-          className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'prices' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
-        >
-          💲 PRECIOS Y LOGS
+
+        <button onClick={() => exportCatalogCSV(false)} className="bg-[#2596be] hover:bg-[#1e7a9b] text-white px-3.5 py-2 rounded-xl text-[9px] font-black flex items-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95">
+          <Download size={14}/> EXPORTAR CATÁLOGO
         </button>
       </div>
 
@@ -935,7 +962,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
             
             <div className="space-y-1 lg:col-span-3 relative">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE DEL PRODUCTO</label>
-              <input type="text" maxLength={100} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="DESCRIPCIÓN DETALLADA DEL PRODUCTO..." required />
+              <input type="text" maxLength={100} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="DESCRIPCIÓN DETALLADA..." required />
               {newProd.name && newProd.name.length >= 100 && <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse">Límite 100 alcanzado</span>}
             </div>
 
@@ -943,6 +970,15 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">U. MEDIDA</label>
               <select value={newProd.unitName} onChange={e => setNewProd({...newProd, unitName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all" required>
                  {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+
+            {/* CATEGORÍA OBLIGATORIA CON SELECCIONE */}
+            <div className="space-y-1 lg:col-span-2">
+              <label className="text-[9px] font-black text-[#2596be] uppercase tracking-widest">CATEGORÍA *</label>
+              <select value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all" required>
+                 <option value="">SELECCIONE</option>
+                 {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
 
@@ -954,51 +990,85 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               </select>
             </div>
 
-            <div className="space-y-1 lg:col-span-2">
+            <div className="space-y-1 lg:col-span-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">COSTO ($)</label>
               <input type="text" inputMode="numeric" maxLength={7} value={newProd.cost} onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 7) setNewProd({...newProd, cost: v}); }} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
             
-            <div className="space-y-1 lg:col-span-2">
+            <div className="space-y-1 lg:col-span-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
               <input type="text" inputMode="numeric" maxLength={4} value={newProd.utility} onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 4) setNewProd({...newProd, utility: v}); }} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" placeholder="" required />
             </div>
 
-            <div className="space-y-1 lg:col-span-6 bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                <img 
-                  src={newProd.image || DEFAULT_CASTILLA_IMAGE} 
-                  alt="Previsualización" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1 w-full space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">
-                  IMAGEN DEL PRODUCTO (OPCIONAL - MÁX 500 KB - JPG/WEBP)
-                </label>
-                <input 
-                  type="file" 
-                  accept="image/jpeg,image/jpg,image/webp" 
-                  onChange={handleProductImageChange}
-                  className="w-full text-[10px] text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-[#2596be] file:text-white hover:file:bg-[#1e7a9b] cursor-pointer"
-                />
-              </div>
-              {newProd.image && (
-                <button 
-                  type="button" 
-                  onClick={() => setNewProd(prev => ({ ...prev, image: '' }))}
-                  className="px-3 py-2 bg-rose-50 text-rose-500 rounded-xl text-[9px] font-black hover:bg-rose-500 hover:text-white transition-colors cursor-pointer shrink-0"
-                >
-                  QUITAR FOTO
-                </button>
-              )}
+            {/* OBSERVACIONES AMPLIABLES (TEXTAREA CON RESIZE-Y) */}
+            <div className="space-y-1 lg:col-span-6 relative">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">OBSERVACIONES (MÁX 100 CARACTERES - ALFANUMÉRICO Y SÍMBOLOS)</label>
+              <textarea 
+                maxLength={100} 
+                rows={2}
+                value={newProd.observations} 
+                onChange={e => setNewProd({...newProd, observations: e.target.value.toUpperCase()})} 
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all resize-y" 
+                placeholder="EJ: PRODUCTO FRÁGIL, ALMACENAR EN SECO..." 
+              />
+              <span className="absolute bottom-2 right-3 text-[8px] text-slate-400 font-black">{newProd.observations.length}/100</span>
             </div>
+
+            {/* SELECTOR DE IMÁGENES COMPACTO (ESTILO MERCADO LIBRE REDUCIDO) */}
+            <div className="space-y-2 lg:col-span-6 bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-slate-200">
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">
+                  GALERÍA DE IMÁGENES (HASTA 4 - MÁX 500 KB C/U - JPG/WEBP)
+                </label>
+                <span className="text-[9px] font-mono text-[#2596be] font-black">
+                  {(newProd.images || []).filter(Boolean).length} / 4 CARGADAS (MÍNIMO 1)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[0, 1, 2, 3].map((index) => {
+                  const imgUrl = newProd.images && newProd.images[index];
+                  return (
+                    <div key={index} className="relative flex flex-col items-center">
+                      <label className={`w-full h-20 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden bg-white shadow-sm hover:border-[#2596be] group ${imgUrl ? 'border-solid border-[#2596be]' : 'border-slate-300'}`}>
+                        <input 
+                          type="file" 
+                          accept="image/jpeg,image/jpg,image/webp" 
+                          className="hidden" 
+                          onChange={(e) => handleSingleImageUpload(index, e)}
+                        />
+                        {imgUrl ? (
+                          <img src={imgUrl} alt={`Imagen ${index + 1}`} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center text-slate-400 group-hover:text-[#2596be] transition-colors p-1 text-center">
+                            <span className="text-lg font-black leading-none mb-0.5">+</span>
+                            <span className="text-[8px] font-black uppercase">IMAGEN {index + 1}</span>
+                          </div>
+                        )}
+                      </label>
+
+                      {imgUrl && (
+                        <button 
+                          type="button" 
+                          onClick={() => removeImageAt(index)}
+                          className="absolute -top-1.5 -right-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1 shadow-md transition-transform hover:scale-110 cursor-pointer"
+                          title="Eliminar imagen"
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button 
               type="button" 
-              onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', taxId: '', cost: '', utility: '', image: '' })}
+              onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] })}
               className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
             >
               <XCircle size={16} /> LIMPIAR FORMULARIO
@@ -1020,7 +1090,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
         <div className="pt-6 border-t border-slate-100 space-y-4">
           <h4 className="font-black text-[#134b60] text-[10px] uppercase tracking-wider flex items-center gap-2">
-            <History size={16} className="text-[#2596be]" /> ÚLTIMOS 5 PRODUCTOS REGISTRADOS RECIENTEMENTE
+            <History size={16} className="text-[#2596be]" /> ÚLTIMOS 5 PRODUCTOS REGISTRADOS
           </h4>
           <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
             <div className="overflow-x-auto scrollbar-hide">
@@ -1029,7 +1099,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                   <tr>
                     <th className="px-6 py-5">FOTO</th>
                     <th className="px-6 py-5">CÓDIGO ID</th>
-                    <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
+                    <th className="px-6 py-5">PRODUCTO / CATEGORÍA</th>
                     <th className="px-6 py-5 text-center">STOCK DISP.</th>
                     <th className="px-6 py-5 text-right">VALOR BASE</th>
                     <th className="px-6 py-5 text-right">IVA</th>
@@ -1043,6 +1113,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     products.slice(-5).reverse().map(p => {
                       const c = getCalculatedValues(p.cost, p.utility, p.taxId);
                       const availableStock = calculateAvailableStock(p.id, inventory, orders);
+                      const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
                       return (
                         <tr 
                             key={p.id} 
@@ -1050,12 +1121,12 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                             className="hover:bg-white transition-colors cursor-pointer"
                           >
                           <td className="px-6 py-3">
-                            <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
+                            <img src={displayImg} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
                           </td>
                           <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
                           <td className="px-6 py-4">
                             <p className="font-black text-[#134b60]">{p.name}</p>
-                            <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                            <span className="px-2 py-0.5 bg-[#e9f4f8] text-[#2596be] rounded-lg text-[8px] font-black">{p.category || 'N/A'}</span>
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
@@ -1083,7 +1154,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           <div className="relative flex-1 w-full">
             <input
               type="text"
-              placeholder="Buscador inteligente: ID, nombre o unidad..."
+              placeholder="Buscador inteligente: ID, nombre, categoría o unidad..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
@@ -1103,7 +1174,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 <tr>
                   <th className="px-6 py-5">FOTO</th>
                   <th className="px-6 py-5">CÓDIGO ID</th>
-                  <th className="px-6 py-5">PRODUCTO / UNIDAD</th>
+                  <th className="px-6 py-5">PRODUCTO / CATEGORÍA</th>
                   <th className="px-6 py-5 text-center">STOCK DISP.</th>
                   <th className="px-6 py-5 text-right">VALOR BASE</th>
                   <th className="px-6 py-5 text-right">IVA</th>
@@ -1118,6 +1189,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                   filteredProducts.map(p => {
                     const c = getCalculatedValues(p.cost, p.utility, p.taxId);
                     const availableStock = calculateAvailableStock(p.id, inventory, orders);
+                    const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
                     return (
                       <tr 
                           key={p.id} 
@@ -1125,12 +1197,15 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                           className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
                         >
                       <td className="px-6 py-3">
-                        <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
+                        <img src={displayImg} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
                       </td>
                       <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
                       <td className="px-6 py-4">
                         <p className="font-black text-[#134b60]">{p.name}</p>
-                        <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                        <div className="flex gap-2 mt-0.5">
+                          <span className="px-2 py-0.5 bg-[#e9f4f8] text-[#2596be] rounded-lg text-[8px] font-black">{p.category || 'N/A'}</span>
+                          <span className="text-[9px] text-slate-400 font-bold">{p.unitName}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
@@ -1142,7 +1217,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                       <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, taxId: p.taxId, cost: p.cost, utility: p.utility }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
+                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, category: p.category || '', taxId: p.taxId, cost: p.cost, utility: p.utility, observations: p.observations || '', images: p.images || [p.image || DEFAULT_CASTILLA_IMAGE] }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
                           <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
                         </div>
                       </td>
@@ -1211,7 +1286,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     <tr>
                       <th className="px-4 py-3 text-center w-12">CHECK</th>
                       <th className="px-4 py-3">CÓDIGO ID</th>
-                      <th className="px-4 py-3">PRODUCTO / UNIDAD</th>
+                      <th className="px-4 py-3">PRODUCTO / CATEGORÍA</th>
                       <th className="px-4 py-3 text-right">COSTO ACTUAL</th>
                       <th className="px-4 py-3 text-right">UTILIDAD %</th>
                       <th className="px-4 py-3 text-right">PRECIO FINAL ACTUAL</th>
@@ -1241,7 +1316,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                             <td className="px-4 py-3 font-mono text-[#2596be] font-black">{p.id}</td>
                             <td className="px-4 py-3">
                               <p className="font-black text-[#134b60]">{p.name}</p>
-                              <p className="text-[9px] text-slate-400 font-bold">{p.unitName}</p>
+                              <span className="px-2 py-0.5 bg-[#e9f4f8] text-[#2596be] rounded-lg text-[8px] font-black">{p.category || 'N/A'}</span>
                             </td>
                             <td className="px-4 py-3 text-right font-mono text-slate-500">{formatCurrency(p.cost)}</td>
                             <td className="px-4 py-3 text-right font-mono text-slate-500">{p.utility}%</td>
@@ -1324,11 +1399,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                                   className="w-28 px-2 py-2 bg-white border-2 border-[#2596be]/50 focus:border-[#2596be] rounded-xl font-mono text-xs text-center text-[#134b60] outline-none shadow-sm font-black placeholder:text-slate-300 placeholder:font-normal"
                                 />
                               </div>
-                              {isPriceDrop && (
-                                <span className="block text-[8px] text-amber-600 font-black mt-1 text-center animate-pulse">
-                                  ⚠️ ATENCIÓN: Precio final menor al actual
-                                </span>
-                              )}
+                              {isPriceDrop && <span className="block text-[8px] text-amber-600 font-black mt-1 text-center animate-pulse">⚠️ ATENCIÓN: Precio final menor al actual</span>}
                             </td>
                             <td className="px-4 py-4 text-center align-middle w-[32%]">
                               <div className="flex items-center justify-start gap-3 max-w-[180px] mx-auto">
@@ -1344,11 +1415,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                                   className="w-20 px-2 py-2 bg-white border-2 border-[#2596be]/50 focus:border-[#2596be] rounded-xl font-mono text-xs text-center text-[#134b60] outline-none shadow-sm font-black placeholder:text-slate-300 placeholder:font-normal"
                                 />
                               </div>
-                              {isUtilityDrop && (
-                                <span className="block text-[8px] text-amber-600 font-black mt-1 text-center animate-pulse">
-                                  ⚠️ ATENCIÓN: Utilidad menor a la actual
-                                </span>
-                              )}
+                              {isUtilityDrop && <span className="block text-[8px] text-amber-600 font-black mt-1 text-center animate-pulse">⚠️ ATENCIÓN: Utilidad menor a la actual</span>}
                             </td>
                             <td className="px-4 py-4 text-right align-middle w-[10%]">
                               <button 
@@ -1430,7 +1497,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
       )}
 
-      {/* --- MODAL DE ÉXITO MASIVO --- */}
+      {/* --- MODALES --- */}
       {priceSuccessModal && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[120] flex items-center justify-center p-4 uppercase">
           <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center border-2 border-[#e9f4f8] space-y-6 animate-in fade-in duration-300">
@@ -1442,35 +1509,23 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               <h3 className="text-lg font-black text-[#134b60]">ACTUALIZACIÓN MASIVA COMPLETADA</h3>
             </div>
             <p className="text-xs text-slate-500 font-bold leading-relaxed">
-              ¡ACTUALIZACIÓN MASIVA EXITOSA! SE MODIFICARON <span className="text-[#2596be] font-black">{priceSuccessModal.count} PRECIOS</span> Y SE REGISTRARON CORRECTAMENTE EN LA BITÁCORA.
+              ¡ACTUALIZACIÓN MASIVA EXITOSA! SE MODIFICARON <span className="text-[#2596be] font-black">{priceSuccessModal.count} PRECIOS</span>.
             </p>
-            <button 
-              onClick={() => setPriceSuccessModal(null)}
-              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95"
-            >
-              ENTENDIDO
-            </button>
+            <button onClick={() => setPriceSuccessModal(null)} className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95">ENTENDIDO</button>
           </div>
         </div>
       )}
 
-      {/* --- MODAL DE CONFIRMACIÓN --- */}
       {priceConfirmModal && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4 uppercase">
           <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-left border-2 border-[#e9f4f8] space-y-6">
             <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
-              <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
-                <AlertTriangle size={28} />
-              </div>
+              <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><AlertTriangle size={28} /></div>
               <div>
                 <span className="text-[10px] font-mono font-black text-amber-600">SEGURIDAD DEL SISTEMA</span>
                 <h3 className="text-lg font-black text-[#134b60]">CONFIRMAR ACTUALIZACIÓN DE PRECIOS</h3>
               </div>
             </div>
-
-            <p className="text-xs text-slate-500 font-bold leading-relaxed">
-              Estás a punto de aplicar los cambios en los precios de los productos seleccionados. Revisa el resumen final antes de proceder.
-            </p>
 
             <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
               <table className="w-full text-left uppercase">
@@ -1484,31 +1539,9 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
                   {priceConfirmModal.items.map((item, idx) => (
                     <tr key={idx} className={`hover:bg-slate-50 ${item.isPriceDrop || item.isUtilityDrop ? 'bg-amber-50/60' : ''}`}>
-                      <td className="px-4 py-3 font-black">
-                        {item.name}
-                        {item.isPriceDrop && (
-                          <span className="block text-[8px] text-amber-600 font-black mt-0.5">
-                            ⚠️ ATENCIÓN: Precio final menor al actual
-                          </span>
-                        )}
-                        {item.isUtilityDrop && (
-                          <span className="block text-[8px] text-amber-600 font-black mt-0.5">
-                            ⚠️ ATENCIÓN: Utilidad menor a la actual
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center font-mono">
-                        <span className="text-slate-400">{formatCurrency(item.oldCost)}</span>
-                        <span className="mx-1 text-[#2596be]">→</span>
-                        <span className="text-[#134b60]">{formatCurrency(item.newCost)}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center font-mono">
-                        <span className="text-slate-400">{formatCurrency(item.oldFinalPrice)}</span>
-                        <span className="mx-1 text-[#2596be]">→</span>
-                        <span className={item.isPriceDrop ? 'text-amber-600 font-black' : 'text-[#134b60]'}>
-                          {formatCurrency(item.newFinalPrice)}
-                        </span>
-                      </td>
+                      <td className="px-4 py-3 font-black">{item.name}</td>
+                      <td className="px-4 py-3 text-center font-mono"><span className="text-slate-400">{formatCurrency(item.oldCost)}</span> ➔ <span className="text-[#134b60]">{formatCurrency(item.newCost)}</span></td>
+                      <td className="px-4 py-3 text-center font-mono"><span className="text-slate-400">{formatCurrency(item.oldFinalPrice)}</span> ➔ <span className={item.isPriceDrop ? 'text-amber-600 font-black' : 'text-[#134b60]'}>{formatCurrency(item.newFinalPrice)}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -1516,18 +1549,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
             </div>
 
             <div className="flex gap-4 pt-2">
-              <button 
-                onClick={() => setPriceConfirmModal(null)}
-                className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                CANCELAR
-              </button>
-              <button 
-                onClick={executeConfirmedBatchUpdates}
-                className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95"
-              >
-                SÍ, CONFIRMAR Y APLICAR CAMBIOS
-              </button>
+              <button onClick={() => setPriceConfirmModal(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
+              <button onClick={executeConfirmedBatchUpdates} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95">SÍ, CONFIRMAR Y APLICAR</button>
             </div>
           </div>
         </div>
@@ -1536,15 +1559,15 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     {/* --- MODAL CARGUE NUEVOS --- */}
     {modalType === 'bulkUpload' && (
       <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-          <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
+          <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-4xl' : 'max-w-md'}`}>
               {!csvPreview ? (
                 <>
                   <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
                   <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO DE NUEVOS PRODUCTOS</h3>
-                  <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO: ID, NOMBRE, UNIDAD, COSTO, UTILIDAD, IVA(%)</p>
+                  <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO: ID, NOMBRE, UNIDAD, CATEGORIA, COSTO, UTILIDAD, IVA(%), OBSERVACIONES</p>
                   
                   <button onClick={downloadTemplate} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                      <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
+                      <Download size={14}/> DESCARGAR PLANTILLA MAESTRA
                   </button>
 
                   <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
@@ -1562,12 +1585,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                       <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
                     </div>
                     <div className="flex gap-3 text-right">
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
-                        {csvPreview.validRows.length} VÁLIDOS
-                      </span>
-                      <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${csvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                        {csvPreview.errors.length} ERRORES
-                      </span>
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">{csvPreview.validRows.length} VÁLIDOS</span>
+                      <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${csvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>{csvPreview.errors.length} ERRORES</span>
                     </div>
                   </div>
 
@@ -1575,29 +1594,27 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     <table className="w-full text-left uppercase">
                       <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest z-10">
                         <tr>
-                          <th className="px-4 py-3">ID</th>
-                          <th className="px-4 py-3">PRODUCTO</th>
-                          <th className="px-4 py-3 text-center">UNIDAD</th>
-                          <th className="px-4 py-3 text-right">COSTO</th>
-                          <th className="px-4 py-3 text-center">UTILIDAD</th>
-                          <th className="px-4 py-3 text-center">IVA</th>
+                          <th className="px-3 py-3">ID</th>
+                          <th className="px-3 py-3">PRODUCTO</th>
+                          <th className="px-3 py-3 text-center">CATEGORÍA</th>
+                          <th className="px-3 py-3 text-right">COSTO</th>
+                          <th className="px-3 py-3 text-center">UTILIDAD</th>
+                          <th className="px-3 py-3 text-center">IVA</th>
+                          <th className="px-3 py-3">OBSERVACIONES</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
-                        {csvPreview.validRows.length === 0 ? (
-                          <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-300">NO HAY REGISTROS VÁLIDOS</td></tr>
-                        ) : (
-                          csvPreview.validRows.map((row, idx) => (
-                            <tr key={idx} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                              <td className="px-4 py-3 font-mono text-[#2596be] font-black">{row.id}</td>
-                              <td className="px-4 py-3">{row.name}</td>
-                              <td className="px-4 py-3 text-center">{row.unitName}</td>
-                              <td className="px-4 py-3 text-right font-mono">{row.cost}</td>
-                              <td className="px-4 py-3 text-center">{row.utility}%</td>
-                              <td className="px-4 py-3 text-center text-amber-600">{row.taxName}</td>
-                            </tr>
-                          ))
-                        )}
+                        {csvPreview.validRows.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                            <td className="px-3 py-3 font-mono text-[#2596be] font-black">{row.id}</td>
+                            <td className="px-3 py-3">{row.name}</td>
+                            <td className="px-3 py-3 text-center"><span className="px-2 py-0.5 bg-[#e9f4f8] text-[#2596be] rounded-lg text-[8px] font-black">{row.category}</span></td>
+                            <td className="px-3 py-3 text-right font-mono">{row.cost}</td>
+                            <td className="px-3 py-3 text-center">{row.utility}%</td>
+                            <td className="px-3 py-3 text-center text-amber-600">{row.taxName}</td>
+                            <td className="px-3 py-3 text-slate-400 text-[9px]">{row.observations || 'N/A'}</td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
@@ -1605,9 +1622,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                   {csvPreview.errors.length > 0 && (
                     <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
                       <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
-                      {csvPreview.errors.map((err, idx) => (
-                        <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
-                      ))}
+                      {csvPreview.errors.map((err, idx) => <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>)}
                     </div>
                   )}
 
@@ -1639,10 +1654,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 <>
                   <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
                   <h3 className="font-black text-xl mb-2 tracking-tighter">ACTUALIZACIÓN MASIVA DE PRECIOS (CSV)</h3>
-                  <p className="text-[10px] text-slate-400 font-bold mb-6">EXPORTA TU CATÁLOGO, MODIFICA COSTOS/UTILIDADES Y SÚBELO AQUÍ.</p>
-                  
                   <button onClick={() => exportCatalogCSV(false)} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                      <Download size={14}/> 📥 DESCARGAR CATÁLOGO ACTUAL PARA EDITAR
+                      <Download size={14}/> 📥 DESCARGAR CATÁLOGO ACTUAL
                   </button>
 
                   <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
@@ -1656,16 +1669,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                     <div>
-                      <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE CAMBIOS DE PRECIOS</h3>
+                      <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DE CAMBIOS</h3>
                       <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
-                    </div>
-                    <div className="flex gap-3 text-right">
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
-                        SE VAN A MODIFICAR {priceCsvPreview.validRows.length} PRECIOS
-                      </span>
-                      <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${priceCsvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                        {priceCsvPreview.errors.length} ERRORES / AVISOS
-                      </span>
                     </div>
                   </div>
 
@@ -1679,51 +1684,20 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
-                        {priceCsvPreview.validRows.length === 0 ? (
-                          <tr><td colSpan="3" className="px-4 py-8 text-center text-slate-300">NO HAY CAMBIOS VÁLIDOS PARA APLICAR</td></tr>
-                        ) : (
-                          priceCsvPreview.validRows.map((row, idx) => (
-                            <tr key={idx} className={`hover:bg-slate-50 transition-colors ${row.isPriceDrop || row.isUtilityDrop ? 'bg-amber-50/50' : ''}`}>
-                              <td className="px-4 py-3 font-black">
-                                #{row.id} - {row.name}
-                                {row.isPriceDrop && <span className="block text-[8px] text-amber-600 font-black mt-0.5">⚠️ PRECIO FINAL MENOR AL ACTUAL</span>}
-                                {row.isUtilityDrop && <span className="block text-[8px] text-amber-600 font-black mt-0.5">⚠️ UTILIDAD MENOR A LA ACTUAL</span>}
-                              </td>
-                              <td className="px-4 py-3 text-center font-mono">
-                                <span className="text-slate-400">{formatCurrency(row.oldCost)}</span>
-                                <span className="mx-1 text-[#2596be]">➔</span>
-                                <span className="text-[#134b60]">{formatCurrency(row.newCost)}</span>
-                              </td>
-                              <td className="px-4 py-3 text-center font-mono">
-                                <span className="text-slate-400">{row.oldUtility}%</span>
-                                <span className="mx-1 text-[#2596be]">➔</span>
-                                <span className="text-[#134b60]">{row.newUtility}%</span>
-                              </td>
-                            </tr>
-                          ))
-                        )}
+                        {priceCsvPreview.validRows.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3 font-black">#{row.id} - {row.name}</td>
+                            <td className="px-4 py-3 text-center font-mono"><span className="text-slate-400">{formatCurrency(row.oldCost)}</span> ➔ <span className="text-[#134b60]">{formatCurrency(row.newCost)}</span></td>
+                            <td className="px-4 py-3 text-center font-mono"><span className="text-slate-400">{row.oldUtility}%</span> ➔ <span className="text-[#134b60]">{row.newUtility}%</span></td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
 
-                  {priceCsvPreview.errors.length > 0 && (
-                    <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
-                      <p className="text-[10px] font-black text-rose-600 uppercase mb-2">ERRORES DETECTADOS (BLOQUEA LA IMPORTACIÓN):</p>
-                      {priceCsvPreview.errors.map((err, idx) => (
-                        <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
-                      ))}
-                    </div>
-                  )}
-
                   <div className="flex gap-4 pt-2">
                     <button onClick={() => setPriceCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all cursor-pointer">CANCELAR</button>
-                    <button 
-                      onClick={executePriceBulkUpdate}
-                      disabled={priceCsvPreview.validRows.length === 0 || priceCsvPreview.errors.length > 0}
-                      className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
-                    >
-                      CONFIRMAR Y ACTUALIZAR {priceCsvPreview.validRows.length} PRECIOS
-                    </button>
+                    <button onClick={executePriceBulkUpdate} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 transition-all cursor-pointer active:scale-95">CONFIRMAR Y ACTUALIZAR</button>
                   </div>
                 </div>
               )}
@@ -1731,6 +1705,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
     )}
 
+    {/* --- MODAL EDICIÓN Y ELIMINACIÓN --- */}
     {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
       <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
         <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
@@ -1746,32 +1721,40 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
             <div className="space-y-4">
               {modalType === 'edit' && (
                 <div className="space-y-4 max-h-[50vh] overflow-y-auto px-2 py-1 scrollbar-hide">
+                  <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">CÓDIGO ID</label><input type="text" value={editData.id} disabled className="w-full px-4 py-3 bg-slate-100 border-2 border-transparent rounded-xl font-black text-sm text-center text-slate-400" /></div>
+                  <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">NOMBRE PRODUCTO</label><input type="text" maxLength={100} value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] uppercase" /></div>
                   <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400">CÓDIGO ID (SOLO LECTURA)</label>
-                      <input type="text" value={editData.id} disabled className="w-full px-4 py-3 bg-slate-100 border-2 border-transparent rounded-xl font-black text-sm text-center text-slate-400" />
+                    <label className="text-[9px] font-black text-slate-400">CATEGORÍA *</label>
+                    <select value={editData.category} onChange={(e) => setEditData({...editData, category: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] uppercase" required>
+                         <option value="">SELECCIONE</option>
+                         {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
                   </div>
-                  <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">NOMBRE PRODUCTO</label><input type="text" maxLength={100} value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase" /></div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-slate-400">UNIDAD</label>
-                    <select value={editData.unitName} onChange={(e) => setEditData({...editData, unitName: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase">
+                    <select value={editData.unitName} onChange={(e) => setEditData({...editData, unitName: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] uppercase">
                          {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-slate-400">IVA</label>
-                    <select value={editData.taxId} onChange={(e) => setEditData({...editData, taxId: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all uppercase">
+                    <select value={editData.taxId} onChange={(e) => setEditData({...editData, taxId: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] uppercase">
                          <option value="">SELECCIONE</option>
                          {taxes.map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
                     </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">COSTO</label><input type="number" value={editData.cost} onChange={(e) => setEditData({...editData, cost: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" /></div>
-                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">UTILIDAD %</label><input type="number" value={editData.utility} onChange={(e) => setEditData({...editData, utility: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" /></div>
+                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">COSTO</label><input type="number" value={editData.cost} onChange={(e) => setEditData({...editData, cost: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60]" /></div>
+                    <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">UTILIDAD %</label><input type="number" value={editData.utility} onChange={(e) => setEditData({...editData, utility: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60]" /></div>
+                  </div>
+                  <div className="space-y-1 relative">
+                    <label className="text-[9px] font-black text-slate-400">OBSERVACIONES (MÁX 100)</label>
+                    <textarea rows={2} maxLength={100} value={editData.observations} onChange={(e) => setEditData({...editData, observations: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] uppercase resize-y" />
                   </div>
                 </div>
               )}
-              {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
-              {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DE {selectedProd?.name}.</p></div>}
+              {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase">⚠️ SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
+              {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">ACCIÓN IRREVERSIBLE. ELIMINACIÓN DE {selectedProd?.name}.</p></div>}
             </div>
             <div className="flex gap-4 mt-10">
               <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
@@ -1780,7 +1763,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setProducts(products.filter(p => p.id !== selectedProd.id)); setModalType(null); }
-              }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
+              }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
             </div>
           </div>
         </div>
@@ -1789,27 +1772,32 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     
     <Footer />
 
+    {/* --- MODAL DETALLE DE PRODUCTO CON GALERÍA Y OBSERVACIONES --- */}
     {modalType === 'productDetail' && selectedProd && (() => {
       const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
       const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
+      const prodImages = (selectedProd.images && selectedProd.images.length > 0) ? selectedProd.images : [selectedProd.image || DEFAULT_CASTILLA_IMAGE];
       return (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-xl text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-xl text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6 max-h-[90vh] overflow-y-auto scrollbar-hide">
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-4">
-                <img src={selectedProd.image || DEFAULT_CASTILLA_IMAGE} alt={selectedProd.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-200 shadow-sm" />
-                <div>
-                  <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE PRODUCTO #{selectedProd.id}</span>
-                  <h3 className="text-xl font-black text-[#134b60]">{selectedProd.name}</h3>
-                </div>
+              <div>
+                <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE PRODUCTO #{selectedProd.id}</span>
+                <h3 className="text-xl font-black text-[#134b60]">{selectedProd.name}</h3>
+                <span className="px-2.5 py-1 bg-[#e9f4f8] text-[#2596be] rounded-lg text-[9px] font-black inline-block mt-1">CATEGORÍA: {selectedProd.category || 'N/A'}</span>
               </div>
-              <button 
-                onClick={() => setModalType(null)}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+              <button onClick={() => setModalType(null)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"><X size={18} /></button>
+            </div>
+
+            {/* Galería de imágenes */}
+            <div className="space-y-2">
+              <span className="text-[9px] font-black text-slate-400 uppercase">IMÁGENES REGISTRADAS ({prodImages.length})</span>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {prodImages.map((imgUrl, i) => (
+                  <img key={i} src={imgUrl} alt={`Foto ${i+1}`} className="w-20 h-20 rounded-2xl object-cover border-2 border-slate-200 shadow-sm shrink-0" />
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-xs font-bold text-[#134b60]">
@@ -1833,13 +1821,20 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               </div>
             </div>
 
+            {selectedProd.observations && (
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs text-[#134b60]">
+                <span className="text-[9px] text-[#2596be] font-black block mb-1">OBSERVACIONES:</span>
+                <p className="font-bold">{selectedProd.observations}</p>
+              </div>
+            )}
+
             <div className="bg-[#e9f4f8] p-5 rounded-2xl border-2 border-[#2596be]/30 space-y-3">
               <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
-                <span className="text-[9px] text-[#2596be] font-black">SUBTOTAL (COSTO + UTILIDAD):</span>
+                <span className="text-[9px] text-[#2596be] font-black">SUBTOTAL:</span>
                 <span className="font-mono">{formatCurrency(c.subtotal)}</span>
               </div>
               <div className="flex justify-between items-center text-xs font-bold text-[#134b60]">
-                <span className="text-[9px] text-amber-600 font-black">VALOR IMPUESTO (IVA):</span>
+                <span className="text-[9px] text-amber-600 font-black">VALOR IVA:</span>
                 <span className="font-mono text-amber-600">{formatCurrency(c.taxAmount)}</span>
               </div>
               <div className="border-t border-[#2596be]/20 pt-3 flex justify-between items-center text-sm font-black text-[#134b60]">
@@ -1849,12 +1844,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
             </div>
 
             <div className="flex justify-end pt-2">
-              <button 
-                onClick={() => setModalType(null)}
-                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95"
-              >
-                CERRAR DETALLE
-              </button>
+              <button onClick={() => setModalType(null)} className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all cursor-pointer">CERRAR</button>
             </div>
 
           </div>
