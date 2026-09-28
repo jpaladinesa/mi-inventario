@@ -276,7 +276,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
 // --- CONSTANTE DE IMAGEN POR DEFECTO (CASTILLA) ---
 const DEFAULT_CASTILLA_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'><rect width='500' height='500' fill='%23134b60'/><text x='50%' y='43%' dominant-baseline='middle' text-anchor='middle' fill='%232596be' font-family='sans-serif' font-size='32' font-weight='black'>DISTRIBUCIONES</text><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-size='38' font-weight='black'>CASTILLA</text></svg>";
 
-// --- MÓDULO DE PRODUCTOS CON SOPORTE DE DECIMALES Y VALIDACIONES ESTRICTAS ---
+// --- MÓDULO DE PRODUCTOS: DISEÑO ORGANIZADO Y SOPORTE DE DECIMALES ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
   const [priceCsvPreview, setPriceCsvPreview] = useState(null); 
@@ -474,7 +474,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     link.click();
   };
 
-  // --- VALIDACIÓN ESTRICTA PARA ACTUALIZACIÓN MASIVA DE PRECIOS (SOPORTA DECIMALES) ---
   const handlePriceFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -502,7 +501,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         const line = lines[i].trim();
         if (!line) continue;
 
-        // IMPORTANTE: Separar estrictamente por punto y coma (;) para no romper números con decimales (ej: 1500,50)
         const parts = line.split(';').map(p => p ? p.trim() : '');
         if (parts.length < 5) {
           errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
@@ -518,25 +516,21 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           continue;
         }
 
-        // 1. Validar que no cambien el ID
         if (cleanId !== existingProd.id && id !== existingProd.id) {
           errors.push(`Línea ${i + 1} (ID ${id}): No está permitido cambiar el ID del producto.`);
           continue;
         }
 
-        // 2. Validar que no cambien el Nombre
         if (csvName && existingProd.name && csvName.toUpperCase().trim() !== existingProd.name.toUpperCase().trim()) {
           errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies el nombre. Mantén '${existingProd.name}'.`);
           continue;
         }
 
-        // 3. Validar que no cambien la Unidad de Medida
         if (csvUnit && existingProd.unitName && csvUnit.toUpperCase().trim() !== existingProd.unitName.toUpperCase().trim()) {
           errors.push(`Línea ${i + 1} (ID ${existingProd.id}): No cambies la unidad de medida. Mantén '${existingProd.unitName}'.`);
           continue;
         }
 
-        // 4. Validar que no cambien el Impuesto (IVA)
         const existingTaxObj = taxes.find(t => t.id === existingProd.taxId);
         const existingTaxVal = existingTaxObj ? existingTaxObj.value : (existingProd.taxValue || 0);
         if (csvTax !== undefined && csvTax !== '') {
@@ -547,7 +541,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           }
         }
 
-        // 5. Costo Obligatorio (Soporta decimales con punto o coma)
         if (cost === undefined || cost === '') {
           errors.push(`Línea ${i + 1} (ID ${existingProd.id}): El costo es obligatorio.`);
           continue;
@@ -559,7 +552,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           continue;
         }
 
-        // 6. Utilidad Opcional (Soporta decimales con punto o coma)
         let parsedUtility = parseFloat(existingProd.utility) || 0;
         if (utility !== undefined && utility !== '') {
           const cleanUtilStr = String(utility).replace(/\s/g, '').replace(',', '.');
@@ -598,10 +590,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         errors.push(`⚠️ El archivo no contiene ningún cambio de costo o utilidad frente al catálogo actual.`);
       }
 
-      setPriceCsvPreview({
-        validRows,
-        errors
-      });
+      setPriceCsvPreview({ validRows, errors });
     };
 
     reader.readAsText(file, 'UTF-8');
@@ -619,11 +608,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     priceCsvPreview.validRows.forEach(row => {
       updatedProducts = updatedProducts.map(p => {
         if (p.id === row.id) {
-          return {
-            ...p,
-            cost: row.newCost,
-            utility: row.newUtility
-          };
+          return { ...p, cost: row.newCost, utility: row.newUtility };
         }
         return p;
       });
@@ -754,23 +739,17 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     const timestamp = new Date().toLocaleString();
     const newLogs = [];
     let updatedProducts = [...products];
-
     let currentLogsList = [...priceLogs];
 
     priceConfirmModal.items.forEach(item => {
       updatedProducts = updatedProducts.map(p => {
         if (p.id === item.id) {
-          return {
-            ...p,
-            cost: item.newCost,
-            utility: item.newUtility
-          };
+          return { ...p, cost: item.newCost, utility: item.newUtility };
         }
         return p;
       });
 
       const nextMoveId = getNextLogID(currentLogsList);
-
       const logEntry = {
         moveId: nextMoveId,
         productId: item.id,
@@ -880,11 +859,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         });
       }
 
-      setCsvPreview({
-        validRows,
-        errors,
-        totalFound: validRows.length + errors.length
-      });
+      setCsvPreview({ validRows, errors, totalFound: validRows.length + errors.length });
     };
 
     reader.readAsText(file, 'UTF-8');
@@ -902,10 +877,15 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
   return (
     <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PRODUCTOS</h2>
+      
+      {/* 1. ENCABEZADO PRINCIPAL CON TÍTULO Y BOTONES DE ACCIÓN */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b-4 border-[#2596be] pb-6 gap-6">
+        <div>
+          <span className="text-[10px] font-mono font-black text-[#2596be] tracking-widest uppercase">MÓDULO ADMINISTRATIVO</span>
+          <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PRODUCTOS</h2>
+        </div>
         
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
           <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95">
             <UploadCloud size={16}/> CARGUE NUEVOS (CSV)
           </button>
@@ -917,28 +897,29 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           <button onClick={() => exportCatalogCSV(false)} className="bg-[#2596be] hover:bg-[#1e7a9b] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95">
             <Download size={16}/> EXPORTAR CATÁLOGO
           </button>
-          
-          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
-            <button 
-              onClick={() => setActiveSubTab('create')} 
-              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
-            >
-              ➕ NUEVO
-            </button>
-            <button 
-              onClick={() => setActiveSubTab('list')} 
-              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
-            >
-              📋 CATÁLOGO ({products.length})
-            </button>
-            <button 
-              onClick={() => setActiveSubTab('prices')} 
-              className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'prices' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
-            >
-              💲 PRECIOS Y LOGS
-            </button>
-          </div>
         </div>
+      </div>
+
+      {/* 2. BARRA DE PESTAÑAS DE NAVEGACIÓN INDEPENDIENTE */}
+      <div className="flex bg-white p-2 rounded-3xl shadow-sm border-2 border-[#e9f4f8] w-fit">
+        <button 
+          onClick={() => setActiveSubTab('create')} 
+          className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+        >
+          ➕ NUEVO PRODUCTO
+        </button>
+        <button 
+          onClick={() => setActiveSubTab('list')} 
+          className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+        >
+          📋 CATÁLOGO ({products.length})
+        </button>
+        <button 
+          onClick={() => setActiveSubTab('prices')} 
+          className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'prices' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+        >
+          💲 PRECIOS Y LOGS
+        </button>
       </div>
 
       {activeSubTab === 'create' && (
@@ -1449,7 +1430,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
       )}
 
-      {/* --- MODAL DE ÉXITO MASIVO CORPORATIVO --- */}
+      {/* --- MODAL DE ÉXITO MASIVO --- */}
       {priceSuccessModal && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[120] flex items-center justify-center p-4 uppercase">
           <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center border-2 border-[#e9f4f8] space-y-6 animate-in fade-in duration-300">
@@ -1473,7 +1454,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         </div>
       )}
 
-      {/* --- MODAL DE DOBLE CONFIRMACIÓN --- */}
+      {/* --- MODAL DE CONFIRMACIÓN --- */}
       {priceConfirmModal && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4 uppercase">
           <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-left border-2 border-[#e9f4f8] space-y-6">
@@ -1552,7 +1533,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         </div>
       )}
 
-    {/* --- MODAL DE CARGUE NUEVOS PRODUCTOS --- */}
+    {/* --- MODAL CARGUE NUEVOS --- */}
     {modalType === 'bulkUpload' && (
       <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
           <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
@@ -1650,7 +1631,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
     )}
 
-    {/* --- MODAL DE CARGUE MASIVO PARA ACTUALIZACIÓN DE PRECIOS --- */}
+    {/* --- MODAL CARGUE PRECIOS --- */}
     {modalType === 'bulkPriceUpload' && (
       <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
           <div className={`bg-white rounded-3xl shadow-2xl p-8 w-full text-center text-[#134b60] transition-all duration-300 ${priceCsvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
