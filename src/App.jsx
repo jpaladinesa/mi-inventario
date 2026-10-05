@@ -281,6 +281,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
   const [priceCsvPreview, setPriceCsvPreview] = useState(null); 
   const [priceSuccessModal, setPriceSuccessModal] = useState(null); 
+  const [warningModal, setWarningModal] = useState(null); // MODAL ESTÉTICO PARA ALERTAS Y AVISOS
   const [activeSubTab, setActiveSubTab] = useState('create');
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const [searchTerm, setSearchTerm] = useState('');
@@ -393,13 +394,19 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
     const validTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      alert('FORMATO NO VÁLIDO. USE EXCLUSIVAMENTE IMÁGENES JPG O WEBP.');
+      setWarningModal({
+        title: 'FORMATO NO VÁLIDO',
+        message: 'USE EXCLUSIVAMENTE IMÁGENES EN FORMATO JPG O WEBP.'
+      });
       e.target.value = '';
       return;
     }
 
     if (file.size > 500 * 1024) {
-      alert('LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.');
+      setWarningModal({
+        title: 'EXCESO DE PESO',
+        message: 'LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.'
+      });
       e.target.value = '';
       return;
     }
@@ -418,6 +425,52 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
   const removeImageAt = (index) => {
     setNewProd(prev => {
+      const updatedImages = [...(prev.images || [])];
+      updatedImages.splice(index, 1);
+      return { ...prev, images: updatedImages };
+    });
+  };
+
+  const handleEditSingleImageUpload = (index, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setWarningModal({
+        title: 'FORMATO NO VÁLIDO',
+        message: 'USE EXCLUSIVAMENTE IMÁGENES EN FORMATO JPG O WEBP.'
+      });
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 500 * 1024) {
+      setWarningModal({
+        title: 'EXCESO DE PESO',
+        message: 'LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.'
+      });
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEditData(prev => {
+        let updatedImages = prev.images ? [...prev.images] : [];
+        while (updatedImages.length <= index) {
+          updatedImages.push(null);
+        }
+        updatedImages[index] = reader.result;
+        return { ...prev, images: updatedImages };
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const removeEditImageAt = (index) => {
+    setEditData(prev => {
       const updatedImages = [...(prev.images || [])];
       updatedImages.splice(index, 1);
       return { ...prev, images: updatedImages };
@@ -456,7 +509,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     if (products.some(p => p.id === newProd.id)) { setErrorMsg('ESTE CÓDIGO ID YA EXISTE'); return; }
     
     const taxObj = taxes.find(t => t.id === newProd.taxId);
-    const finalImages = (newProd.images && newProd.images.length > 0) ? newProd.images : [DEFAULT_CASTILLA_IMAGE];
+    const finalImages = (newProd.images && newProd.images.length > 0) ? newProd.images.filter(Boolean) : [DEFAULT_CASTILLA_IMAGE];
 
     const nuevoProductoData = { 
         ...newProd, 
@@ -478,7 +531,9 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
   const executeUpdate = () => {
     const taxObj = taxes.find(t => t.id === editData.taxId);
-    const finalImages = (editData.images && editData.images.length > 0) ? editData.images : (editData.image ? [editData.image] : [DEFAULT_CASTILLA_IMAGE]);
+    const validFilteredImages = (editData.images || []).filter(Boolean);
+    const finalImages = validFilteredImages.length > 0 ? validFilteredImages : (editData.image ? [editData.image] : [DEFAULT_CASTILLA_IMAGE]);
+    
     setProducts(products.map(p => p.id === selectedProd.id ? { 
         ...p,
         ...editData, 
@@ -497,7 +552,10 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       : products;
 
     if (itemsToExport.length === 0) {
-      alert('NO HAY PRODUCTOS PARA EXPORTAR.');
+      setWarningModal({
+        title: 'CATÁLOGO VACÍO',
+        message: 'NO HAY PRODUCTOS DISPONIBLES PARA EXPORTAR.'
+      });
       return;
     }
 
@@ -521,7 +579,10 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("El archivo es demasiado pesado. El límite máximo es 5 MB.");
+      setWarningModal({
+        title: 'ARCHIVO PESADO',
+        message: 'EL ARCHIVO ES DEMASIADO PESADO. EL LÍMITE MÁXIMO ES 5 MB.'
+      });
       return;
     }
 
@@ -792,7 +853,10 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("El archivo es demasiado pesado. El límite máximo es 5 MB.");
+      setWarningModal({
+        title: 'ARCHIVO PESADO',
+        message: 'EL ARCHIVO ES DEMASIADO PESADO. EL LÍMITE MÁXIMO ES 5 MB.'
+      });
       return;
     }
 
@@ -1087,64 +1151,6 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
           <div className="bg-amber-50 border-2 border-amber-100 px-6 py-4 rounded-2xl"><p className="text-[8px] text-amber-500 font-black mb-1">VALOR IVA</p><p className="text-lg font-black text-amber-700">{formatCurrency(currentCalcs.taxAmount)}</p></div>
           <div className="bg-[#e9f4f8] px-6 py-4 rounded-2xl border-2 border-[#2596be]/30"><p className="text-[8px] text-[#2596be] font-black mb-1">PRECIO SUGERIDO FINAL</p><p className="text-xl font-black text-[#134b60]">{formatCurrency(currentCalcs.finalPrice)}</p></div>
         </div>
-
-        <div className="pt-6 border-t border-slate-100 space-y-4">
-          <h4 className="font-black text-[#134b60] text-[10px] uppercase tracking-wider flex items-center gap-2">
-            <History size={16} className="text-[#2596be]" /> ÚLTIMOS 5 PRODUCTOS REGISTRADOS
-          </h4>
-          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
-            <div className="overflow-x-auto scrollbar-hide">
-              <table className="w-full text-left min-w-[1000px] uppercase">
-                <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest">
-                  <tr>
-                    <th className="px-6 py-5">FOTO</th>
-                    <th className="px-6 py-5">CÓDIGO ID</th>
-                    <th className="px-6 py-5">PRODUCTO / CATEGORÍA</th>
-                    <th className="px-6 py-5 text-center">STOCK DISP.</th>
-                    <th className="px-6 py-5 text-right">VALOR BASE</th>
-                    <th className="px-6 py-5 text-right">IVA</th>
-                    <th className="px-6 py-5 text-right">FINAL</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-                  {products.length === 0 ? (
-                    <tr><td colSpan="7" className="px-6 py-16 text-center text-slate-300 font-black">CATÁLOGO VACÍO</td></tr>
-                  ) : (
-                    products.slice(-5).reverse().map(p => {
-                      const c = getCalculatedValues(p.cost, p.utility, p.taxId);
-                      const availableStock = calculateAvailableStock(p.id, inventory, orders);
-                      const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
-                      return (
-                        <tr 
-                            key={p.id} 
-                            onClick={() => { setSelectedProd(p); setModalType('productDetail'); }}
-                            className="hover:bg-white transition-colors cursor-pointer"
-                          >
-                          <td className="px-6 py-3">
-                            <img src={displayImg} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
-                          </td>
-                          <td className="px-6 py-4 font-mono text-[#2596be] font-black">{p.id}</td>
-                          <td className="px-6 py-4">
-                            <p className="font-black text-[#134b60]">{p.name}</p>
-                            <span className="px-2 py-0.5 bg-[#e9f4f8] text-[#2596be] rounded-lg text-[8px] font-black">{p.category || 'N/A'}</span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={`px-3 py-1 rounded-xl font-mono text-xs inline-block font-black ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
-                              {availableStock.toFixed(2)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
-                          <td className="px-6 py-4 text-right font-mono text-amber-600">{formatCurrency(c.taxAmount)}</td>
-                          <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
       </div>
       )}
 
@@ -1217,8 +1223,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                       <td className="px-6 py-4 text-right font-black font-mono text-[#134b60]">{formatCurrency(c.finalPrice)}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, category: p.category || '', taxId: p.taxId, cost: p.cost, utility: p.utility, observations: p.observations || '', images: p.images || [p.image || DEFAULT_CASTILLA_IMAGE] }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
-                          <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
+                          <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, category: p.category || '', taxId: p.taxId, cost: p.cost, utility: p.utility, observations: p.observations || '', images: p.images || (p.image ? [p.image] : []) }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer" title="Editar producto y fotos"><Edit size={14}/></button>
+                          <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer" title="Eliminar producto"><Trash2 size={14}/></button>
                         </div>
                       </td>
                     </tr>
@@ -1516,6 +1522,30 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         </div>
       )}
 
+      {/* --- MODAL ESTÉTICO DE AVISOS / ADVERTENCIAS --- */}
+      {warningModal && (
+        <div className="fixed inset-0 bg-[#134b60]/85 backdrop-blur-sm z-[130] flex items-center justify-center p-4 uppercase animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center border-2 border-[#e9f4f8] space-y-6">
+            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+              <AlertTriangle size={32} />
+            </div>
+            <div>
+              <span className="text-[10px] font-mono font-black text-amber-600 tracking-widest">{warningModal.title}</span>
+              <h3 className="text-lg font-black text-[#134b60] mt-1">ERROR</h3>
+            </div>
+            <p className="text-xs text-slate-600 font-bold leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              {warningModal.message}
+            </p>
+            <button 
+              onClick={() => setWarningModal(null)} 
+              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs uppercase shadow-xl transition-all cursor-pointer active:scale-95"
+            >
+              ENTENDIDO
+            </button>
+          </div>
+        </div>
+      )}
+
       {priceConfirmModal && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4 uppercase">
           <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-left border-2 border-[#e9f4f8] space-y-6">
@@ -1708,9 +1738,9 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     {/* --- MODAL EDICIÓN Y ELIMINACIÓN --- */}
     {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
       <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
-        <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
+        <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-lg ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
           <div className="p-8 text-[#134b60]">
-            <div className="flex flex-col items-center text-center gap-4 mb-8">
+            <div className="flex flex-col items-center text-center gap-4 mb-6">
               <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
                     {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
               </div>
@@ -1720,7 +1750,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
             </div>
             <div className="space-y-4">
               {modalType === 'edit' && (
-                <div className="space-y-4 max-h-[50vh] overflow-y-auto px-2 py-1 scrollbar-hide">
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto px-2 py-1 scrollbar-hide">
                   <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">CÓDIGO ID</label><input type="text" value={editData.id} disabled className="w-full px-4 py-3 bg-slate-100 border-2 border-transparent rounded-xl font-black text-sm text-center text-slate-400" /></div>
                   <div className="space-y-1"><label className="text-[9px] font-black text-slate-400">NOMBRE PRODUCTO</label><input type="text" maxLength={100} value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] uppercase" /></div>
                   <div className="space-y-1">
@@ -1751,12 +1781,60 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     <label className="text-[9px] font-black text-slate-400">OBSERVACIONES (MÁX 100)</label>
                     <textarea rows={2} maxLength={100} value={editData.observations} onChange={(e) => setEditData({...editData, observations: e.target.value.toUpperCase()})} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-black text-sm outline-none focus:border-[#2596be] text-[#134b60] uppercase resize-y" />
                   </div>
+
+                  {/* SELECTOR DE IMÁGENES EN EL MODAL DE EDICIÓN */}
+                  <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">
+                        GALERÍA DE IMÁGENES (HASTA 4 - MÁX 500 KB C/U)
+                      </label>
+                      <span className="text-[9px] font-mono text-[#2596be] font-black">
+                        {(editData.images || []).filter(Boolean).length} / 4 CARGADAS
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[0, 1, 2, 3].map((index) => {
+                        const imgUrl = editData.images && editData.images[index];
+                        return (
+                          <div key={index} className="relative flex flex-col items-center">
+                            <label className={`w-full h-16 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden bg-white shadow-sm hover:border-[#2596be] group ${imgUrl ? 'border-solid border-[#2596be]' : 'border-slate-300'}`}>
+                              <input 
+                                type="file" 
+                                accept="image/jpeg,image/jpg,image/webp" 
+                                className="hidden" 
+                                onChange={(e) => handleEditSingleImageUpload(index, e)}
+                              />
+                              {imgUrl ? (
+                                <img src={imgUrl} alt={`Imagen ${index + 1}`} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="flex flex-col items-center text-slate-400 group-hover:text-[#2596be] transition-colors p-1 text-center">
+                                  <span className="text-base font-black leading-none mb-0.5">+</span>
+                                  <span className="text-[7px] font-black uppercase">FOTO {index + 1}</span>
+                                </div>
+                              )}
+                            </label>
+                            {imgUrl && (
+                              <button 
+                                type="button" 
+                                onClick={() => removeEditImageAt(index)}
+                                className="absolute -top-1 -right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1 shadow-md transition-transform hover:scale-110 cursor-pointer"
+                                title="Eliminar imagen"
+                              >
+                                <X size={10} />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                 </div>
               )}
               {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase">⚠️ SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
               {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">ACCIÓN IRREVERSIBLE. ELIMINACIÓN DE {selectedProd?.name}.</p></div>}
             </div>
-            <div className="flex gap-4 mt-10">
+            <div className="flex gap-4 mt-8">
               <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
               <button onClick={() => {
                    if (modalType === 'edit') setModalType('updateConfirm');
@@ -1772,7 +1850,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     
     <Footer />
 
-    {/* --- MODAL DETALLE DE PRODUCTO CON GALERÍA Y OBSERVACIONES --- */}
+    {/* --- MODAL DETALLE DE PRODUCTO CON BOTÓN DIRECTO DE EDICIÓN Y GESTIÓN DE FOTOS --- */}
     {modalType === 'productDetail' && selectedProd && (() => {
       const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
       const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
@@ -1843,7 +1921,26 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-between items-center pt-2 gap-3">
+              <button 
+                onClick={() => {
+                  setEditData({
+                    id: selectedProd.id,
+                    name: selectedProd.name,
+                    unitName: selectedProd.unitName,
+                    category: selectedProd.category || '',
+                    taxId: selectedProd.taxId,
+                    cost: selectedProd.cost,
+                    utility: selectedProd.utility,
+                    observations: selectedProd.observations || '',
+                    images: selectedProd.images || (selectedProd.image ? [selectedProd.image] : [])
+                  });
+                  setModalType('edit');
+                }}
+                className="px-5 py-3 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-md transition-all cursor-pointer flex items-center gap-2"
+              >
+                ✏️ EDITAR Y GESTIONAR FOTOS
+              </button>
               <button onClick={() => setModalType(null)} className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all cursor-pointer">CERRAR</button>
             </div>
 
