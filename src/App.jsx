@@ -2959,7 +2959,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   );
 };
   
-// --- MÓDULO DE SOLICITUD DE PEDIDO (CORREGIDO Y OPTIMIZADO) ---
+// --- MÓDULO DE SOLICITUD DE PEDIDO (CORREGIDO ERROR DE DOBLE CONTEO EN MÓVIL) ---
 const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
   const [activeOrderTab, setActiveOrderTab] = useState('catalog'); // 'catalog' o 'cart'
@@ -2981,6 +2981,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   const [cardQuantities, setCardQuantities] = useState({}); // Cantidad por tarjeta
   const [modalType, setModalType] = useState(null);
   const [zoomImageProd, setZoomImageProd] = useState(null); // Producto para el modal de zoom
+  const [zoomImageIndex, setZoomImageIndex] = useState(0); // Índice de la imagen activa en el zoom
   const [lastSavedOrder, setLastSavedOrder] = useState(null);
   const [generalObservation, setGeneralObservation] = useState('');
 
@@ -3059,19 +3060,12 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   const handleAddCardToCart = (prod) => {
     const qtyToAdd = parseInt(cardQuantities[prod.id], 10) || 1;
     const unitPrice = getProductFinalPrice(prod);
-    const availableStock = calculateAvailableStock(prod.id, inventory, orders) - cart.filter(c => c.productId === prod.id).reduce((sum, c) => sum + c.quantity, 0);
-
-    let warningText = "";
-    if (qtyToAdd > availableStock) {
-      warningText = "SUJETO A DISPONIBILIDAD CON ASESOR";
-    }
 
     const existing = cart.find(c => c.productId === prod.id);
     if (existing) {
       setCart(cart.map(c => c.productId === prod.id ? {
         ...c,
-        quantity: c.quantity + qtyToAdd,
-        observation: warningText ? (c.observation ? `${c.observation} | ${warningText}` : warningText) : c.observation
+        quantity: c.quantity + qtyToAdd
       } : c));
     } else {
       setCart([...cart, {
@@ -3082,11 +3076,10 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
         quantity: qtyToAdd,
         taxValue: prod.taxValue,
         totalPricePerUnit: unitPrice,
-        observation: warningText
+        observation: ''
       }]);
     }
 
-    // Resetear contador de esta tarjeta a 1 y dejar las demás intactas
     setCardQuantities(prev => ({ ...prev, [prod.id]: 1 }));
   };
 
@@ -3250,7 +3243,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
       </div>
 
       {/* ======================================================== */}
-      {/* PESTAÑA 1: CATÁLOGO DE PRODUCTOS                         */}
+      {/* PESTAÑA 1: CATÁLOGO DE PRODUCTOS (2 COLUMNAS EN MÓVIL)   */}
       {/* ======================================================== */}
       {activeOrderTab === 'catalog' && (
         <div className="space-y-6 animate-in fade-in duration-300">
@@ -3271,7 +3264,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 relative">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4 relative">
             {isSearchDisabled && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
                 <p className="bg-[#134b60] text-white px-6 py-3 rounded-full font-black text-xs uppercase shadow-xl animate-pulse">
@@ -3288,48 +3281,56 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
               catalogProducts.map(p => {
                 const unitPrice = getProductFinalPrice(p);
                 const currentQty = cardQuantities[p.id] !== undefined ? cardQuantities[p.id] : 1;
-                const availableStock = calculateAvailableStock(p.id, inventory, orders) - cart.filter(c => c.productId === p.id).reduce((sum, c) => sum + c.quantity, 0);
+                const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
 
                 return (
                   <div 
                     key={p.id}
-                    className="bg-white p-5 rounded-3xl border-2 border-slate-200 hover:border-[#2596be] transition-all flex flex-col justify-between text-left shadow-sm group hover:shadow-md"
+                    className="bg-white p-2.5 sm:p-3.5 rounded-2xl border-2 border-slate-200 hover:border-[#2596be] transition-all flex flex-col justify-between text-left shadow-sm group hover:shadow-md"
                   >
                     <div>
                       <div 
-                        onClick={() => setZoomImageProd(p)}
-                        className="w-full h-48 rounded-2xl overflow-hidden bg-slate-100 mb-4 border border-slate-200 relative cursor-pointer group-hover:scale-[1.02] transition-transform shadow-inner"
+                        onClick={() => { setZoomImageProd(p); setZoomImageIndex(0); }}
+                        className="w-full h-24 sm:h-36 rounded-xl overflow-hidden bg-slate-100 mb-2 border border-slate-200 relative cursor-pointer group-hover:scale-[1.02] transition-transform shadow-inner"
                         title="Hacer clic para ampliar imagen"
                       >
-                        <img src={p.image || DEFAULT_CASTILLA_IMAGE} alt={p.name} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-black text-[10px]">
-                          🔍 AMPLIAR IMAGEN
+                        <img src={displayImg} alt={p.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-black text-[8px] sm:text-[9px]">
+                          🔍 AMPLIAR
                         </div>
-                        <span className="absolute top-2 left-2 bg-[#134b60] text-white font-mono text-[9px] font-black px-2.5 py-1 rounded-lg shadow">#{p.id}</span>
-                        <span className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-[#134b60] font-black text-[9px] px-2.5 py-1 rounded-lg shadow-sm">
-                          STOCK: {availableStock.toFixed(0)}
-                        </span>
+                        <span className="absolute top-1 left-1 bg-[#134b60] text-white font-mono text-[7px] sm:text-[8px] font-black px-1.5 sm:px-2 py-0.5 rounded shadow">#{p.id}</span>
                       </div>
-                      <p className="text-xs font-black text-[#134b60] line-clamp-2 leading-tight uppercase mb-1">{p.name}</p>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-4">UNIDAD: {p.unitName}</p>
+
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 bg-[#e9f4f8] text-[#2596be] rounded text-[7px] sm:text-[8px] font-black uppercase">{p.category || 'VARIOS'}</span>
+                        <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[7px] sm:text-[8px] font-bold uppercase">{p.unitName}</span>
+                      </div>
+
+                      <p className="text-[10px] sm:text-[11px] font-black text-[#134b60] line-clamp-2 leading-tight uppercase mb-1">{p.name}</p>
+
+                      {p.observations && (
+                        <div className="bg-slate-50 px-2 py-1 rounded border border-slate-100 mb-2">
+                          <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase truncate" title={p.observations}>
+                            {p.observations}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="space-y-4 pt-3 border-t border-slate-100">
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
                       <div className="flex justify-between items-center">
-                        <span className="text-[8px] text-slate-400 font-bold uppercase">VALOR UNITARIO:</span>
-                        <span className="text-xs font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
+                        <span className="text-[7px] sm:text-[8px] text-slate-400 font-bold uppercase">VALOR:</span>
+                        <span className="text-[10px] sm:text-xs font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shrink-0">
+                      <div className="flex flex-col sm:flex-row items-center gap-1.5">
+                        <div className="flex items-center bg-slate-100 rounded-lg border border-slate-200 overflow-hidden shrink-0 w-full sm:w-auto justify-center">
                           <button 
                             type="button" 
-                            onMouseDown={() => startHolding(p.id, -1)}
-                            onMouseUp={stopHolding}
-                            onMouseLeave={stopHolding}
-                            onTouchStart={() => startHolding(p.id, -1)}
-                            onTouchEnd={stopHolding}
-                            className="px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                            onPointerDown={(e) => { e.preventDefault(); startHolding(p.id, -1); }}
+                            onPointerUp={stopHolding}
+                            onPointerLeave={stopHolding}
+                            className="px-2 py-1.5 sm:py-2 text-[10px] font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
                           >
                             -
                           </button>
@@ -3340,17 +3341,15 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                             value={currentQty}
                             onChange={(e) => handleQtyInputChange(p.id, e.target.value)}
                             onBlur={() => handleQtyInputBlur(p.id)}
-                            className="w-14 text-center text-xs font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
+                            className="w-8 sm:w-10 text-center text-[10px] font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
                           />
 
                           <button 
                             type="button" 
-                            onMouseDown={() => startHolding(p.id, 1)}
-                            onMouseUp={stopHolding}
-                            onMouseLeave={stopHolding}
-                            onTouchStart={() => startHolding(p.id, 1)}
-                            onTouchEnd={stopHolding}
-                            className="px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                            onPointerDown={(e) => { e.preventDefault(); startHolding(p.id, 1); }}
+                            onPointerUp={stopHolding}
+                            onPointerLeave={stopHolding}
+                            className="px-2 py-1.5 sm:py-2 text-[10px] font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
                           >
                             +
                           </button>
@@ -3360,9 +3359,9 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                           type="button" 
                           onClick={() => handleAddCardToCart(p)}
                           disabled={isSearchDisabled}
-                          className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-[#2596be]/20 transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          className="w-full sm:flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-1.5 sm:py-2 rounded-lg text-[8px] sm:text-[9px] font-black uppercase shadow-md shadow-[#2596be]/20 transition-all active:scale-95 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
                         >
-                          <Plus size={14} /> AGREGAR
+                          <Plus size={10} /> AGREGAR
                         </button>
                       </div>
                     </div>
@@ -3494,52 +3493,96 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
       )}
 
       {/* ======================================================== */}
-      {/* MODAL DE ZOOM / AMPLIACIÓN DE IMAGEN                     */}
+      {/* MODAL DE ZOOM / AMPLIACIÓN DE IMAGEN (RESPONSIVE)        */}
       {/* ======================================================== */}
       {zoomImageProd && (() => {
         const unitPrice = getProductFinalPrice(zoomImageProd);
         const currentQty = cardQuantities[zoomImageProd.id] !== undefined ? cardQuantities[zoomImageProd.id] : 1;
-        const availableStock = calculateAvailableStock(zoomImageProd.id, inventory, orders) - cart.filter(c => c.productId === zoomImageProd.id).reduce((sum, c) => sum + c.quantity, 0);
+        const imagesList = (zoomImageProd.images && zoomImageProd.images.length > 0) ? zoomImageProd.images.filter(Boolean) : [zoomImageProd.image || DEFAULT_CASTILLA_IMAGE];
+        const activeImg = imagesList[zoomImageIndex] || imagesList[0] || DEFAULT_CASTILLA_IMAGE;
 
         return (
-          <div className="fixed inset-0 bg-[#134b60]/85 backdrop-blur-md z-[120] flex items-center justify-center p-4 print:hidden uppercase">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center relative border-2 border-[#e9f4f8] animate-in zoom-in-95 duration-300 space-y-6">
-              <button 
-                onClick={() => setZoomImageProd(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-500 transition-colors cursor-pointer font-black"
-              >
-                ✕
-              </button>
+          <div className="fixed inset-0 bg-[#134b60]/85 backdrop-blur-md z-[120] flex items-center justify-center p-3 sm:p-4 print:hidden uppercase">
+            <div className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 w-full max-w-3xl max-h-[92vh] text-center relative border-2 border-[#e9f4f8] animate-in zoom-in-95 duration-300 flex flex-col overflow-y-auto scrollbar-hide gap-3">
               
-              <div>
-                <span className="text-[10px] font-mono font-black text-[#2596be] block mb-1">CÓDIGO #{zoomImageProd.id}</span>
-                <h3 className="text-lg font-black text-[#134b60]">{zoomImageProd.name}</h3>
-                <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">UNIDAD: {zoomImageProd.unitName}</p>
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3 shrink-0">
+                <div className="text-left pr-4">
+                  <span className="text-[9px] font-mono font-black text-[#2596be] block">CÓDIGO #{zoomImageProd.id}</span>
+                  <h3 className="text-sm sm:text-base md:text-lg font-black text-[#134b60] leading-tight">{zoomImageProd.name}</h3>
+                  <p className="text-[8px] text-slate-400 font-bold uppercase mt-0.5">UNIDAD: {zoomImageProd.unitName} | CATEGORÍA: {zoomImageProd.category || 'N/A'}</p>
+                </div>
+                <button 
+                  onClick={() => setZoomImageProd(null)}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-500 transition-colors cursor-pointer font-black shrink-0"
+                >
+                  ✕
+                </button>
               </div>
               
-              <div className="w-full h-56 rounded-2xl overflow-hidden bg-slate-100 border-2 border-slate-200 shadow-inner relative">
-                <img src={zoomImageProd.image || DEFAULT_CASTILLA_IMAGE} alt={zoomImageProd.name} className="w-full h-full object-cover" />
-                <span className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-[#134b60] font-black text-[9px] px-2.5 py-1 rounded-lg shadow-sm">
-                  STOCK: {availableStock.toFixed(0)}
-                </span>
+              {/* Contenedor de Imagen Ampliada con Carrusel */}
+              <div className="relative w-full h-52 sm:h-60 md:h-68 bg-slate-50 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-inner flex items-center justify-center shrink-0">
+                <img src={activeImg} alt={zoomImageProd.name} className="max-h-full max-w-full object-contain p-2" />
+                
+                {imagesList.length > 1 && (
+                  <>
+                    <button 
+                      onClick={() => setZoomImageIndex(prev => (prev === 0 ? imagesList.length - 1 : prev - 1))}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-8 h-8 rounded-full flex items-center justify-center font-black transition-colors cursor-pointer shadow-lg text-xs"
+                      title="Imagen anterior"
+                    >
+                      ❮
+                    </button>
+                    <button 
+                      onClick={() => setZoomImageIndex(prev => (prev === imagesList.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-8 h-8 rounded-full flex items-center justify-center font-black transition-colors cursor-pointer shadow-lg text-xs"
+                      title="Siguiente imagen"
+                    >
+                      ❯
+                    </button>
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white px-2.5 py-0.5 rounded-full text-[8px] font-black tracking-wider">
+                      IMAGEN {zoomImageIndex + 1} DE {imagesList.length}
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <span className="text-[9px] text-slate-400 font-bold uppercase">VALOR UNITARIO:</span>
-                <span className="text-sm font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
-              </div>
+              {/* Miniaturas de navegación si hay varias */}
+              {imagesList.length > 1 && (
+                <div className="flex justify-center gap-2 shrink-0 overflow-x-auto py-1">
+                  {imagesList.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setZoomImageIndex(idx)}
+                      className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${zoomImageIndex === idx ? 'border-[#2596be] scale-105 shadow-md' : 'border-slate-200 opacity-60 hover:opacity-100'}`}
+                    >
+                      <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-center gap-3">
-                  <div className="flex items-center bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+              {/* Descripción / Observaciones del producto */}
+              {zoomImageProd.observations && (
+                <div className="bg-[#e9f4f8]/50 p-3 rounded-xl border border-[#2596be]/30 text-left shrink-0">
+                  <span className="text-[8px] text-[#2596be] font-black block mb-0.5">OBSERVACIONES / DESCRIPCIÓN DEL PRODUCTO:</span>
+                  <p className="text-[10px] font-bold text-[#134b60] leading-snug">{zoomImageProd.observations}</p>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-100 shrink-0">
+                <div className="text-left w-full sm:w-auto">
+                  <span className="text-[8px] text-slate-400 font-bold uppercase block">VALOR UNITARIO</span>
+                  <span className="text-base font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                  <div className="flex items-center bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shrink-0">
                     <button 
                       type="button" 
-                      onMouseDown={() => startHolding(zoomImageProd.id, -1)}
-                      onMouseUp={stopHolding}
-                      onMouseLeave={stopHolding}
-                      onTouchStart={() => startHolding(zoomImageProd.id, -1)}
-                      onTouchEnd={stopHolding}
-                      className="px-4 py-3 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                      onPointerDown={(e) => { e.preventDefault(); startHolding(zoomImageProd.id, -1); }}
+                      onPointerUp={stopHolding}
+                      onPointerLeave={stopHolding}
+                      className="px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
                     >
                       -
                     </button>
@@ -3550,39 +3593,29 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                       value={currentQty}
                       onChange={(e) => handleQtyInputChange(zoomImageProd.id, e.target.value)}
                       onBlur={() => handleQtyInputBlur(zoomImageProd.id)}
-                      className="w-16 text-center text-sm font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
+                      className="w-14 text-center text-xs font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
                     />
 
                     <button 
                       type="button" 
-                      onMouseDown={() => startHolding(zoomImageProd.id, 1)}
-                      onMouseUp={stopHolding}
-                      onMouseLeave={stopHolding}
-                      onTouchStart={() => startHolding(zoomImageProd.id, 1)}
-                      onTouchEnd={stopHolding}
-                      className="px-4 py-3 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                      onPointerDown={(e) => { e.preventDefault(); startHolding(zoomImageProd.id, 1); }}
+                      onPointerUp={stopHolding}
+                      onPointerLeave={stopHolding}
+                      className="px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
                     >
                       +
                     </button>
                   </div>
-                </div>
 
-                <div className="flex gap-3 pt-2">
-                  <button 
-                    onClick={() => setZoomImageProd(null)}
-                    className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer"
-                  >
-                    CERRAR
-                  </button>
                   <button 
                     onClick={() => {
                       handleAddCardToCart(zoomImageProd);
                       setZoomImageProd(null);
                     }}
                     disabled={isSearchDisabled}
-                    className="flex-1 py-3.5 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    className="flex-1 sm:flex-initial px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
-                    <Plus size={14} /> AGREGAR
+                    <Plus size={14} /> AGREGAR AL CARRITO
                   </button>
                 </div>
               </div>
