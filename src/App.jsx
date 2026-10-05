@@ -4455,10 +4455,24 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
   );
 };
 
-// --- DASHBOARD DE CLIENTE ---
+// --- DASHBOARD DE CLIENTE (CON BOTÓN DE MENÚ 100% NATIVO) ---
 const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions, currentUser, clients }) => {
   const [showPromo, setShowPromo] = useState(false);
   const [activePromo, setActivePromo] = useState(null);
+
+  // Función segura para desplegar/ocultar el menú lateral
+  const toggleSidebar = () => {
+    const aside = document.querySelector('aside');
+    if (aside) {
+      if (aside.classList.contains('-translate-x-full')) {
+        aside.classList.remove('-translate-x-full');
+        aside.classList.add('translate-x-0');
+      } else {
+        aside.classList.add('-translate-x-full');
+        aside.classList.remove('translate-x-0');
+      }
+    }
+  };
 
   useEffect(() => {
     if (!promotions || promotions.length === 0 || !currentUser) return;
@@ -4472,7 +4486,6 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
       if (p.status !== 'ACTIVA') return false;
       
       const start = new Date(p.startDate);
-      // Conversión de horas a milisegundos (1 hora = 3,600,000 ms)
       const end = new Date(start.getTime() + (p.durationHours * 3600000));
       const isTimeValid = now >= start && now <= end;
 
@@ -4502,113 +4515,100 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
   }), [orders]);
 
   const statCards = [
-    { id: 'NUEVA', title: "SOLICITUDES NUEVAS", value: stats.new, icon: <FileText className="text-[#2596be]" />, color: "border-[#e9f4f8]", bg: "bg-[#e9f4f8]" },
-    { id: 'EN ALISTAMIENTO', title: "EN ALISTAMIENTO", value: stats.prep, icon: <Clock className="text-amber-600" />, color: "border-amber-100", bg: "bg-amber-50" },
-    { id: 'EN CAMINO', title: "PEDIDOS EN CAMINO", value: stats.shipped, icon: <Truck className="text-indigo-600" />, color: "border-indigo-100", bg: "bg-indigo-50" },
-    { id: 'ENTREGADA', title: "PEDIDOS ENTREGADOS", value: stats.delivered, icon: <CheckCircle2 className="text-emerald-600" />, color: "border-emerald-100", bg: "bg-emerald-50" },
+    { id: 'NUEVA', title: "SOLICITUDES NUEVAS", value: stats.new, icon: <FileText className="text-[#2596be]" size={18} />, color: "border-[#e9f4f8]", bg: "bg-[#e9f4f8]" },
+    { id: 'EN ALISTAMIENTO', title: "EN ALISTAMIENTO", value: stats.prep, icon: <Clock className="text-amber-600" size={18} />, color: "border-amber-100", bg: "bg-amber-50" },
+    { id: 'EN CAMINO', title: "PEDIDOS EN CAMINO", value: stats.shipped, icon: <Truck className="text-indigo-600" size={18} />, color: "border-indigo-100", bg: "bg-indigo-50" },
+    { id: 'ENTREGADA', title: "PEDIDOS ENTREGADOS", value: stats.delivered, icon: <CheckCircle2 className="text-emerald-600" size={18} />, color: "border-emerald-100", bg: "bg-emerald-50" },
   ];
 
   return (
-    <div className="flex flex-col min-h-full animate-in fade-in duration-500 uppercase space-y-8 relative">
+    <div className="flex flex-col min-h-full animate-in fade-in duration-500 uppercase space-y-6 sm:space-y-8 relative">
       
-      {/* --- EL POP-UP DE LA PROMOCIÓN --- */}
       {showPromo && activePromo && (
         <div className="fixed inset-0 bg-[#134b60]/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4 print:hidden animate-in zoom-in duration-300">
-          <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden w-full max-w-lg relative border-4 border-[#2596be]">
-            <button 
-              onClick={() => setShowPromo(false)} 
-              className="absolute top-4 right-4 bg-white/80 backdrop-blur-md text-[#134b60] p-2.5 rounded-full shadow-lg hover:bg-rose-500 hover:text-white transition-all z-10 cursor-pointer"
-            >
-              <X size={20} />
+          <div className="bg-white rounded-[28px] sm:rounded-[32px] shadow-2xl overflow-hidden w-full max-w-md sm:max-w-lg relative border-4 border-[#2596be]">
+            <button onClick={() => setShowPromo(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/80 backdrop-blur-md text-[#134b60] p-2 rounded-full shadow-lg hover:bg-rose-500 hover:text-white transition-all z-10 cursor-pointer">
+              <X size={18} />
             </button>
-            
-            {activePromo.image && (
-              <img src={activePromo.image} alt="Promoción" className="w-full h-80 object-contain bg-slate-50" />
-            )}
-            
-            <div className="p-8 text-center bg-white">
-              <h3 className="font-black text-2xl text-[#134b60] tracking-tighter mb-2">{activePromo.name}</h3>
-              {activePromo.text && <p className="text-[11px] font-bold text-slate-500 uppercase">{activePromo.text}</p>}
+            {activePromo.image && <img src={activePromo.image} alt="Promoción" className="w-full h-56 sm:h-80 object-contain bg-slate-50" />}
+            <div className="p-6 sm:p-8 text-center bg-white">
+              <h3 className="font-black text-xl sm:text-2xl text-[#134b60] tracking-tighter mb-2">{activePromo.name}</h3>
+              {activePromo.text && <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase">{activePromo.text}</p>}
             </div>
-            
             <div className="w-full bg-slate-100 h-1.5 relative overflow-hidden">
-              <div 
-                className="absolute inset-y-0 left-0 bg-[#2596be]" 
-                style={{ 
-                  width: '100%',
-                  animation: `shrinkWidth ${activePromo.screenTimeSeconds}s linear forwards`
-                }}
-              ></div>
+              <div className="absolute inset-y-0 left-0 bg-[#2596be]" style={{ width: '100%', animation: `shrinkWidth ${activePromo.screenTimeSeconds}s linear forwards` }}></div>
             </div>
           </div>
-          <style>{`
-            @keyframes shrinkWidth {
-              from { width: 100%; }
-              to { width: 0%; }
-            }
-          `}</style>
+          <style>{`@keyframes shrinkWidth { from { width: 100%; } to { width: 0%; } }`}</style>
         </div>
       )}
-      {/* --- FIN DEL POP-UP --- */}
 
-      <div className="border-b-4 border-[#2596be] w-fit pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">PORTAL CLIENTE CASTILLA</h2>
+      {/* CABECERA CON BOTÓN DE MENÚ NATIVO SVG */}
+      <div className="flex items-center gap-4 border-b-4 border-[#2596be] pb-3">
+        <button 
+          onClick={toggleSidebar}
+          className="p-3 rounded-2xl bg-[#2596be] text-white shadow-lg shadow-[#2596be]/25 hover:bg-[#1e7a9b] transition-all cursor-pointer flex items-center justify-center active:scale-95 shrink-0"
+          title="Abrir Menú de Navegación"
+        >
+          {/* SVG NATIVO - NO BORRAR - GARANTIZA QUE NO FALLE */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="4" x2="20" y1="12" y2="12"></line>
+            <line x1="4" x2="20" y1="6" y2="6"></line>
+            <line x1="4" x2="20" y1="18" y2="18"></line>
+          </svg>
+        </button>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">PORTAL CLIENTE CASTILLA</h2>
       </div>
       
       <RealTimeClock />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {statCards.map((card, i) => (
-          <div 
-            key={i} 
-            onClick={() => { setFilterStatus(card.id); setActiveTab('client_orders_history'); }}
-            className={`p-8 rounded-[32px] border-2 ${card.color} ${card.bg} shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden`}
-          >
-            <div className="flex items-center justify-between relative z-10">
-              <div>
-                <p className="text-[9px] text-[#134b60] opacity-70 font-black mb-1 tracking-widest">{card.title}</p>
-                <p className="text-4xl font-black text-[#134b60] tracking-tighter">{card.value}</p>
+          <div key={i} onClick={() => { setFilterStatus(card.id); setActiveTab('client_orders_history'); }} className={`p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[32px] border-2 ${card.color} ${card.bg} shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden flex flex-col justify-between`}>
+            <div className="flex items-center justify-between relative z-10 gap-2">
+              <div className="min-w-0">
+                <p className="text-[7px] sm:text-[8px] lg:text-[9px] text-[#134b60] opacity-70 font-black mb-1 tracking-wider sm:tracking-widest truncate">{card.title}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#134b60] tracking-tighter">{card.value}</p>
               </div>
-              <div className="bg-white/80 p-4 rounded-2xl group-hover:bg-white transition-colors shadow-sm border border-white">{card.icon}</div>
+              <div className="bg-white/80 p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl group-hover:bg-white transition-colors shadow-sm border border-white shrink-0">{card.icon}</div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white rounded-[40px] border-2 border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="p-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#e9f4f8]/30 gap-4">
+      <div className="bg-white rounded-[32px] sm:rounded-[40px] border-2 border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
+        <div className="p-6 sm:p-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#e9f4f8]/30 gap-4">
           <h4 className="text-[10px] font-black text-[#134b60] tracking-widest flex items-center gap-2 uppercase"><Activity size={16} className="text-[#2596be]"/> MOVIMIENTOS RECIENTES</h4>
-          <button onClick={() => setActiveTab('client_new_order')} className="bg-[#2596be] text-white px-6 py-3.5 rounded-2xl font-black text-[10px] flex items-center gap-2 hover:bg-[#1e7a9b] shadow-lg shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CREAR SOLICITUD <ChevronRight size={14} /></button>
+          <button onClick={() => setActiveTab('client_new_order')} className="w-full sm:w-auto bg-[#2596be] text-white px-6 py-3.5 rounded-2xl font-black text-[10px] flex items-center justify-center gap-2 hover:bg-[#1e7a9b] shadow-lg shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CREAR SOLICITUD <ChevronRight size={14} /></button>
         </div>
+        
         <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left uppercase min-w-[900px]">
+          <table className="w-full text-left uppercase min-w-[850px]">
             <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
               <tr>
-                <th className="px-8 py-5">ID SOLICITUD</th>
-                <th className="px-8 py-5">FECHA</th>
-                <th className="px-8 py-5 text-center">ITEMS</th>
-                <th className="px-8 py-5 text-right">TOTAL ESTIMADO</th>
-                <th className="px-8 py-5 text-center">ESTADO</th>
-                <th className="px-8 py-5 text-right">ACCIÓN</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5">ID SOLICITUD</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5">FECHA</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 text-center">ITEMS</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 text-right">TOTAL ESTIMADO</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 text-center">ESTADO</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 text-right">ACCIÓN</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
               {orders.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="px-8 py-20 text-center text-slate-300 font-black tracking-tighter uppercase">SIN SOLICITUDES REGISTRADAS</td>
-                </tr>
+                <tr><td colSpan="6" className="px-4 sm:px-8 py-20 text-center text-slate-300 font-black tracking-tighter uppercase">SIN SOLICITUDES REGISTRADAS</td></tr>
               ) : (
                 orders.map(o => (
                   <tr key={o.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-8 py-5 font-mono text-[#2596be] font-black">{o.id}</td>
-                    <td className="px-8 py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
-                    <td className="px-8 py-5 text-center font-black">{o.totalItems}</td>
-                    <td className="px-8 py-5 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
-                    <td className="px-8 py-5 text-center">
-                        <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border shadow-sm ${o.status === 'NUEVA' ? 'bg-[#e9f4f8] text-[#2596be] border-[#2596be]/20' : o.status === 'CANCELADA' ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>{o.status}</span>
+                    <td className="px-4 sm:px-8 py-4 sm:py-5 font-mono text-[#2596be] font-black">{o.id}</td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-center font-black">{o.totalItems}</td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-center">
+                        <span className={`px-3 sm:px-4 py-1.5 rounded-full text-[8px] font-black uppercase border shadow-sm ${o.status === 'NUEVA' ? 'bg-[#e9f4f8] text-[#2596be] border-[#2596be]/20' : o.status === 'CANCELADA' ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>{o.status}</span>
                     </td>
-                    <td className="px-8 py-5 text-right">
-                      <button onClick={() => { setFilterStatus('TODOS'); setActiveTab('client_orders_history'); }} className="bg-[#e9f4f8] text-[#2596be] p-3 rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm flex items-center gap-2 ml-auto text-[10px] uppercase font-black cursor-pointer active:scale-95">
+                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-right">
+                      <button onClick={() => { setFilterStatus('TODOS'); setActiveTab('client_orders_history'); }} className="bg-[#e9f4f8] text-[#2596be] px-3 sm:px-4 py-2.5 rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm flex items-center gap-2 ml-auto text-[10px] uppercase font-black cursor-pointer active:scale-95">
                         <Eye size={14}/> DETALLE
                       </button>
                     </td>
@@ -4623,6 +4623,7 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
     </div>
   );
 };
+
 /// --- PANEL DE CONTROL (ADMIN) OPTIMIZADO ---
 const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, setFilterStatus }) => {
   const stats = useMemo(() => {
@@ -6029,6 +6030,13 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     return () => clearInterval(timer);
   }, []);
 
+  // Asegurar que al abrir el menú en móviles o tablets, las letras SIEMPRE se muestren
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setSidebarCollapsed(false);
+    }
+  }, [isSidebarOpen]);
+
   // Formatear hora y fecha en español
   const timeString = currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const dateString = currentTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
@@ -6169,12 +6177,32 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   };
 
   return (
-  <div className="flex h-screen overflow-hidden bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
-      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'w-20' : 'w-64'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative h-full shadow-2xl border-r border-[#194052]`}>
+    <div className="flex h-screen overflow-hidden bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
+      
+      {/* 1. PEGA ESTE FONDO OSCURO AQUÍ (Entre el div y el aside) */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-[#134b60]/50 backdrop-blur-sm z-[60] lg:hidden cursor-pointer"
+        />
+      )}
+
+      {/* Esta es tu línea 6174 original, déjala igual */}
+      <aside className={`fixed inset-y-0 left-0 z-[70] w-64 ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         
-        {/* Botón flotante para minimizar / expandir */}
+        {/* 2. PEGA ESTE BOTÓN DE "X" AQUÍ (Justo debajo de abrir el aside) */}
         <button 
+          onClick={() => setIsSidebarOpen(false)}
+          className="lg:hidden absolute top-4 right-4 p-2 bg-white/10 hover:bg-rose-500 hover:text-white text-slate-300 rounded-xl transition-all cursor-pointer z-50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        {/* ... AQUÍ SIGUE TU CÓDIGO NORMAL (Línea 6176 en adelante) ... */}
+        {/* Botón flotante para minimizar / expandir */}
+        <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+       
           className="absolute -right-3.5 top-6 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
           title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
         >
@@ -6267,11 +6295,11 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
         <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden shrink-0">
           {/* Lado izquierdo: Botón móvil y Mensaje de Bienvenida */}
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsSidebarOpen(true)} 
-              className="p-2.5 text-[#134b60] md:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100"
-            >
-              <MenuIcon size={20} />
+            <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2.5 text-[#134b60] lg:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100"
+                >
+                <MenuIcon size={20} />
             </button>
             <h1 className="text-xs md:text-sm font-black text-[#134b60] tracking-tight uppercase">
               Bienvenido, {currentUser.name}
