@@ -6030,13 +6030,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     return () => clearInterval(timer);
   }, []);
 
-  // Asegurar que al abrir el menú en móviles o tablets, las letras SIEMPRE se muestren
-  useEffect(() => {
-    if (isSidebarOpen) {
-      setSidebarCollapsed(false);
-    }
-  }, [isSidebarOpen]);
-
+  
   // Formatear hora y fecha en español
   const timeString = currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const dateString = currentTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
@@ -6188,9 +6182,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
       )}
 
       {/* Esta es tu línea 6174 original, déjala igual */}
-      <aside className={`fixed inset-y-0 left-0 z-[70] w-64 ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        
-        {/* 2. PEGA ESTE BOTÓN DE "X" AQUÍ (Justo debajo de abrir el aside) */}
+      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64 bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <button 
           onClick={() => setIsSidebarOpen(false)}
           className="lg:hidden absolute top-4 right-4 p-2 bg-white/10 hover:bg-rose-500 hover:text-white text-slate-300 rounded-xl transition-all cursor-pointer z-50"
@@ -6291,7 +6283,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
       </aside>
 
       {/* Panel Derecho con altura completa y scroll independiente */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+      <main className={`flex-1 flex flex-col h-full overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden shrink-0">
           {/* Lado izquierdo: Botón móvil y Mensaje de Bienvenida */}
           <div className="flex items-center gap-3">
