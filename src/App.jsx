@@ -2959,8 +2959,8 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   );
 };
   
-// --- MÓDULO DE SOLICITUD DE PEDIDO (CORREGIDO ERROR DE DOBLE CONTEO EN MÓVIL) ---
-const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine }) => {
+// --- MÓDULO DE SOLICITUD DE PEDIDO (CORREGIDO ERROR DE DOBLE CONTEO EN MÓVIL Y NOTIFICACIONES) ---
+const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine, setNotifications }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
   const [activeOrderTab, setActiveOrderTab] = useState('catalog'); // 'catalog' o 'cart'
   
@@ -3168,6 +3168,20 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     setActiveOrderTab('catalog'); 
     setLastSavedOrder(newOrder);
     setModalType('orderSuccess');
+
+    // --- NUEVO DISPARADOR DE NOTIFICACIÓN ---
+    if (setNotifications) {
+      setNotifications(prev => [
+        {
+          id: Date.now(),
+          message: `Nuevo pedido registrado: ${nextID} por ${clientNameToSave}`,
+          targetRoles: ['ADMIN', 'SUPERADMIN'], // Solo lo ven los administradores
+          targetUserId: null,
+          readBy: []
+        },
+        ...prev
+      ]);
+    }
   };
 
   return (
@@ -3675,7 +3689,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
 };
 
 // --- MÓDULO DE GESTIÓN DE PEDIDOS ---
-const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus, setActiveTab }) => {
+const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus, setActiveTab, setNotifications }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const [pendingChange, setPendingChange] = useState(null); 
@@ -3814,6 +3828,9 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
       finalCancelReason = cancelReason === 'OTROS' ? cancelOtherText : cancelReason;
     }
 
+    // Buscamos el pedido original para obtener el ID del cliente (necesario para notificarlo)
+    const orderToUpdate = orders.find(o => o.id === id);
+
     setOrders(orders.map(o => o.id === id ? { 
       ...o, 
       status: newStatus, 
@@ -3826,6 +3843,26 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
         status: newStatus,
         ...((newStatus === 'ANULADA' || newStatus === 'CANCELADA') ? { cancelReason: finalCancelReason } : {})
       });
+    }
+
+    // --- NUEVO DISPARADOR DE NOTIFICACIÓN DE ESTADO AL CLIENTE ---
+    if (setNotifications && orderToUpdate && role === 'ADMIN') {
+      // Intentamos recuperar el ID del cliente de nuestra lista global en localStorage (suponiendo que existe)
+      const allClients = JSON.parse(localStorage.getItem('inventrack_clients') || '[]');
+      const clientRecord = allClients.find(c => c.name === orderToUpdate.clientName);
+      
+      if (clientRecord) {
+        setNotifications(prev => [
+          {
+            id: Date.now(),
+            message: `El estado de tu pedido ${orderToUpdate.id} ha cambiado a: ${newStatus}`,
+            targetRoles: ['CLIENTE'], // Solo lo ve el cliente específico
+            targetUserId: clientRecord.id,
+            readBy: []
+          },
+          ...prev
+        ]);
+      }
     }
 
     setPendingChange(null);
@@ -4239,7 +4276,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                                   step="1"
                                   value={currentEdits.deliveredQuantity}
                                   onChange={(e) => handleItemDeliveryChange(idx, 'deliveredQuantity', parseInt(e.target.value) || 0)}
-                                  className="w-20 px-2 py-2 bg-white border-2 border-slate-200 rounded-xl text-center font-black text-emerald-600 outline-none focus:border-emerald-500 transition-all"
+                                  className="w-20 px-2 py-2 bg-white border-2 border-slate-200 rounded-xl text-center font-black text-emerald-600 outline-none focus:border-emerald-50 transition-all"
                                 />
                               </td>
                               <td className="px-5 py-4 text-center font-mono text-rose-500 font-black text-sm">{currentEdits.pendingQuantity}</td>
@@ -4384,10 +4421,10 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                               <>
                                 <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span className="font-mono">{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
                                 {calc.totalItemDiscounts > 0 && (
-                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span className="font-mono">- {formatCurrency(calc.totalItemDiscounts)}</span></div>
+                                    <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span className="font-mono">-{formatCurrency(calc.totalItemDiscounts)}</span></div>
                                 )}
                                 {calc.globalDiscountAmount > 0 && (
-                                  <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span className="font-mono">- {formatCurrency(calc.globalDiscountAmount)}</span></div>
+                                    <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span className="font-mono">-{formatCurrency(calc.globalDiscountAmount)}</span></div>
                                 )}
                                 <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span className="font-mono">{formatCurrency(calc?.taxesAmount || 0)}</span></div>
                                 <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span className="font-mono">{formatCurrency(calc?.total || 0)}</span></div>
@@ -6560,7 +6597,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
         {/* Vistas dinámicas */}
         <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
           {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
-          {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
+          {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} setNotifications={setNotifications} />}
           {activeTab === 'inventory' && <InventoryView inventory={inventory} setInventory={setInventory} products={products} orders={orders} />}
           {activeTab === 'access' && <AccessManagementView users={users} setUsers={setUsers} clients={clients} />}
           {activeTab === 'crm' && <CRMView products={products} clients={clients} inventory={inventory} orders={orders} />}
@@ -6570,8 +6607,8 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           {activeTab === 'client_types' && <ConfigurationListView title="TIPO CLIENTE" items={clientTypes} setItems={setClientTypes} prefix="TC" labelName="TIPO" labelValue="RECARGO" />}
           {activeTab === 'promotions' && <PromotionsManagementView promotions={promotions} setPromotions={setPromotions} clientTypes={clientTypes} />}
           {activeTab === 'client_dashboard' && <ClientDashboardView orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} promotions={promotions} currentUser={currentUser} clients={clients} />}
-          {activeTab === 'client_new_order' && <ClientNewOrderView products={products} orders={orders} setOrders={setOrders} currentUser={currentUser} clients={clients} clientTypes={clientTypes} inventory={inventory} globalDiscountEngine={globalDiscountEngine} />}
-          {activeTab === 'client_orders_history' && <OrdersManagementView orders={orders} setOrders={setOrders} role="CLIENTE" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
+          {activeTab === 'client_new_order' && <ClientNewOrderView products={products} orders={orders} setOrders={setOrders} currentUser={currentUser} clients={clients} clientTypes={clientTypes} inventory={inventory} globalDiscountEngine={globalDiscountEngine} setNotifications={setNotifications} />}
+          {activeTab === 'client_orders_history' && <OrdersManagementView orders={orders} setOrders={setOrders} role="CLIENTE" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} setNotifications={setNotifications} />}
         </div>
       </main>
     </div>
