@@ -4763,20 +4763,52 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
   );
 };
 
-// --- MÓDULO DE GESTIÓN DE ACCESOS ---
+// --- MÓDULO DE GESTIÓN DE ACCESOS Y ROLES (CON RESTRICCIÓN PARA CLIENTES) ---
 const AccessManagementView = ({ users, setUsers, clients }) => {
-  const initialForm = { role: '', relatedId: '', name: '', email: '', password: '' };
+  const AVAILABLE_MODULES = [
+    { id: 'dashboard', label: 'DASHBOARD', group: 'GESTIÓN GENERAL' },
+    { id: 'orders', label: 'PEDIDOS', group: 'GESTIÓN GENERAL' },
+    { id: 'access', label: 'ACCESOS', group: 'GESTIÓN GENERAL' },
+    { id: 'crm', label: 'CRM', group: 'GESTIÓN GENERAL' },
+    { id: 'clients', label: 'CLIENTES', group: 'GESTIÓN GENERAL' },
+    { id: 'client_type', label: 'TIPO CLIENTE', group: 'GESTIÓN GENERAL' },
+    { id: 'inventory', label: 'INVENTARIO', group: 'GESTIÓN GENERAL' },
+    { id: 'products', label: 'PRODUCTOS', group: 'GESTIÓN GENERAL' },
+    { id: 'taxes', label: 'IMPUESTOS', group: 'GESTIÓN GENERAL' },
+    { id: 'promotions', label: 'PROMOCIONES', group: 'GESTIÓN GENERAL' },
+    { id: 'client_home', label: 'INICIO (CLIENTE)', group: 'PORTAL CLIENTE' },
+    { id: 'client_new_order', label: 'HACER PEDIDO', group: 'PORTAL CLIENTE' },
+    { id: 'client_orders_history', label: 'MIS PEDIDOS', group: 'PORTAL CLIENTE' }
+  ];
+
+  const getDefaultModulesForRole = (role) => {
+    switch (role) {
+      case 'SUPERADMIN':
+        return AVAILABLE_MODULES.map(m => m.id);
+      case 'ADMIN':
+        return ['dashboard', 'orders', 'inventory', 'products', 'taxes', 'promotions', 'crm'];
+      case 'OPERADOR':
+        return ['dashboard', 'orders', 'inventory', 'products'];
+      case 'CLIENT':
+        return ['client_home', 'client_new_order', 'client_orders_history'];
+      default:
+        return [];
+    }
+  };
+
+  const initialForm = { role: '', relatedId: '', name: '', email: '', password: '', permissions: [] };
   const [newUser, setNewUser] = useState(initialForm);
   const [searchClient, setSearchClient] = useState('');
   const [modalType, setModalType] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editData, setEditData] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
+  const [searchUserTerm, setSearchUserTerm] = useState('');
+  
+  const [activeTab, setActiveTab] = useState('create');
 
   const filteredClients = useMemo(() => searchClient ? clients.filter(c => c.docNumber.includes(searchClient) || c.name.toLowerCase().includes(searchClient.toLowerCase())).slice(0, 5) : [], [searchClient, clients]);
-  
-  // Lógica para el buscador inteligente de usuarios
-  const [searchUserTerm, setSearchUserTerm] = useState('');
+
   const filteredUsers = useMemo(() => {
     if (!searchUserTerm) return users;
     const term = searchUserTerm.toLowerCase();
@@ -4787,13 +4819,45 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
       (u.role && u.role.toLowerCase().includes(term))
     );
   }, [users, searchUserTerm]);
-  
+
   const getNextID = () => `US${String(users.length + 1).padStart(6, '0')}`;
+
+  const handleRoleChange = (role, isEdit = false) => {
+    const defaultPerms = getDefaultModulesForRole(role);
+    if (isEdit) {
+      setEditData(prev => ({ ...prev, role, permissions: defaultPerms }));
+    } else {
+      setNewUser(prev => ({ ...prev, role, permissions: defaultPerms }));
+    }
+  };
+
+  const handlePermissionToggle = (modId, roleCheck, isEdit = false) => {
+    // Si el rol es CLIENT y el módulo pertenece a Gestión General, se bloquea por completo
+    if (roleCheck === 'CLIENT' && modId !== 'client_home' && modId !== 'client_new_order' && modId !== 'client_orders_history') {
+      return;
+    }
+
+    if (isEdit) {
+      const current = editData.permissions || [];
+      const updated = current.includes(modId) ? current.filter(id => id !== modId) : [...current, modId];
+      setEditData({ ...editData, permissions: updated });
+    } else {
+      const current = newUser.permissions || [];
+      const updated = current.includes(modId) ? current.filter(id => id !== modId) : [...current, modId];
+      setNewUser({ ...newUser, permissions: updated });
+    }
+  };
 
   const handleAdd = (e) => {
     e.preventDefault();
-    if (!newUser.relatedId) { setErrorMsg('DEBE SELECCIONAR UN CLIENTE DEL BUSCADOR PRIMERO.'); return; }
-    if (users.some(u => u.email.toLowerCase() === newUser.email.toLowerCase())) { setErrorMsg('EL CORREO YA ESTÁ REGISTRADO EN EL SISTEMA.'); return; }
+    if (newUser.role !== 'SUPERADMIN' && !newUser.relatedId && newUser.role !== 'ADMIN' && newUser.role !== 'OPERADOR') { 
+      setErrorMsg('DEBE SELECCIONAR UN CLIENTE O ASIGNAR UN ROL VÁLIDO.'); 
+      return; 
+    }
+    if (users.some(u => u.email.toLowerCase() === newUser.email.toLowerCase())) { 
+      setErrorMsg('EL CORREO YA ESTÁ REGISTRADO EN EL SISTEMA.'); 
+      return; 
+    }
 
     setUsers([...users, {
       ...newUser,
@@ -4805,265 +4869,417 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
     setNewUser(initialForm);
     setSearchClient('');
     setErrorMsg('');
+    setActiveTab('list');
   };
 
   const executeUpdate = () => {
-    if (users.some(u => u.id !== selectedUser.id && u.email.toLowerCase() === editData.email.toLowerCase())) { alert('ESTE CORREO ESTÁ EN USO POR OTRO USUARIO'); return; }
+    if (users.some(u => u.id !== selectedUser.id && u.email.toLowerCase() === editData.email.toLowerCase())) { 
+      alert('ESTE CORREO ESTÁ EN USO POR OTRO USUARIO'); 
+      return; 
+    }
     setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...editData, name: editData.name.toUpperCase() } : u));
     setModalType(null);
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE ACCESOS Y USUARIOS</h2>
+    <div className="flex flex-col w-full min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-5 pb-10">
+      
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-2 border-slate-100 pb-3 w-full">
+        <div className="border-b-4 border-[#2596be] pb-1">
+          <h2 className="text-lg md:text-xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE ACCESOS Y ROLES</h2>
+        </div>
+
+        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <button 
+            onClick={() => setActiveTab('create')}
+            className={`px-4 py-2 rounded-lg text-[10px] font-black transition-all cursor-pointer ${activeTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}
+          >
+            ➕ NUEVO ACCESO
+          </button>
+          <button 
+            onClick={() => setActiveTab('list')}
+            className={`px-4 py-2 rounded-lg text-[10px] font-black transition-all cursor-pointer ${activeTab === 'list' ? 'bg-white text-[#134b60] shadow-sm' : 'text-slate-400 hover:text-[#134b60]'}`}
+          >
+            📋 LISTA DE USUARIOS ({users.length})
+          </button>
+        </div>
       </div>
 
-      {errorMsg && <div className="p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl animate-pulse">{errorMsg}</div>}
+      {errorMsg && <div className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl animate-pulse w-full">{errorMsg}</div>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* FORMULARIO NUEVO USUARIO */}
-        <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm h-fit space-y-6">
-          <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase">
-            <UserPlus size={18} className="text-[#2596be]" /> NUEVO ACCESO
-          </h3>
-          <form className="space-y-5" onSubmit={handleAdd}>
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ROL</label>
-              <select 
-                value={newUser.role} 
-                onChange={(e) => setNewUser({...newUser, role: e.target.value})} 
-                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all"
-                required
-              >
-                <option value="">SELECCIONE ROL</option>
-                <option value="ADMIN">ADMINISTRADOR</option>
-                <option value="CLIENT">CLIENTE</option>
-              </select>
+      {/* VISTA 1: FORMULARIO NUEVO ACCESO */}
+      {activeTab === 'create' && (
+        <div className="bg-white p-5 md:p-6 rounded-2xl border-2 border-[#e9f4f8] shadow-sm space-y-4 animate-in fade-in duration-300 w-full">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h3 className="font-black text-[#134b60] flex items-center gap-2 text-xs uppercase tracking-wider">
+              <UserPlus size={16} className="text-[#2596be]" /> REGISTRAR NUEVO ACCESO Y PERMISOS
+            </h3>
+          </div>
+          
+          <form className="space-y-4 w-full" onSubmit={handleAdd}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ROL DEL SISTEMA</label>
+                <select 
+                  value={newUser.role} 
+                  onChange={(e) => handleRoleChange(e.target.value, false)} 
+                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all"
+                  required
+                >
+                  <option value="">SELECCIONE ROL</option>
+                  <option value="SUPERADMIN">SUPERADMIN (TOTAL)</option>
+                  <option value="ADMIN">ADMINISTRADOR</option>
+                  <option value="OPERADOR">OPERADOR</option>
+                  <option value="CLIENT">CLIENTE</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMBRE COMPLETO</label>
+                <input 
+                  type="text" 
+                  value={newUser.name} 
+                  onChange={(e) => setNewUser({...newUser, name: e.target.value.toUpperCase()})} 
+                  placeholder="NOMBRE Y APELLIDO" 
+                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
+                  required 
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
+                <input 
+                  type="email" 
+                  value={newUser.email} 
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
+                  placeholder="CORREO@DOMINIO.COM" 
+                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs lowercase text-[#134b60] transition-all" 
+                  required 
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">CONTRASEÑA TEMPORAL</label>
+                <input 
+                  type="password" 
+                  value={newUser.password} 
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})} 
+                  placeholder="••••••••" 
+                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" 
+                  required 
+                />
+              </div>
             </div>
 
-            <div className="space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VINCULAR CLIENTE</label>
-              <input 
-                type="text" 
-                value={searchClient} 
-                onChange={(e) => setSearchClient(e.target.value)} 
-                placeholder="BUSCAR CLIENTE POR NIT O NOMBRE..." 
-                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
-              />
-              {filteredClients.length > 0 && !newUser.relatedId && (
-                <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-2xl mt-1 z-50 overflow-hidden uppercase text-xs font-bold">
-                  {filteredClients.map(c => (
-                    <div 
-                      key={c.id} 
-                      onClick={() => {
-                        setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email});
-                        setSearchClient(`${c.docNumber} - ${c.name}`);
-                      }}
-                      className="px-4 py-3 hover:bg-[#e9f4f8] cursor-pointer text-[#134b60] border-b border-slate-50"
-                    >
-                      <span className="font-mono text-[#2596be] mr-2">{c.docNumber}</span>
-                      <span>{c.name}</span>
-                    </div>
+            {newUser.role === 'CLIENT' && (
+              <div className="space-y-1 relative max-w-md">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">VINCULAR CLIENTE</label>
+                <input 
+                  type="text" 
+                  value={searchClient} 
+                  onChange={(e) => setSearchClient(e.target.value)} 
+                  placeholder="BUSCAR CLIENTE POR NIT O NOMBRE..." 
+                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
+                />
+                {filteredClients.length > 0 && !newUser.relatedId && (
+                  <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-xl mt-1 z-50 overflow-hidden uppercase text-xs font-bold">
+                    {filteredClients.map(c => (
+                      <div 
+                        key={c.id} 
+                        onClick={() => {
+                          setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email});
+                          setSearchClient(`${c.docNumber} - ${c.name}`);
+                        }}
+                        className="px-3 py-2.5 hover:bg-[#e9f4f8] cursor-pointer text-[#134b60] border-b border-slate-50"
+                      >
+                        <span className="font-mono text-[#2596be] mr-2">{c.docNumber}</span>
+                        <span>{c.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* MÓDULOS CON RESTRICCIÓN PARA CLIENTE */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 w-full">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block">MÓDULOS HABILITADOS</label>
+                {newUser.role === 'CLIENT' && (
+                  <span className="text-[8px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                    ⚠️ ROL CLIENTE: RESTRINGIDO EXCLUSIVAMENTE A PORTAL CLIENTE
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-1.5">
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">GESTIÓN GENERAL</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                  {AVAILABLE_MODULES.filter(m => m.group === 'GESTIÓN GENERAL').map(mod => {
+                    const isClientRestricted = newUser.role === 'CLIENT';
+                    return (
+                      <label 
+                        key={mod.id} 
+                        className={`flex items-center gap-2 p-2 rounded-xl transition-colors border ${isClientRestricted ? 'bg-slate-100 opacity-50 cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-[#e9f4f8]/50 cursor-pointer border-slate-100'}`}
+                      >
+                        <input 
+                          type="checkbox"
+                          checked={newUser.permissions?.includes(mod.id) || false}
+                          disabled={isClientRestricted}
+                          onChange={() => handlePermissionToggle(mod.id, newUser.role, false)}
+                          className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <span className="text-[9px] font-black text-[#134b60] truncate">{mod.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">PORTAL CLIENTE</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2">
+                  {AVAILABLE_MODULES.filter(m => m.group === 'PORTAL CLIENTE').map(mod => (
+                    <label key={mod.id} className="flex items-center gap-2 p-2 bg-slate-50 hover:bg-[#e9f4f8]/50 rounded-xl cursor-pointer transition-colors border border-slate-100">
+                      <input 
+                        type="checkbox"
+                        checked={newUser.permissions?.includes(mod.id) || false}
+                        onChange={() => handlePermissionToggle(mod.id, newUser.role, false)}
+                        className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer"
+                      />
+                      <span className="text-[9px] font-black text-[#134b60] truncate">{mod.label}</span>
+                    </label>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE</label>
-              <input 
-                type="text" 
-                value={newUser.name} 
-                onChange={(e) => setNewUser({...newUser, name: e.target.value.toUpperCase()})} 
-                placeholder="NOMBRE COMPLETO" 
-                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
-                required 
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
-              <input 
-                type="email" 
-                value={newUser.email} 
-                onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
-                placeholder="CORREO@DOMINIO.COM" 
-                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs lowercase text-[#134b60] transition-all" 
-                required 
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CONTRASEÑA TEMPORAL</label>
-              <input 
-                type="password" 
-                value={newUser.password} 
-                onChange={(e) => setNewUser({...newUser, password: e.target.value})} 
-                placeholder="••••••••" 
-                className="w-full px-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" 
-                required 
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button 
                 type="button" 
                 onClick={() => { setNewUser(initialForm); setSearchClient(''); setErrorMsg(''); }}
-                className="w-full sm:w-auto px-6 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+                className="px-5 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-xl font-black text-[9px] uppercase transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm"
               >
-                <XCircle size={16} /> LIMPIAR
+                <XCircle size={14} /> LIMPIAR
               </button>
               <button 
                 type="submit"
-                className="w-full sm:w-auto px-6 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                className="px-6 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest shadow-md shadow-[#2596be]/20 transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
               >
-                <Plus size={16} /> CREAR ACCESO
+                <Plus size={14} /> GUARDAR ACCESO
               </button>
             </div>
           </form>
         </div>
+      )}
 
-        {/* TABLA DE USUARIOS */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
-            <div className="relative flex-1">
+      {/* VISTA 2: LISTA DE USUARIOS */}
+      {activeTab === 'list' && (
+        <div className="bg-white p-5 md:p-6 rounded-2xl border-2 border-[#e9f4f8] shadow-sm space-y-4 animate-in fade-in duration-300 w-full">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+            <div className="relative w-full sm:max-w-md">
               <input
                 type="text"
                 placeholder="Buscador inteligente: ID, nombre, correo o rol..."
                 value={searchUserTerm}
                 onChange={(e) => setSearchUserTerm(e.target.value)}
-                className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
+                className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-xl px-4 py-2.5 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
               />
             </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-              Mostrando {filteredUsers.length} de {users.length}
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+              Mostrando {filteredUsers.length} de {users.length} registros
             </span>
           </div>
 
-          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
-            <div className="max-h-[450px] overflow-y-auto overflow-x-auto scrollbar-hide">
-              <table className="w-full text-left uppercase min-w-[700px]">
+          <div className="rounded-xl border-2 border-slate-100 shadow-sm overflow-hidden flex flex-col w-full">
+            <div className="max-h-[550px] overflow-y-auto overflow-x-auto scrollbar-hide w-full">
+              <table className="w-full text-left uppercase min-w-[750px]">
                 <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-5">ID</th>
-                    <th className="px-6 py-5">NOMBRE / CORREO</th>
-                    <th className="px-6 py-5 text-center">ROL</th>
-                    <th className="px-6 py-5 text-right">GESTIÓN</th>
+                    <th className="px-5 py-3.5">ID / ROL</th>
+                    <th className="px-5 py-3.5">NOMBRE / CORREO</th>
+                    <th className="px-5 py-3.5 text-center">MÓDULOS</th>
+                    <th className="px-5 py-3.5 text-right">GESTIÓN</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="4" className="px-6 py-16 text-center text-slate-300 font-black">SIN ACCESOS REGISTRADOS</td>
+                      <td colSpan="4" className="px-5 py-16 text-center text-slate-300 font-black">SIN ACCESOS REGISTRADOS</td>
                     </tr>
                   ) : (
-                    filteredUsers.map((u) => (
-                      <tr key={u.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                        <td className="px-6 py-4 font-mono text-[#2596be] font-black">{u.id}</td>
-                        <td className="px-6 py-4">
-                          <p className="font-black text-[#134b60]">{u.name}</p>
-                          <p className="text-[9px] text-slate-400 lowercase">{u.email}</p>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`px-3 py-1 rounded-xl text-[9px] font-black ${u.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button 
-                              onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} 
-                              className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl transition-all hover:bg-[#2596be] hover:text-white shadow-sm cursor-pointer active:scale-95"
-                            >
-                              <Edit size={14} />
-                            </button>
-                            <button 
-                              onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} 
-                              className="p-2.5 bg-rose-50 text-rose-500 rounded-xl transition-all hover:bg-rose-500 hover:text-white shadow-sm cursor-pointer active:scale-95"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    filteredUsers.map((u) => {
+                      const isNativaCastilla = u.email?.toLowerCase().includes('castilla') || (u.role === 'SUPERADMIN' && u.id === 'US000001');
+                      return (
+                        <tr key={u.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
+                          <td className="px-5 py-3">
+                            <span className="font-mono text-[#2596be] font-black block">{u.id}</span>
+                            <span className={`inline-block px-2 py-0.5 rounded-md text-[8px] font-black mt-0.5 ${u.role === 'SUPERADMIN' ? 'bg-purple-50 text-purple-600 border border-purple-200' : u.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : u.role === 'OPERADOR' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3">
+                            <p className="font-black text-[#134b60]">{u.name}</p>
+                            <p className="text-[9px] text-slate-400 lowercase">{u.email}</p>
+                          </td>
+                          <td className="px-5 py-3 text-center">
+                            <span className="text-[9px] font-mono font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600">
+                              {u.permissions?.length || 0} módulos
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} 
+                                className="p-2 bg-[#e9f4f8] text-[#2596be] rounded-xl transition-all hover:bg-[#2596be] hover:text-white shadow-sm cursor-pointer active:scale-95"
+                                title="Editar Permisos y Rol"
+                              >
+                                <Edit size={13} />
+                              </button>
+                              {!isNativaCastilla ? (
+                                <button 
+                                  onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} 
+                                  className="p-2 bg-rose-50 text-rose-500 rounded-xl transition-all hover:bg-rose-500 hover:text-white shadow-sm cursor-pointer active:scale-95"
+                                  title="Eliminar Acceso"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              ) : (
+                                <span className="text-[7px] font-black text-slate-300 uppercase px-2 py-1 flex items-center justify-end">NATIVO</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* MODALES DE EDICIÓN Y ELIMINACIÓN */}
+      {/* MODAL DE EDICIÓN Y PERMISOS CON RESTRICCIÓN CLIENTE */}
       {modalType && (
         <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
-            <div className="p-8 text-[#134b60]">
-              <div className="flex flex-col items-center text-center gap-4 mb-8">
-                <div className={`p-4 rounded-full shadow-inner ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                  {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
+          <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-xl ${modalType === 'deleteSecond' ? 'border-[6px] border-rose-500' : ''}`}>
+            <div className="p-6 text-[#134b60]">
+              <div className="flex flex-col items-center text-center gap-3 mb-4">
+                <div className={`p-3 rounded-full shadow-inner ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
+                  {modalType === 'edit' ? <Edit size={28} /> : modalType === 'updateConfirm' ? <Info size={28} /> : <AlertTriangle size={28} />}
                 </div>
-                <h3 className="font-black text-xl uppercase tracking-tighter">
-                  {modalType === 'edit' ? 'EDITAR ACCESO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR ACCESO'}
+                <h3 className="font-black text-base uppercase tracking-tighter">
+                  {modalType === 'edit' ? 'EDITAR ROL Y PERMISOS' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR CAMBIOS' : 'ELIMINAR ACCESO'}
                 </h3>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {modalType === 'edit' && (
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ROL</label>
-                      <select 
-                        value={editData.role} 
-                        onChange={(e) => setEditData({...editData, role: e.target.value})} 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-bold text-xs uppercase outline-none focus:border-[#2596be] text-[#134b60] transition-all"
-                      >
-                        <option value="ADMIN">ADMINISTRADOR</option>
-                        <option value="CLIENT">CLIENTE</option>
-                      </select>
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ROL DEL SISTEMA</label>
+                        <select 
+                          value={editData.role} 
+                          onChange={(e) => handleRoleChange(e.target.value, true)} 
+                          className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-bold text-xs uppercase outline-none focus:border-[#2596be] text-[#134b60] transition-all"
+                        >
+                          <option value="SUPERADMIN">SUPERADMIN (TOTAL)</option>
+                          <option value="ADMIN">ADMINISTRADOR</option>
+                          <option value="OPERADOR">OPERADOR</option>
+                          <option value="CLIENT">CLIENTE</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMBRE</label>
+                        <input 
+                          type="text" 
+                          value={editData.name} 
+                          onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} 
+                          className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black uppercase text-xs outline-none focus:border-[#2596be] text-[#134b60] transition-all" 
+                        />
+                      </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE</label>
-                      <input 
-                        type="text" 
-                        value={editData.name} 
-                        onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black uppercase text-xs outline-none focus:border-[#2596be] text-[#134b60] transition-all" 
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
+                      <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
                       <input 
                         type="email" 
                         value={editData.email} 
                         onChange={(e) => setEditData({...editData, email: e.target.value})} 
-                        className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] text-[#134b60] lowercase transition-all" 
+                        className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] text-[#134b60] lowercase transition-all" 
                       />
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block">PERSONALIZAR MÓDULOS PERMITIDOS</label>
+                        {editData.role === 'CLIENT' && (
+                          <span className="text-[8px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                            ⚠️ RESTRINGIDO A PORTAL CLIENTE
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">GESTIÓN GENERAL</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          {AVAILABLE_MODULES.filter(m => m.group === 'GESTIÓN GENERAL').map(mod => {
+                            const isClientRestricted = editData.role === 'CLIENT';
+                            return (
+                              <label key={mod.id} className={`flex items-center gap-2 p-2 rounded-xl border ${isClientRestricted ? 'bg-slate-100 opacity-50 cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-[#e9f4f8]/50 cursor-pointer border-slate-100'}`}>
+                                <input 
+                                  type="checkbox"
+                                  checked={editData.permissions?.includes(mod.id) || false}
+                                  disabled={isClientRestricted}
+                                  onChange={() => handlePermissionToggle(mod.id, editData.role, true)}
+                                  className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer disabled:cursor-not-allowed"
+                                />
+                                <span className="text-[9px] font-black text-[#134b60]">{mod.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">PORTAL CLIENTE</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          {AVAILABLE_MODULES.filter(m => m.group === 'PORTAL CLIENTE').map(mod => (
+                            <label key={mod.id} className="flex items-center gap-2 p-2 bg-slate-50 hover:bg-[#e9f4f8]/50 rounded-xl cursor-pointer transition-colors border border-slate-100">
+                              <input 
+                                type="checkbox"
+                                checked={editData.permissions?.includes(mod.id) || false}
+                                onChange={() => handlePermissionToggle(mod.id, editData.role, true)}
+                                className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer"
+                              />
+                              <span className="text-[9px] font-black text-[#134b60]">{mod.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
                 {modalType === 'updateConfirm' && (
-                  <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl shadow-sm">
-                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase tracking-wide">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p>
+                  <div className="p-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl shadow-sm">
+                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase tracking-wide">⚠️ SE VAN A MODIFICAR LOS PERMISOS Y ACCESOS DE ESTE USUARIO.</p>
                   </div>
                 )}
                 {modalType === 'deleteSecond' && (
-                  <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl shadow-sm">
-                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN TOTAL DE <span className="font-mono">{selectedUser?.id}</span>.</p>
+                  <div className="p-3 bg-rose-50 border-2 border-rose-200 rounded-xl shadow-sm">
+                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A ELIMINAR EL ACCESO DE <span className="font-mono">{selectedUser?.id}</span>. ESTА ACCIÓN NO SE PUEDE REVERTIR.</p>
                   </div>
                 )}
               </div>
 
-              <div className="flex gap-4 mt-8">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
+              <div className="flex gap-2.5 mt-5">
+                <button onClick={() => setModalType(null)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
                 <button onClick={() => {
                    if (modalType === 'edit') setModalType('updateConfirm');
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setUsers(users.filter(u => u.id !== selectedUser.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b] shadow-[#2596be]/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'}`}>ACEPTAR</button>
+                }} className={`flex-1 py-2.5 text-white rounded-xl font-black text-xs uppercase transition-all shadow-md cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
               </div>
             </div>
           </div>
@@ -5073,6 +5289,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
     </div>
   );
 };
+
 // --- MÓDULO DE PROMOCIONES ---
 const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) => {
   const initialForm = { name: '', targetClients: [], startDateOnly: '', startTimeOnly: '', startDate: '', durationHours: '', screenTimeSeconds: '', text: '', image: '' };
@@ -6013,63 +6230,93 @@ const CRMView = ({ products, clients, inventory, orders }) => {
   );
 };
 
-// --- COMPONENTE PRINCIPAL (DASHBOARD WRAPPER) ---
+// --- COMPONENTE PRINCIPAL (DASHBOARD WRAPPER) COMPLETO Y CORREGIDO ---
 const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlobalLogo }) => {
-  const role = currentUser.role; 
-  const [activeTab, setActiveTab] = useState(role === 'ADMIN' ? 'dashboard' : 'client_dashboard');
+  // 1. Validación de roles
+  const isAdmin = currentUser.role === 'ADMIN' || currentUser.role === 'SUPERADMIN'; 
+  
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'dashboard' : 'client_dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('TODOS');
   
-  // Estados para el reloj y el calendario desplegable
+  // 2. Estados para el reloj y el calendario desplegable
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
+
+  // 3. ESTADOS PARA NOTIFICACIONES INTERACTIVAS
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem('inventrack_notifications');
+    if (saved) return JSON.parse(saved);
+    
+    // Datos de prueba iniciales
+    return [
+      { id: 1, message: 'Se ha registrado un nuevo pedido #1024', targetRoles: ['ADMIN', 'SUPERADMIN'], targetUserId: null, readBy: [] },
+      { id: 2, message: 'Alerta de bajo stock en producto X', targetRoles: ['ADMIN', 'SUPERADMIN'], targetUserId: null, readBy: [] },
+      { id: 3, message: 'Tu pedido ha sido aprobado y está en alistamiento', targetRoles: ['CLIENTE'], targetUserId: currentUser.id, readBy: [] },
+      { id: 4, message: 'Bienvenido al nuevo portal Inventrack', targetRoles: ['ADMIN', 'SUPERADMIN', 'CLIENTE'], targetUserId: null, readBy: [] }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('inventrack_notifications', JSON.stringify(notifications));
+  }, [notifications]);
+
+  // Filtrar notificaciones para el usuario actual y ordenarlas
+  const userNotifications = notifications.filter(n => 
+    (n.targetRoles && n.targetRoles.includes(currentUser.role)) || 
+    (n.targetUserId && n.targetUserId === currentUser.id)
+  ).sort((a, b) => b.id - a.id);
+
+  // Calcular no leídas
+  const unreadCount = userNotifications.filter(n => !n.readBy.includes(currentUser.id)).length;
+
+  // Marcar como leído
+  const markAsRead = (notificationId) => {
+    setNotifications(prev => prev.map(n => {
+      if (n.id === notificationId && !n.readBy.includes(currentUser.id)) {
+        return { ...n, readBy: [...n.readBy, currentUser.id] };
+      }
+      return n;
+    }));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => {
+      if ((n.targetRoles?.includes(currentUser.role) || n.targetUserId === currentUser.id) && !n.readBy.includes(currentUser.id)) {
+        return { ...n, readBy: [...n.readBy, currentUser.id] };
+      }
+      return n;
+    }));
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  
-  // Formatear hora y fecha en español
   const timeString = currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const dateString = currentTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
 
-  // Función para calcular festivos fijos y móviles de Colombia según el año
   const getColombiaHolidays = (year) => {
     const holidays = [
-      `1-1-${year}`,   // Año Nuevo
-      `1-6-${year}`,   // Reyes Magos
-      `3-19-${year}`,  // San José
-      `5-1-${year}`,   // Día del Trabajo
-      `6-29-${year}`,  // San Pedro y San Pablo
-      `7-20-${year}`,  // Independencia de Colombia
-      `8-7-${year}`,   // Batalla de Boyacá
-      `8-15-${year}`,  // La Asunción de la Virgen
-      `10-12-${year}`, // Día de la Raza
-      `11-1-${year}`,  // Todos los Santos
-      `11-11-${year}`, // Independencia de Cartagena
-      `12-8-${year}`,  // Inmaculada Concepción
-      `12-25-${year}`, // Navidad
+      `1-1-${year}`, `1-6-${year}`, `3-19-${year}`, `5-1-${year}`, `6-29-${year}`, `7-20-${year}`,
+      `8-7-${year}`, `8-15-${year}`, `10-12-${year}`, `11-1-${year}`, `11-11-${year}`, `12-8-${year}`, `12-25-${year}`
     ];
-
-    // Función auxiliar para mover festivos al siguiente lunes (Ley Emiliani)
     const moveToNextMonday = (d, m, y) => {
       const dateObj = new Date(y, m - 1, d);
-      const dayOfWeek = dateObj.getDay(); // 0: Dom, 1: Lun, ...
+      const dayOfWeek = dateObj.getDay();
       if (dayOfWeek !== 1) {
         const daysToAdd = (1 - dayOfWeek + 7) % 7;
         dateObj.setDate(dateObj.getDate() + (daysToAdd === 0 ? 7 : daysToAdd));
       }
       return `${dateObj.getMonth() + 1}-${dateObj.getDate()}-${dateObj.getFullYear()}`;
     };
-
-    holidays.push(moveToNextMonday(3, 21, year)); // San José (trasladado)
-    holidays.push(moveToNextMonday(6, 29, year)); // San Pedro y San Pablo (trasladado)
-    holidays.push(moveToNextMonday(8, 15, year)); // Asunción (trasladado)
-    holidays.push(moveToNextMonday(10, 12, year)); // Día de la Raza (trasladado)
-    holidays.push(moveToNextMonday(11, 1, year));  // Todos los Santos (trasladado)
-
+    holidays.push(moveToNextMonday(3, 21, year)); holidays.push(moveToNextMonday(6, 29, year));
+    holidays.push(moveToNextMonday(8, 15, year)); holidays.push(moveToNextMonday(10, 12, year));
+    holidays.push(moveToNextMonday(11, 1, year));
     return new Set(holidays);
   };
 
@@ -6077,68 +6324,28 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
     const saved = localStorage.getItem('inventrack_globalDiscountEngine');
     return saved !== null ? JSON.parse(saved) : true;
   });
-  useEffect(() => {
-    localStorage.setItem('inventrack_globalDiscountEngine', JSON.stringify(globalDiscountEngine));
-  }, [globalDiscountEngine]);
+  useEffect(() => { localStorage.setItem('inventrack_globalDiscountEngine', JSON.stringify(globalDiscountEngine)); }, [globalDiscountEngine]);
   
-  const [taxes, setTaxes] = useState(() => {
-    const saved = localStorage.getItem('inventrack_taxes');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('inventrack_taxes', JSON.stringify(taxes));
-  }, [taxes]);
+  const [taxes, setTaxes] = useState(() => { const saved = localStorage.getItem('inventrack_taxes'); return saved ? JSON.parse(saved) : []; });
+  useEffect(() => { localStorage.setItem('inventrack_taxes', JSON.stringify(taxes)); }, [taxes]);
 
-  const [clientTypes, setClientTypes] = useState(() => {
-    const saved = localStorage.getItem('inventrack_clientTypes');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('inventrack_clientTypes', JSON.stringify(clientTypes));
-  }, [clientTypes]);
+  const [clientTypes, setClientTypes] = useState(() => { const saved = localStorage.getItem('inventrack_clientTypes'); return saved ? JSON.parse(saved) : []; });
+  useEffect(() => { localStorage.setItem('inventrack_clientTypes', JSON.stringify(clientTypes)); }, [clientTypes]);
 
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('inventrack_products');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('inventrack_products', JSON.stringify(products));
-  }, [products]);
+  const [products, setProducts] = useState(() => { const saved = localStorage.getItem('inventrack_products'); return saved ? JSON.parse(saved) : []; });
+  useEffect(() => { localStorage.setItem('inventrack_products', JSON.stringify(products)); }, [products]);
 
-  const [clients, setClients] = useState(() => {
-    const saved = localStorage.getItem('inventrack_clients');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('inventrack_clients', JSON.stringify(clients));
-  }, [clients]);
+  const [clients, setClients] = useState(() => { const saved = localStorage.getItem('inventrack_clients'); return saved ? JSON.parse(saved) : []; });
+  useEffect(() => { localStorage.setItem('inventrack_clients', JSON.stringify(clients)); }, [clients]);
 
-  const [inventory, setInventory] = useState(() => {
-    const saved = localStorage.getItem('inventrack_inventory');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('inventrack_inventory', JSON.stringify(inventory));
-  }, [inventory]);
+  const [inventory, setInventory] = useState(() => { const saved = localStorage.getItem('inventrack_inventory'); return saved ? JSON.parse(saved) : []; });
+  useEffect(() => { localStorage.setItem('inventrack_inventory', JSON.stringify(inventory)); }, [inventory]);
 
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('inventrack_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('inventrack_orders', JSON.stringify(orders));
-  }, [orders]);
+  const [orders, setOrders] = useState(() => { const saved = localStorage.getItem('inventrack_orders'); return saved ? JSON.parse(saved) : []; });
+  useEffect(() => { localStorage.setItem('inventrack_orders', JSON.stringify(orders)); }, [orders]);
   
-  const [promotions, setPromotions] = useState(() => {
-    const saved = localStorage.getItem('inventrack_promotions');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('inventrack_promotions', JSON.stringify(promotions));
-  }, [promotions]);
-
-  const [csvPreview, setCsvPreview] = useState(null);
-  const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
+  const [promotions, setPromotions] = useState(() => { const saved = localStorage.getItem('inventrack_promotions'); return saved ? JSON.parse(saved) : []; });
+  useEffect(() => { localStorage.setItem('inventrack_promotions', JSON.stringify(promotions)); }, [promotions]);
   
   const adminMenu = [
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={20} /> },
@@ -6172,42 +6379,25 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
-      
-      {/* 1. PEGA ESTE FONDO OSCURO AQUÍ (Entre el div y el aside) */}
       {isSidebarOpen && (
-        <div 
-          onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-[#134b60]/50 backdrop-blur-sm z-[60] lg:hidden cursor-pointer"
-        />
+        <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-[#134b60]/50 backdrop-blur-sm z-[60] lg:hidden cursor-pointer" />
       )}
 
-      {/* Esta es tu línea 6174 original, déjala igual */}
       <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64 bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <button 
-          onClick={() => setIsSidebarOpen(false)}
-          className="lg:hidden absolute top-4 right-4 p-2 bg-white/10 hover:bg-rose-500 hover:text-white text-slate-300 rounded-xl transition-all cursor-pointer z-50"
-        >
+        <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden absolute top-4 right-4 p-2 bg-white/10 hover:bg-rose-500 hover:text-white text-slate-300 rounded-xl transition-all cursor-pointer z-50">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
-        {/* ... AQUÍ SIGUE TU CÓDIGO NORMAL (Línea 6176 en adelante) ... */}
-        {/* Botón flotante para minimizar / expandir */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-       
-          className="absolute -right-3.5 top-6 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
-          title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
-        >
+        <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="absolute -right-3.5 top-6 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer" title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}>
           {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
 
-        {/* Cabecera del Logo Compacta */}
         <div className={`p-3.5 border-b border-[#194052] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all shrink-0`}>
           <label htmlFor="logo-upload" className={`w-9 h-9 bg-white rounded-xl flex items-center justify-center p-1 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-2'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}>
-            {role === 'ADMIN' && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
-            <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${role === 'ADMIN' ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+            {isAdmin && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
+            <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${isAdmin ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
             <Package size={18} className="text-[#2596be] hidden" />
-            {role === 'ADMIN' && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={14} className="text-[#134b60]" /></div>}
+            {isAdmin && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={14} className="text-[#134b60]" /></div>}
           </label>
           
           {!sidebarCollapsed && (
@@ -6218,36 +6408,19 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           )}
         </div>
 
-        {/* Badge de Rol Súper Compacto */}
         <div className="px-3 py-2 shrink-0">
-          <div 
-            className={`w-full py-2 rounded-xl text-[8px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-2.5'} shadow-inner transition-all`}
-          >
-            {role === 'ADMIN' ? (
-              <ShieldCheck size={14} className="text-[#2596be] shrink-0" />
-            ) : (
-              <User size={14} className="text-[#2596be] shrink-0" />
-            )}
-            {!sidebarCollapsed && (
-              <span className="truncate uppercase tracking-wider">
-                {role === 'ADMIN' ? 'ADMINISTRADOR' : 'CLIENTE'}
-              </span>
-            )}
+          <div className={`w-full py-2 rounded-xl text-[8px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-2.5'} shadow-inner transition-all`}>
+            {isAdmin ? <ShieldCheck size={14} className="text-[#2596be] shrink-0" /> : <User size={14} className="text-[#2596be] shrink-0" />}
+            {!sidebarCollapsed && <span className="truncate uppercase tracking-wider">{currentUser.role}</span>}
           </div>
         </div>
 
-        {/* Menú de Navegación Compacto sin scroll innecesario */}
         <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-2' : 'px-3 py-1'} space-y-0.5 overflow-y-auto scrollbar-hide`}>
-          {role === 'ADMIN' && (
+          {isAdmin && (
             <>
               {!sidebarCollapsed && <div className="text-[6px] text-slate-400 font-black uppercase tracking-widest px-2 mb-1 opacity-60">Gestión General</div>}
               {adminMenu.map((item) => (
-                <button 
-                  key={item.id} 
-                  onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} 
-                  title={item.label} 
-                  className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
-                >
+                <button key={item.id} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} title={item.label} className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}>
                   <span className="shrink-0">{item.icon}</span>
                   {!sidebarCollapsed && <span className="text-[8px] tracking-wider uppercase">{item.label}</span>}
                 </button>
@@ -6257,56 +6430,36 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           )}
 
           {clientMenu.map((item) => (
-            <button 
-              key={item.id} 
-              onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
-              title={item.label} 
-              className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}
-            >
+            <button key={item.id} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} title={item.label} className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}>
               <span className="shrink-0">{item.icon}</span>
               {!sidebarCollapsed && <span className="text-[8px] tracking-wider uppercase">{item.label}</span>}
             </button>
           ))}
         </nav>
 
-        {/* Botón de Salir Minimalista */}
         <div className="px-3 py-2 border-t border-[#194052] shrink-0">
-          <button 
-            onClick={onLogout} 
-            title="Salir"
-            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-1.5' : 'gap-2 px-2.5 py-1.5'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[8px] uppercase tracking-wider transition-all`}
-          >
+          <button onClick={onLogout} title="Salir" className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-1.5' : 'gap-2 px-2.5 py-1.5'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[8px] uppercase tracking-wider transition-all`}>
             <span className="shrink-0"><LogOut size={13} /></span>
             {!sidebarCollapsed && <span>SALIR</span>}
           </button>
         </div>
       </aside>
 
-      {/* Panel Derecho con altura completa y scroll independiente */}
       <main className={`flex-1 flex flex-col h-full overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden shrink-0">
-          {/* Lado izquierdo: Botón móvil y Mensaje de Bienvenida */}
           <div className="flex items-center gap-3">
-            <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2.5 text-[#134b60] lg:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100"
-                >
-                <MenuIcon size={20} />
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2.5 text-[#134b60] lg:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100">
+              <MenuIcon size={20} />
             </button>
             <h1 className="text-xs md:text-sm font-black text-[#134b60] tracking-tight uppercase">
               Bienvenido, {currentUser.name}
             </h1>
           </div>
 
-          {/* Lado derecho: Widget de Reloj/Fecha Extendido con Desplegable de Calendario, Festivos y Campana */}
           <div className="flex items-center gap-3 ml-auto">
-            
-            {/* Widget de Reloj y Fecha (Alargado y Desplegable) */}
+            {/* Reloj y Calendario */}
             <div className="relative">
-              <button 
-                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                className="flex items-center gap-3.5 px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl shadow-inner text-[#134b60] hover:bg-slate-100 transition-all cursor-pointer"
-              >
+              <button onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="flex items-center gap-3.5 px-4 py-2.5 bg-slate-50 border border-slate-200/85 rounded-2xl shadow-inner text-[#134b60] hover:bg-slate-100 transition-all cursor-pointer">
                 <Clock size={20} className="text-[#2596be] shrink-0" />
                 <div className="flex flex-col text-left leading-tight">
                   <span className="text-xs font-black tracking-wider">{timeString}</span>
@@ -6315,124 +6468,96 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
                 <ChevronDown size={14} className={`text-slate-400 transition-transform ${isCalendarOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Backdrop para cerrar el calendario al hacer clic fuera */}
-              {isCalendarOpen && (
-                <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsCalendarOpen(false)}></div>
-              )}
+              {isCalendarOpen && <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsCalendarOpen(false)}></div>}
 
-              {/* Panel Desplegable del Calendario */}
               {isCalendarOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-3xl shadow-2xl border-2 border-[#e9f4f8] p-5 z-50 uppercase font-sans text-slate-900">
-                  {/* Cabecera del Mes */}
                   <div className="flex items-center justify-between mb-4">
-                    <button 
-                      onClick={() => {
-                        const newD = new Date(calendarDate);
-                        newD.setMonth(newD.getMonth() - 1);
-                        setCalendarDate(newD);
-                      }}
-                      className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <span className="text-xs font-black text-[#134b60]">
-                      {calendarDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-                    </span>
-                    <button 
-                      onClick={() => {
-                        const newD = new Date(calendarDate);
-                        newD.setMonth(newD.getMonth() + 1);
-                        setCalendarDate(newD);
-                      }}
-                      className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
+                    <button onClick={() => { const newD = new Date(calendarDate); newD.setMonth(newD.getMonth() - 1); setCalendarDate(newD); }} className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"><ChevronLeft size={16} /></button>
+                    <span className="text-xs font-black text-[#134b60]">{calendarDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
+                    <button onClick={() => { const newD = new Date(calendarDate); newD.setMonth(newD.getMonth() + 1); setCalendarDate(newD); }} className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"><ChevronRight size={16} /></button>
                   </div>
-
-                  {/* Días de la semana */}
                   <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 mb-2">
                     <span>LU</span><span>MA</span><span>MI</span><span>JU</span><span>VI</span><span className="text-slate-400">SA</span><span className="text-rose-500">DO</span>
                   </div>
-
-                  {/* Cuadrícula de días */}
                   <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold">
                     {(() => {
-                      const year = calendarDate.getFullYear();
-                      const month = calendarDate.getMonth();
-                      const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Lunes inicio
+                      const year = calendarDate.getFullYear(); const month = calendarDate.getMonth();
+                      const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
                       const totalDays = new Date(year, month + 1, 0).getDate();
-                      const today = new Date();
-                      const holidays = getColombiaHolidays(year);
-
+                      const today = new Date(); const holidays = getColombiaHolidays(year);
                       const days = [];
-                      for (let i = 0; i < firstDayIndex; i++) {
-                        days.push(<div key={`empty-${i}`} className="p-2"></div>);
-                      }
-
+                      for (let i = 0; i < firstDayIndex; i++) days.push(<div key={`empty-${i}`} className="p-2"></div>);
                       for (let day = 1; day <= totalDays; day++) {
                         const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
                         const dateKey = `${month + 1}-${day}-${year}`;
                         const isHoliday = holidays.has(dateKey);
-                        const dateObj = new Date(year, month, day);
-                        const isSunday = dateObj.getDay() === 0;
-
-                        let styleClass = 'hover:bg-slate-100 text-[#134b60] cursor-pointer';
-                        let tooltip = '';
-
-                        if (isToday) {
-                          styleClass = 'bg-[#2596be] text-white font-black shadow-md';
-                        } else if (isHoliday) {
-                          styleClass = 'bg-rose-50 text-rose-600 font-black border border-rose-200';
-                          tooltip = 'Festivo Colombia';
-                        } else if (isSunday) {
-                          styleClass = 'text-rose-500 font-bold bg-rose-50/50';
-                        }
-
-                        days.push(
-                          <div 
-                            key={day} 
-                            title={tooltip}
-                            className={`p-2 rounded-xl flex items-center justify-center transition-all ${styleClass}`}
-                          >
-                            {day}
-                          </div>
-                        );
+                        const isSunday = new Date(year, month, day).getDay() === 0;
+                        let styleClass = 'hover:bg-slate-100 text-[#134b60] cursor-pointer'; let tooltip = '';
+                        if (isToday) styleClass = 'bg-[#2596be] text-white font-black shadow-md';
+                        else if (isHoliday) { styleClass = 'bg-rose-50 text-rose-600 font-black border border-rose-200'; tooltip = 'Festivo Colombia'; }
+                        else if (isSunday) styleClass = 'text-rose-500 font-bold bg-rose-50/50';
+                        days.push(<div key={day} title={tooltip} className={`p-2 rounded-xl flex items-center justify-center transition-all ${styleClass}`}>{day}</div>);
                       }
                       return days;
                     })()}
                   </div>
-
-                  {/* Botón "Hoy" para regresar al día actual */}
                   <div className="mt-4 pt-3 border-t border-slate-100 flex justify-center">
-                    <button 
-                      onClick={() => setCalendarDate(new Date())}
-                      className="text-xs font-black text-[#2596be] hover:underline cursor-pointer"
-                    >
-                      Hoy
-                    </button>
+                    <button onClick={() => setCalendarDate(new Date())} className="text-xs font-black text-[#2596be] hover:underline cursor-pointer">Hoy</button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Campana de Notificaciones */}
+            {/* Campana de Notificaciones Interactiva */}
             <div className="relative">
               <button 
-                onClick={() => {}}
+                onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); setIsCalendarOpen(false); }}
                 className="w-10 h-10 bg-slate-50 border border-slate-200/80 text-[#134b60] rounded-2xl flex items-center justify-center hover:bg-slate-100 transition-all shadow-inner relative cursor-pointer"
                 title="Notificaciones"
               >
                 <Bell size={18} className="text-[#134b60]" />
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-pulse">
-                  3
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
+
+              {isNotificationsOpen && <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsNotificationsOpen(false)}></div>}
+
+              {isNotificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-3xl shadow-2xl border-2 border-[#e9f4f8] p-5 z-50 uppercase font-sans flex flex-col max-h-[400px]">
+                  <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                    <span className="text-xs font-black text-[#134b60]">NOTIFICACIONES</span>
+                    {unreadCount > 0 && (
+                      <button onClick={markAllAsRead} className="text-[8px] font-bold text-[#2596be] hover:underline cursor-pointer">
+                        MARCAR TODAS LEÍDAS
+                      </button>
+                    )}
+                  </div>
+                  <div className="overflow-y-auto scrollbar-hide space-y-2 flex-1">
+                    {userNotifications.length > 0 ? (
+                      userNotifications.map(n => {
+                        const isRead = n.readBy.includes(currentUser.id);
+                        return (
+                          <div key={n.id} onClick={() => markAsRead(n.id)} className={`p-3 rounded-xl border transition-all cursor-pointer flex gap-3 items-center ${isRead ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-[#e9f4f8]/50 border-[#2596be]/30 shadow-sm hover:border-[#2596be]/50'}`}>
+                            {!isRead && <div className="w-2 h-2 rounded-full bg-[#2596be] shrink-0"></div>}
+                            <p className={`text-[9px] leading-relaxed ${isRead ? 'text-slate-500 font-bold' : 'text-[#134b60] font-black'}`}>{n.message}</p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center p-4 text-[9px] text-slate-400 font-bold">NO TIENES MENSAJES NUEVOS</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Contenedor dinámico de vistas con su propio scroll independiente */}
+        {/* Vistas dinámicas */}
         <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
           {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
           {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} />}
@@ -6453,105 +6578,195 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   );
 };
 
-const ForcePasswordChangeView = ({ currentUser, users, setUsers, setCurrentUser, logoImage }) => {
-  const [newPassword, setNewPassword] = useState('');
+// --- 1. COMPONENTE DE LOGIN ---
+const LoginView = ({ users, setUsers, onLoginSuccess }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  
+  const [pendingUser, setPendingUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    // Validación estricta que quitamos del panel de administrador
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-    
-    if (!passwordRegex.test(newPassword)) {
-      setErrorMsg('LA CONTRASEÑA DEBE TENER MÍNIMO 8 CARACTERES, COMBINANDO MAYÚSCULAS, MINÚSCULAS, NÚMEROS Y SÍMBOLOS.');
+    setErrorMsg('');
+
+    const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (!foundUser) {
+      setErrorMsg('CORREO ELECTRÓNICO NO REGISTRADO EN EL SISTEMA.');
       return;
     }
 
-    // 1. Actualizamos la lista global de usuarios
-    const updatedUsers = users.map(u => 
-      u.id === currentUser.id 
-        ? { ...u, password: newPassword, isTemporaryPassword: false } 
-        : u
-    );
-    setUsers(updatedUsers);
+    if (foundUser.password !== password) {
+      setErrorMsg('CONTRASEÑA INCORRECTA.');
+      return;
+    }
 
-    // 2. Actualizamos la sesión actual para desbloquear la entrada al Dashboard
-    setCurrentUser({ ...currentUser, password: newPassword, isTemporaryPassword: false });
+    if (foundUser.isTemporaryPassword) {
+      setPendingUser(foundUser);
+      return;
+    }
+
+    onLoginSuccess(foundUser);
+  };
+
+  const handleUpdatePassword = (e) => {
+    e.preventDefault();
+    setPasswordError('');
+
+    const minLength = newPassword.length >= 6;
+    const hasUppercase = /[A-Z]/.test(newPassword);
+    const hasLowercase = /[a-z]/.test(newPassword);
+    const hasSpecialChar = /[\*\-\+\$\#\_\@\.\!]/.test(newPassword);
+
+    if (!minLength || !hasUppercase || !hasLowercase || !hasSpecialChar) {
+      setPasswordError('LA CONTRASEÑA DEBE TENER MÍNIMO 6 CARACTERES, UNA MAYÚSCULA, UNA MINÚSCULA Y UN CARÁCTER ESPECIAL (*, -, +, ETC.).');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('LAS CONTRASEÑAS NO COINCIDEN.');
+      return;
+    }
+
+    const updatedUsers = users.map(u => {
+      if (u.id === pendingUser.id) {
+        return {
+          ...u,
+          password: newPassword,
+          isTemporaryPassword: false
+        };
+      }
+      return u;
+    });
+
+    setUsers(updatedUsers);
+    const finalUser = updatedUsers.find(u => u.id === pendingUser.id);
+    
+    setPendingUser(null);
+    onLoginSuccess(finalUser);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f8fafc]">
-      <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md flex flex-col items-center gap-6 border-t-8 border-[#2596be] animate-in zoom-in-95 duration-500">
-        {logoImage && <img src={logoImage} alt="Logo" className="h-16 object-contain mb-2" />}
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black text-[#134b60]">CAMBIO OBLIGATORIO</h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">
-            HOLA {currentUser.name}, POR MOTIVOS DE SEGURIDAD DEBES ASIGNAR UNA NUEVA CONTRASEÑA DEFINITIVA PARA PODER INGRESAR AL PORTAL.
-          </p>
+    <div className="flex items-center justify-center min-h-screen bg-[#0f2d3a] p-4 uppercase font-sans">
+      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 md:p-10 border-4 border-[#2596be]/20 space-y-6">
+        <div className="flex flex-col items-center text-center space-y-2">
+          <div className="w-16 h-16 bg-[#0f2d3a] rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#2596be]">
+            <span className="text-white font-black text-xl">IT</span>
+          </div>
+          <h1 className="text-2xl font-black text-[#134b60] tracking-tight">INVENTRACK</h1>
+          <p className="text-[10px] font-bold text-slate-400 tracking-widest">SISTEMA DE GESTIÓN Y OPERACIONES</p>
         </div>
 
         {errorMsg && (
-          <div className="w-full p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-2xl tracking-wide text-center uppercase">
+          <div className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl text-center animate-pulse">
             {errorMsg}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="w-full space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 tracking-widest block">NUEVA CONTRASEÑA DEFINITIVA</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
             <input 
               type="text" 
-              value={newPassword}
-              onChange={(e) => { setNewPassword(e.target.value); setErrorMsg(''); }}
-              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
-              placeholder="Escribe tu nueva contraseña..."
-              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin" 
+              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs lowercase text-[#134b60] transition-all"
+              required 
             />
           </div>
-          
+
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CONTRASEÑA</label>
+            <input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="admin" 
+              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs text-[#134b60] transition-all"
+              required 
+            />
+          </div>
+
           <button 
-            type="submit" 
-            className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl shadow-[#2596be]/20 active:scale-95"
+            type="submit"
+            className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-[#2596be]/25 transition-all cursor-pointer active:scale-95"
           >
-            GUARDAR Y ENTRAR AL PORTAL
+            INICIAR SESIÓN
           </button>
         </form>
+
+        <div className="text-center pt-2">
+          <span className="text-[9px] font-bold text-slate-400">DISTRIBUCIONES CASTILLA S.A.S. © 2026</span>
+        </div>
       </div>
     </div>
   );
 };
-// --- COMPONENTE RAÍZ (APP) - MODO LIBRE DESARROLLO ---
+
+
+// --- 2. COMPONENTE RAÍZ (APP) CON PERMISOS TOTALES FORZADOS ---
 const App = () => {
-  // Usuario administrador por defecto para desarrollo libre
-  const mockAdminUser = {
+  const universalAdminUser = {
     id: "US000001",
     name: "ADMINISTRADOR",
-    email: "admin@distribucionescastilla.com",
-    role: "ADMIN",
-    isTemporaryPassword: false
+    email: "admin",
+    role: "SUPERADMIN",
+    password: "admin",
+    isTemporaryPassword: false,
+    permissions: [
+      'dashboard', 'orders', 'access', 'crm', 'clients', 
+      'client_type', 'inventory', 'products', 'taxes', 'promotions', 
+      'client_home', 'client_new_order', 'client_orders_history'
+    ]
   };
-
-  const [currentUser, setCurrentUser] = useState(mockAdminUser);
 
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('inventrack_users');
-    return saved ? JSON.parse(saved) : [mockAdminUser];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Aseguramos que el usuario admin siempre exista y tenga TODOS los permisos actualizados
+        const filtered = parsed.filter(u => u.email !== 'admin');
+        return [universalAdminUser, ...filtered];
+      } catch (e) {
+        return [universalAdminUser];
+      }
+    }
+    return [universalAdminUser];
   });
+  
   useEffect(() => {
     localStorage.setItem('inventrack_users', JSON.stringify(users));
   }, [users]);
 
+  const [currentUser, setCurrentUser] = useState(null);
+
   const [globalLogo, setGlobalLogo] = useState(() => {
     return localStorage.getItem('inventrack_globalLogo') || '';
   });
+  
   useEffect(() => {
     localStorage.setItem('inventrack_globalLogo', globalLogo);
   }, [globalLogo]);
 
   const handleLogout = () => {
-    // En modo libre recargamos o mantenemos el admin
-    setCurrentUser(mockAdminUser);
+    setCurrentUser(null);
   };
+
+  if (!currentUser) {
+    return (
+      <LoginView 
+        users={users} 
+        setUsers={setUsers} 
+        onLoginSuccess={(user) => setCurrentUser(user)} 
+      />
+    );
+  }
 
   return (
     <Dashboard 
