@@ -4444,7 +4444,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                         <span className="flex items-center gap-2 text-emerald-600"><Smartphone size={14}/> WHATSAPP SOPORTE: 315000123123</span>
                     </div>
                     <div className="text-center mt-4">
-                        <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.4em]">Creado con Inventrack de Distribuciones Castilla. Derechos reservados © 2026.</p>
+                        <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.4em]">Creado con Pide con Castilla. Derechos reservados © 2026.</p>
                     </div>
                   </div>
                 </div>
@@ -6439,7 +6439,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           
           {!sidebarCollapsed && (
             <>
-              <span className="font-black text-[11px] text-white tracking-tight mt-1 block">INVENTRACK</span>
+              <span className="font-black text-[11px] text-white tracking-tight mt-1 block">Pide con Castilla</span>
               <span className="text-[6px] text-[#e9f4f8] font-bold opacity-50 uppercase tracking-[0.1em]">DISTRIBUCIONES CASTILLA</span>
             </>
           )}
@@ -6615,8 +6615,8 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   );
 };
 
-// --- 1. COMPONENTE DE LOGIN ---
-const LoginView = ({ users, setUsers, onLoginSuccess }) => {
+// --- 1. COMPONENTE DE LOGIN SINCRONIZADO CON EL LOGO GLOBAL ---
+const LoginView = ({ users, setUsers, onLoginSuccess, globalLogo }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -6687,15 +6687,76 @@ const LoginView = ({ users, setUsers, onLoginSuccess }) => {
     onLoginSuccess(finalUser);
   };
 
+  // Si está pendiente el cambio de contraseña
+  if (pendingUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0f2d3a] p-4 uppercase font-sans">
+        <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 md:p-10 border-4 border-[#2596be]/20 space-y-6">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#2596be] overflow-hidden p-1">
+              <img src={globalLogo} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+            <h1 className="text-xl font-black text-[#134b60] tracking-tight">ACTUALIZAR CONTRASEÑA</h1>
+            <p className="text-[9px] font-bold text-slate-400 tracking-widest">SEGURIDAD OBLIGATORIA</p>
+          </div>
+
+          {passwordError && (
+            <div className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[9px] rounded-xl text-center">
+              {passwordError}
+            </div>
+          )}
+
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NUEVA CONTRASEÑA</label>
+              <input 
+                type="password" 
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs text-[#134b60]"
+                required 
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CONFIRMAR CONTRASEÑA</label>
+              <input 
+                type="password" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs text-[#134b60]"
+                required 
+              />
+            </div>
+            <button 
+              type="submit"
+              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all cursor-pointer"
+            >
+              GUARDAR Y ACCEDER
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#0f2d3a] p-4 uppercase font-sans">
       <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 md:p-10 border-4 border-[#2596be]/20 space-y-6">
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-16 h-16 bg-[#0f2d3a] rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#2596be]">
-            <span className="text-white font-black text-xl">IT</span>
+          
+          {/* Logo sincronizado automáticamente con el del Dashboard / Sidebar */}
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-1.5 shadow-lg border-2 border-[#2596be] overflow-hidden">
+            <img 
+              src={globalLogo} 
+              alt="Logo Pide con Castilla" 
+              className="w-full h-full object-contain" 
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
+            />
+            <span className="text-[#134b60] font-black text-xl hidden">IT</span>
           </div>
-          <h1 className="text-2xl font-black text-[#134b60] tracking-tight">INVENTRACK</h1>
-          <p className="text-[10px] font-bold text-slate-400 tracking-widest">SISTEMA DE GESTIÓN Y OPERACIONES</p>
+
+          <h1 className="text-2xl font-black text-[#134b60] tracking-tight">pide con castilla</h1>
+          <p className="text-[10px] font-bold text-slate-400 tracking-widest">SISTEMA DE GESTIÓN</p>
         </div>
 
         {errorMsg && (
@@ -6744,7 +6805,6 @@ const LoginView = ({ users, setUsers, onLoginSuccess }) => {
     </div>
   );
 };
-
 
 // --- 2. COMPONENTE RAÍZ (APP) CON PERMISOS TOTALES FORZADOS ---
 const App = () => {
@@ -6801,6 +6861,7 @@ const App = () => {
         users={users} 
         setUsers={setUsers} 
         onLoginSuccess={(user) => setCurrentUser(user)} 
+        globalLogo={globalLogo} 
       />
     );
   }
