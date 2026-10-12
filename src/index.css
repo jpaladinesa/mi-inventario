@@ -1,9 +1,9 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
 
-/* Configuración base para una aplicación profesional 
-*/
+/* Configuración base para una aplicación profesional */
 :root {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
@@ -14,22 +14,25 @@
 }
 
 /* Ajustamos el body para que el Dashboard ocupe toda la pantalla 
-  sin problemas de centrado forzado una vez que inicias sesión.
+   sin problemas de centrado forzado una vez que inicias sesión.
 */
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   background-color: #f8fafc; /* slate-50 */
+  font-family: 'Montserrat', sans-serif;
 }
 
 #root {
   min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Transiciones globales para botones e inputs */
-button, input {
+button, input, select, textarea {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Estilización opcional de la barra de desplazamiento para un look más "Pro" */
