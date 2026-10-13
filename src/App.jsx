@@ -6417,7 +6417,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
       {isSidebarOpen && (
-        <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-[#134b60]/50 backdrop-blur-sm z-[60] lg:hidden cursor-pointer" />
+        <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-[#0071A8]/50 backdrop-blur-sm z-[60] lg:hidden cursor-pointer" />
       )}
 
       <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64 bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>

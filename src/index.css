@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
 
-/* Configuración base para una aplicación profesional */
+/* Configuración base y colores globales */
 :root {
   font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
@@ -11,6 +11,9 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* NUEVO COLOR AZUL PRINCIPAL */
+  --primary-blue: #0071A8;
 }
 
 /* Ajustamos el body para que el Dashboard ocupe toda la pantalla 
