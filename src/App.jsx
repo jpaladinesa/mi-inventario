@@ -275,23 +275,22 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
   );
 };
 
-// --- MÓDULO DE PRODUCTOS: DISEÑO VISUAL MEJORADO ---
+// --- MÓDULO DE PRODUCTOS v2: Montserrat · Colores marca · Viewport fit ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
-  const [priceCsvPreview, setPriceCsvPreview] = useState(null); 
-  const [priceSuccessModal, setPriceSuccessModal] = useState(null); 
+  const [priceCsvPreview, setPriceCsvPreview] = useState(null);
+  const [priceSuccessModal, setPriceSuccessModal] = useState(null);
   const [warningModal, setWarningModal] = useState(null);
   const [activeSubTab, setActiveSubTab] = useState('create');
   const [csvFileMeta, setCsvFileMeta] = useState({ name: '', size: '' });
   const [searchTerm, setSearchTerm] = useState('');
-  
   const [selectedPriceIds, setSelectedPriceIds] = useState([]);
-  const [batchEdits, setBatchEdits] = useState({}); 
-  const [debouncedBatchEdits, setDebouncedBatchEdits] = useState({}); 
-  const [batchError, setBatchError] = useState(''); 
-  const [activePriceSubView, setActivePriceSubView] = useState('editor'); 
+  const [batchEdits, setBatchEdits] = useState({});
+  const [debouncedBatchEdits, setDebouncedBatchEdits] = useState({});
+  const [batchError, setBatchError] = useState('');
+  const [activePriceSubView, setActivePriceSubView] = useState('editor');
   const [priceConfirmModal, setPriceConfirmModal] = useState(null);
-  
+
   const [priceLogs, setPriceLogs] = useState(() => {
     const saved = localStorage.getItem('castillaPriceLogs');
     if (!saved) return [];
@@ -302,36 +301,29 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         const num = parseInt(log.moveId.replace('CP', ''), 10);
         return !isNaN(num) && num < 1000000;
       });
-    } catch (e) {
-      return [];
-    }
+    } catch (e) { return []; }
   });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedBatchEdits(batchEdits);
-    }, 400);
+    const timer = setTimeout(() => setDebouncedBatchEdits(batchEdits), 400);
     return () => clearTimeout(timer);
   }, [batchEdits]);
 
   useEffect(() => {
     localStorage.setItem('castillaPriceLogs', JSON.stringify(priceLogs));
   }, [priceLogs]);
-  
+
   const filteredProducts = products.filter(p =>
     p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (p.unitName && p.unitName.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-  
+
   const getNextNumericID = () => {
     if (products.length === 0) return '00001';
     let max = 0;
-    products.forEach(p => {
-        const num = parseInt(p.id, 10);
-        if (!isNaN(num) && num > max) max = num;
-    });
+    products.forEach(p => { const n = parseInt(p.id, 10); if (!isNaN(n) && n > max) max = n; });
     return String(max + 1).padStart(5, '0');
   };
 
@@ -341,1033 +333,553 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       const num = parseInt(log.moveId.replace('CP', ''), 10);
       return !isNaN(num) && num < 1000000;
     });
-
     if (cpLogs.length === 0) return 'CP000001';
     let max = 0;
-    cpLogs.forEach(log => {
-      const num = parseInt(log.moveId.replace('CP', ''), 10);
-      if (!isNaN(num) && num > max) max = num;
-    });
+    cpLogs.forEach(log => { const n = parseInt(log.moveId.replace('CP', ''), 10); if (!isNaN(n) && n > max) max = n; });
     return `CP${String(max + 1).padStart(6, '0')}`;
   };
 
-  const categoryOptions = [
-    'PAPELERIA', 'OFICINA', 'PIÑATERIA', 'ASEO',
-    'CAFETERIA', 'TECNOLOGIA', 'VARIOS', 'OTRO'
-  ];
+  const categoryOptions = ['PAPELERIA','OFICINA','PIÑATERIA','ASEO','CAFETERIA','TECNOLOGIA','VARIOS','OTRO'];
+  const unitOptions = ['UNIDAD','PAQUETE','CAJA','BOLSA','GRAMO','LIBRA','KILO','ARROBA','MILILITRO','LITRO','GALON','MILIMETRO','CENTIMETRO','METRO','FRASCO','BOTELLA'];
 
-  const initialForm = { 
-    id: getNextNumericID(), 
-    name: '', 
-    unitName: 'UNIDAD', 
-    category: '', 
-    taxId: '', 
-    cost: '', 
-    utility: '', 
-    observations: '',
-    images: [] 
-  };
-  
+  const initialForm = { id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] };
   const [newProd, setNewProd] = useState(initialForm);
-  
-  useEffect(() => {
-    setNewProd(prev => ({ ...prev, id: getNextNumericID() }));
-  }, [products]);
+  useEffect(() => { setNewProd(prev => ({ ...prev, id: getNextNumericID() })); }, [products]);
 
   const [modalType, setModalType] = useState(null);
   const [selectedProd, setSelectedProd] = useState(null);
   const [editData, setEditData] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
-  
-  const unitOptions = [
-    'UNIDAD', 'PAQUETE', 'CAJA', 'BOLSA',
-    'GRAMO', 'LIBRA', 'KILO', 'ARROBA',
-    'MILILITRO', 'LITRO', 'GALON',
-    'MILIMETRO', 'CENTIMETRO', 'METRO',
-    'FRASCO', 'BOTELLA'
-  ];
 
   const handleSingleImageUpload = (index, e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      setWarningModal({
-        title: 'Formato no válido',
-        message: 'Use exclusivamente imágenes en formato JPG o WebP.'
-      });
-      e.target.value = '';
-      return;
-    }
-
-    if (file.size > 500 * 1024) {
-      setWarningModal({
-        title: 'Exceso de peso',
-        message: 'La imagen supera el peso máximo permitido de 500 KB.'
-      });
-      e.target.value = '';
-      return;
-    }
-
+    const file = e.target.files[0]; if (!file) return;
+    const validTypes = ['image/jpeg','image/jpg','image/webp'];
+    if (!validTypes.includes(file.type)) { setWarningModal({ title: 'Formato no válido', message: 'Use imágenes JPG o WebP.' }); e.target.value = ''; return; }
+    if (file.size > 500*1024) { setWarningModal({ title: 'Archivo muy pesado', message: 'Máximo 500 KB por imagen.' }); e.target.value = ''; return; }
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewProd(prev => {
-        const updatedImages = [...(prev.images || [])];
-        updatedImages[index] = reader.result;
-        return { ...prev, images: updatedImages };
-      });
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    reader.onloadend = () => setNewProd(prev => { const imgs = [...(prev.images||[])]; imgs[index] = reader.result; return { ...prev, images: imgs }; });
+    reader.readAsDataURL(file); e.target.value = '';
   };
-
-  const removeImageAt = (index) => {
-    setNewProd(prev => {
-      const updatedImages = [...(prev.images || [])];
-      updatedImages.splice(index, 1);
-      return { ...prev, images: updatedImages };
-    });
-  };
+  const removeImageAt = (index) => setNewProd(prev => { const imgs = [...(prev.images||[])]; imgs.splice(index,1); return { ...prev, images: imgs }; });
 
   const handleEditSingleImageUpload = (index, e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      setWarningModal({
-        title: 'Formato no válido',
-        message: 'Use exclusivamente imágenes en formato JPG o WebP.'
-      });
-      e.target.value = '';
-      return;
-    }
-
-    if (file.size > 500 * 1024) {
-      setWarningModal({
-        title: 'Exceso de peso',
-        message: 'La imagen supera el peso máximo permitido de 500 KB.'
-      });
-      e.target.value = '';
-      return;
-    }
-
+    const file = e.target.files[0]; if (!file) return;
+    const validTypes = ['image/jpeg','image/jpg','image/webp'];
+    if (!validTypes.includes(file.type)) { setWarningModal({ title: 'Formato no válido', message: 'Use imágenes JPG o WebP.' }); e.target.value = ''; return; }
+    if (file.size > 500*1024) { setWarningModal({ title: 'Archivo muy pesado', message: 'Máximo 500 KB por imagen.' }); e.target.value = ''; return; }
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setEditData(prev => {
-        let updatedImages = prev.images ? [...prev.images] : [];
-        while (updatedImages.length <= index) {
-          updatedImages.push(null);
-        }
-        updatedImages[index] = reader.result;
-        return { ...prev, images: updatedImages };
-      });
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    reader.onloadend = () => setEditData(prev => { let imgs = prev.images ? [...prev.images] : []; while(imgs.length<=index) imgs.push(null); imgs[index]=reader.result; return { ...prev, images: imgs }; });
+    reader.readAsDataURL(file); e.target.value = '';
   };
-
-  const removeEditImageAt = (index) => {
-    setEditData(prev => {
-      const updatedImages = [...(prev.images || [])];
-      updatedImages.splice(index, 1);
-      return { ...prev, images: updatedImages };
-    });
-  };
+  const removeEditImageAt = (index) => setEditData(prev => { const imgs = [...(prev.images||[])]; imgs.splice(index,1); return { ...prev, images: imgs }; });
 
   const getCalculatedValues = (cost, utility, taxId) => {
-    const c = parseFloat(cost) || 0;
-    const u = parseFloat(utility) || 0;
-    const taxValue = taxes.find(t => t.id === taxId)?.value || 0;
-    const subtotal = c * (1 + (u / 100));
-    const taxAmount = subtotal * (taxValue / 100);
-    return { subtotal, taxAmount, finalPrice: subtotal + taxAmount };
+    const c = parseFloat(cost)||0, u = parseFloat(utility)||0;
+    const taxValue = taxes.find(t=>t.id===taxId)?.value||0;
+    const subtotal = c*(1+(u/100)), taxAmount = subtotal*(taxValue/100);
+    return { subtotal, taxAmount, finalPrice: subtotal+taxAmount };
   };
-
   const currentCalcs = getCalculatedValues(newProd.cost, newProd.utility, newProd.taxId);
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (taxes.length === 0) {
-      setErrorMsg('Debe crear al menos un impuesto en el módulo de Impuestos antes de registrar productos.');
-      return;
-    }
-
-    if (!newProd.category) {
-      setErrorMsg('Debe seleccionar una categoría obligatoria.');
-      return;
-    }
-
-    if (!newProd.taxId) {
-      setErrorMsg('Debe seleccionar un impuesto válido.');
-      return;
-    } 
-
+    if (taxes.length===0) { setErrorMsg('Debe crear al menos un impuesto antes de registrar productos.'); return; }
+    if (!newProd.category) { setErrorMsg('Debe seleccionar una categoría.'); return; }
+    if (!newProd.taxId) { setErrorMsg('Debe seleccionar un impuesto válido.'); return; }
     const cleanName = newProd.name.toUpperCase().trim();
-    if (products.some(p => p.id === newProd.id)) { setErrorMsg('Este código ID ya existe.'); return; }
-    
-    const taxObj = taxes.find(t => t.id === newProd.taxId);
-    const finalImages = (newProd.images && newProd.images.length > 0) ? newProd.images.filter(Boolean) : [DEFAULT_CASTILLA_IMAGE];
-
-    const nuevoProductoData = { 
-        ...newProd, 
-        name: cleanName, 
-        taxName: taxObj?.name || '0%', 
-        taxValue: taxObj?.value || 0,
-        images: finalImages,
-        image: finalImages[0] 
-    };
-
+    if (products.some(p=>p.id===newProd.id)) { setErrorMsg('Este código ID ya existe.'); return; }
+    const taxObj = taxes.find(t=>t.id===newProd.taxId);
+    const finalImages = (newProd.images&&newProd.images.length>0) ? newProd.images.filter(Boolean) : [DEFAULT_CASTILLA_IMAGE];
     try {
-        setProducts([...products, nuevoProductoData]);
-        setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] }); 
-        setErrorMsg('');
-    } catch (error) {
-        setErrorMsg('Hubo un error al comunicarse con el servidor.');
-    }
+      setProducts([...products, { ...newProd, name: cleanName, taxName: taxObj?.name||'0%', taxValue: taxObj?.value||0, images: finalImages, image: finalImages[0] }]);
+      setNewProd({ id: getNextNumericID(), name:'', unitName:'UNIDAD', category:'', taxId:'', cost:'', utility:'', observations:'', images:[] });
+      setErrorMsg('');
+    } catch { setErrorMsg('Error al comunicarse con el servidor.'); }
   };
 
   const executeUpdate = () => {
-    const taxObj = taxes.find(t => t.id === editData.taxId);
-    const validFilteredImages = (editData.images || []).filter(Boolean);
-    const finalImages = validFilteredImages.length > 0 ? validFilteredImages : (editData.image ? [editData.image] : [DEFAULT_CASTILLA_IMAGE]);
-    
-    setProducts(products.map(p => p.id === selectedProd.id ? { 
-        ...p,
-        ...editData, 
-        name: editData.name.toUpperCase().trim(),
-        taxName: taxObj?.name || '0%',
-        taxValue: taxObj?.value || 0,
-        images: finalImages,
-        image: finalImages[0]
-    } : p));
+    const taxObj = taxes.find(t=>t.id===editData.taxId);
+    const valid = (editData.images||[]).filter(Boolean);
+    const finalImages = valid.length>0 ? valid : (editData.image ? [editData.image] : [DEFAULT_CASTILLA_IMAGE]);
+    setProducts(products.map(p => p.id===selectedProd.id ? { ...p, ...editData, name: editData.name.toUpperCase().trim(), taxName: taxObj?.name||'0%', taxValue: taxObj?.value||0, images: finalImages, image: finalImages[0] } : p));
     setModalType(null);
   };
 
-  const exportCatalogCSV = (onlySelected = false) => {
-    const itemsToExport = onlySelected 
-      ? products.filter(p => selectedPriceIds.includes(p.id))
-      : products;
-
-    if (itemsToExport.length === 0) {
-      setWarningModal({
-        title: 'Catálogo vacío',
-        message: 'No hay productos disponibles para exportar.'
-      });
-      return;
-    }
-
-    let csvContent = "ID;NOMBRE;UNIDAD;CATEGORIA;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE;OBSERVACIONES\n";
-    itemsToExport.forEach(p => {
-      const taxObj = taxes.find(t => t.id === p.taxId);
-      const taxVal = taxObj ? taxObj.value : (p.taxValue || 0);
-      const obs = (p.observations || '').replace(/;/g, ',');
-      csvContent += `${p.id};${p.name};${p.unitName};${p.category || 'VARIOS'};${p.cost};${p.utility};${taxVal};${obs}\n`;
-    });
-
-    const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = onlySelected ? "Catalogo_Precios_Seleccionados.csv" : "Catalogo_Maestro_Castilla.csv";
-    link.click();
+  const exportCatalogCSV = (onlySelected=false) => {
+    const items = onlySelected ? products.filter(p=>selectedPriceIds.includes(p.id)) : products;
+    if (items.length===0) { setWarningModal({ title:'Catálogo vacío', message:'No hay productos para exportar.' }); return; }
+    let csv = "ID;NOMBRE;UNIDAD;CATEGORIA;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE;OBSERVACIONES\n";
+    items.forEach(p => { const tv = taxes.find(t=>t.id===p.taxId)?.value||(p.taxValue||0); csv += `${p.id};${p.name};${p.unitName};${p.category||'VARIOS'};${p.cost};${p.utility};${tv};${(p.observations||'').replace(/;/g,',')}\n`; });
+    const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8;'});
+    const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+    link.download = onlySelected ? "Catalogo_Seleccionados.csv" : "Catalogo_Maestro_Castilla.csv"; link.click();
   };
 
   const handlePriceFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      setWarningModal({
-        title: 'Archivo pesado',
-        message: 'El archivo es demasiado pesado. El límite máximo es 5 MB.'
-      });
-      return;
-    }
-
-    const fileSizeFormatted = file.size > 1024 * 1024 
-      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` 
-      : `${(file.size / 1024).toFixed(2)} KB`;
-
-    setCsvFileMeta({ name: file.name, size: fileSizeFormatted });
-
+    const file = e.target.files[0]; if(!file) return;
+    if(file.size>5*1024*1024) { setWarningModal({title:'Archivo pesado',message:'Máximo 5 MB.'}); return; }
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const text = evt.target.result;
-      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-      
-      const validRows = [];
-      const errors = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        const parts = line.split(';').map(p => p ? p.trim() : '');
-        if (parts.length < 6) {
-          errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
-          continue;
-        }
-
-        const [id, csvName, csvUnit, csvCat, cost, utility, csvTax] = parts;
-        const cleanId = String(id || '').padStart(5, '0');
-
-        const existingProd = products.find(p => p.id === cleanId || p.id === id);
-        if (!existingProd) {
-          errors.push(`Línea ${i + 1}: El ID '${id}' no existe en el catálogo.`);
-          continue;
-        }
-
-        if (cost === undefined || cost === '') {
-          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): El costo es obligatorio.`);
-          continue;
-        }
-        const cleanCostStr = String(cost).replace(/\s/g, '').replace(',', '.');
-        const parsedCost = parseFloat(cleanCostStr);
-        if (isNaN(parsedCost)) {
-          errors.push(`Línea ${i + 1} (ID ${existingProd.id}): El costo no es válido.`);
-          continue;
-        }
-
-        let parsedUtility = parseFloat(existingProd.utility) || 0;
-        if (utility !== undefined && utility !== '') {
-          const cleanUtilStr = String(utility).replace(/\s/g, '').replace(',', '.');
-          const uNum = parseFloat(cleanUtilStr);
-          if (isNaN(uNum)) {
-            errors.push(`Línea ${i + 1} (ID ${existingProd.id}): La utilidad no es válida.`);
-            continue;
-          }
-          parsedUtility = uNum;
-        }
-
-        const hasChanged = parsedCost !== parseFloat(existingProd.cost) || parsedUtility !== parseFloat(existingProd.utility);
-        if (!hasChanged) continue;
-
-        const oldCalcs = getCalculatedValues(existingProd.cost, existingProd.utility, existingProd.taxId);
-        const newCalcs = getCalculatedValues(parsedCost, parsedUtility, existingProd.taxId);
-
-        validRows.push({
-          id: existingProd.id,
-          name: existingProd.name,
-          oldCost: existingProd.cost,
-          newCost: parsedCost,
-          oldUtility: existingProd.utility,
-          newUtility: parsedUtility,
-          taxId: existingProd.taxId,
-          oldFinalPrice: oldCalcs.finalPrice,
-          newFinalPrice: newCalcs.finalPrice,
-          isPriceDrop: newCalcs.finalPrice < oldCalcs.finalPrice,
-          isUtilityDrop: parsedUtility < (parseFloat(existingProd.utility) || 0)
-        });
+      const lines = evt.target.result.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+      const validRows=[]; const errors=[];
+      for(let i=1;i<lines.length;i++) {
+        const line=lines[i].trim(); if(!line) continue;
+        const parts=line.split(';').map(p=>p?p.trim():'');
+        if(parts.length<6){errors.push(`Línea ${i+1}: Faltan columnas.`);continue;}
+        const [id,,,,cost,utility]=parts;
+        const cleanId=String(id||'').padStart(5,'0');
+        const existing=products.find(p=>p.id===cleanId||p.id===id);
+        if(!existing){errors.push(`Línea ${i+1}: ID '${id}' no existe.`);continue;}
+        const parsedCost=parseFloat(String(cost).replace(',','.'));
+        if(isNaN(parsedCost)){errors.push(`Línea ${i+1}: Costo inválido.`);continue;}
+        let parsedUtility=parseFloat(existing.utility)||0;
+        if(utility!==undefined&&utility!==''){const u=parseFloat(String(utility).replace(',','.')); if(isNaN(u)){errors.push(`Línea ${i+1}: Utilidad inválida.`);continue;} parsedUtility=u;}
+        if(parsedCost===parseFloat(existing.cost)&&parsedUtility===parseFloat(existing.utility)) continue;
+        const oldC=getCalculatedValues(existing.cost,existing.utility,existing.taxId);
+        const newC=getCalculatedValues(parsedCost,parsedUtility,existing.taxId);
+        validRows.push({id:existing.id,name:existing.name,oldCost:existing.cost,newCost:parsedCost,oldUtility:existing.utility,newUtility:parsedUtility,taxId:existing.taxId,oldFinalPrice:oldC.finalPrice,newFinalPrice:newC.finalPrice,isPriceDrop:newC.finalPrice<oldC.finalPrice});
       }
-
-      setPriceCsvPreview({ validRows, errors });
+      setPriceCsvPreview({validRows,errors});
     };
-
-    reader.readAsText(file, 'UTF-8');
-    e.target.value = '';
+    reader.readAsText(file,'UTF-8'); e.target.value='';
   };
 
   const executePriceBulkUpdate = () => {
-    if (!priceCsvPreview || priceCsvPreview.validRows.length === 0) return;
-    const timestamp = new Date().toLocaleString();
-    let updatedProducts = [...products];
-    const newLogs = [];
-    let currentLogsList = [...priceLogs];
-    const updatedCount = priceCsvPreview.validRows.length;
-
+    if(!priceCsvPreview||priceCsvPreview.validRows.length===0) return;
+    const timestamp=new Date().toLocaleString(); let updated=[...products]; const newLogs=[]; let logList=[...priceLogs];
     priceCsvPreview.validRows.forEach(row => {
-      updatedProducts = updatedProducts.map(p => {
-        if (p.id === row.id) {
-          return { ...p, cost: row.newCost, utility: row.newUtility };
-        }
-        return p;
-      });
-
-      const nextMoveId = getNextLogID(currentLogsList);
-      const logEntry = {
-        moveId: nextMoveId,
-        productId: row.id,
-        productName: row.name,
-        oldCost: row.oldCost,
-        newCost: row.newCost,
-        oldUtility: row.oldUtility,
-        newUtility: row.newUtility,
-        timestamp,
-        user: 'ADMINISTRADOR',
-        mode: 'CARGUE MASIVO CSV'
-      };
-
-      newLogs.push(logEntry);
-      currentLogsList = [logEntry, ...currentLogsList];
+      updated=updated.map(p=>p.id===row.id?{...p,cost:row.newCost,utility:row.newUtility}:p);
+      const mid=getNextLogID(logList); const entry={moveId:mid,productId:row.id,productName:row.name,oldCost:row.oldCost,newCost:row.newCost,oldUtility:row.oldUtility,newUtility:row.newUtility,timestamp,user:'ADMINISTRADOR',mode:'CARGUE MASIVO CSV'};
+      newLogs.push(entry); logList=[entry,...logList];
     });
-
-    setProducts(updatedProducts);
-    setPriceLogs(prev => [...newLogs, ...prev]);
-    setPriceCsvPreview(null);
-    setModalType(null);
-    setPriceSuccessModal({ count: updatedCount });
+    setProducts(updated); setPriceLogs(prev=>[...newLogs,...prev]); setPriceCsvPreview(null); setModalType(null); setPriceSuccessModal({count:priceCsvPreview.validRows.length});
   };
 
   const toggleSelectPriceItem = (id) => {
     setSelectedPriceIds(prev => {
-      const isSelected = prev.includes(id);
-      const newSelected = isSelected ? prev.filter(item => item !== id) : [...prev, id];
-      
-      if (!isSelected) {
-        const prod = products.find(p => p.id === id);
-        if (prod && !batchEdits[id]) {
-          setBatchEdits(bPrev => ({
-            ...bPrev,
-            [id]: { cost: '', utility: String(prod.utility || '') }
-          }));
-        }
-      } else {
-        setBatchError('');
-      }
-      return newSelected;
+      const isSel=prev.includes(id);
+      if(!isSel) { const prod=products.find(p=>p.id===id); if(prod&&!batchEdits[id]) setBatchEdits(bp=>({...bp,[id]:{cost:'',utility:String(prod.utility||'')}})); }
+      else setBatchError('');
+      return isSel ? prev.filter(i=>i!==id) : [...prev,id];
     });
   };
 
-  const removeItemFromBatch = (idToRemove) => {
-    setSelectedPriceIds(prev => prev.filter(id => id !== idToRemove));
-    setBatchEdits(prev => {
-      const copy = { ...prev };
-      delete copy[idToRemove];
-      return copy;
-    });
-    setDebouncedBatchEdits(prev => {
-      const copy = { ...prev };
-      delete copy[idToRemove];
-      return copy;
-    });
+  const removeItemFromBatch = (id) => {
+    setSelectedPriceIds(prev=>prev.filter(i=>i!==id));
+    setBatchEdits(prev=>{const c={...prev};delete c[id];return c;});
+    setDebouncedBatchEdits(prev=>{const c={...prev};delete c[id];return c;});
     setBatchError('');
   };
 
   const handleBatchEditChange = (productId, field, value) => {
-    const cleanVal = value.replace(/\D/g, '');
-    if (field === 'cost' && cleanVal.length > 7) return;
-    if (field === 'utility' && cleanVal.length > 4) return;
-
-    setBatchEdits(prev => ({
-      ...prev,
-      [productId]: {
-        cost: field === 'cost' ? cleanVal : (prev[productId]?.cost || ''),
-        utility: field === 'utility' ? cleanVal : (prev[productId]?.utility !== undefined ? prev[productId].utility : '')
-      }
-    }));
+    const clean=value.replace(/\D/g,'');
+    if(field==='cost'&&clean.length>7) return;
+    if(field==='utility'&&clean.length>4) return;
+    setBatchEdits(prev=>({...prev,[productId]:{cost:field==='cost'?clean:(prev[productId]?.cost||''),utility:field==='utility'?clean:(prev[productId]?.utility!==undefined?prev[productId].utility:'')}}));
     setBatchError('');
   };
 
   const prepareBatchUpdateConfirmation = () => {
-    if (selectedPriceIds.length === 0) return;
-    
-    const hasIncompleteItems = selectedPriceIds.some(id => {
-      const edits = batchEdits[id] || {};
-      return !edits.cost || edits.cost === '' || edits.utility === undefined || edits.utility === '';
-    });
-
-    if (hasIncompleteItems) {
-      setBatchError('Todos los productos en la bandeja deben tener un nuevo costo y utilidad definidos.');
-      return;
-    }
-
+    if(selectedPriceIds.length===0) return;
+    const incomplete=selectedPriceIds.some(id=>{const e=batchEdits[id]||{};return !e.cost||e.cost===''||e.utility===undefined||e.utility==='';});
+    if(incomplete){setBatchError('Todos los productos deben tener costo y utilidad nuevos.');return;}
     setBatchError('');
-    
-    const itemsToUpdate = selectedPriceIds.map(id => {
-      const p = products.find(prod => prod.id === id);
-      const edits = batchEdits[id] || {};
-      const finalCost = parseFloat(edits.cost);
-      const finalUtility = parseFloat(edits.utility);
-
-      const oldCalcs = getCalculatedValues(p.cost, p.utility, p.taxId);
-      const newCalcs = getCalculatedValues(finalCost, finalUtility, p.taxId);
-      
-      const isPriceDrop = newCalcs.finalPrice < oldCalcs.finalPrice;
-      const oldUtilNum = parseFloat(p.utility) || 0;
-      const isUtilityDrop = finalUtility < oldUtilNum;
-
-      return {
-        id: p.id,
-        name: p.name,
-        oldCost: p.cost,
-        newCost: finalCost,
-        oldUtility: p.utility,
-        newUtility: finalUtility,
-        oldFinalPrice: oldCalcs.finalPrice,
-        newFinalPrice: newCalcs.finalPrice,
-        isPriceDrop,
-        isUtilityDrop,
-        taxId: p.taxId
-      };
+    const items=selectedPriceIds.map(id=>{
+      const p=products.find(prod=>prod.id===id); const ed=batchEdits[id]||{};
+      const fc=parseFloat(ed.cost), fu=parseFloat(ed.utility);
+      const old=getCalculatedValues(p.cost,p.utility,p.taxId); const nw=getCalculatedValues(fc,fu,p.taxId);
+      return {id:p.id,name:p.name,oldCost:p.cost,newCost:fc,oldUtility:p.utility,newUtility:fu,oldFinalPrice:old.finalPrice,newFinalPrice:nw.finalPrice,isPriceDrop:nw.finalPrice<old.finalPrice,taxId:p.taxId};
     });
-
-    setPriceConfirmModal({ items: itemsToUpdate });
+    setPriceConfirmModal({items});
   };
 
   const executeConfirmedBatchUpdates = () => {
-    if (!priceConfirmModal) return;
-    const timestamp = new Date().toLocaleString();
-    const newLogs = [];
-    let updatedProducts = [...products];
-    let currentLogsList = [...priceLogs];
-
-    priceConfirmModal.items.forEach(item => {
-      updatedProducts = updatedProducts.map(p => {
-        if (p.id === item.id) {
-          return { ...p, cost: item.newCost, utility: item.newUtility };
-        }
-        return p;
-      });
-
-      const nextMoveId = getNextLogID(currentLogsList);
-      const logEntry = {
-        moveId: nextMoveId,
-        productId: item.id,
-        productName: item.name,
-        oldCost: item.oldCost,
-        newCost: item.newCost,
-        oldUtility: item.oldUtility,
-        newUtility: item.newUtility,
-        timestamp,
-        user: 'ADMINISTRADOR',
-        mode: 'SELECCIÓN Y LOTE INFERIOR'
-      };
-
-      newLogs.push(logEntry);
-      currentLogsList = [logEntry, ...currentLogsList];
+    if(!priceConfirmModal) return;
+    const timestamp=new Date().toLocaleString(); const newLogs=[]; let updated=[...products]; let logList=[...priceLogs];
+    priceConfirmModal.items.forEach(item=>{
+      updated=updated.map(p=>p.id===item.id?{...p,cost:item.newCost,utility:item.newUtility}:p);
+      const mid=getNextLogID(logList); const entry={moveId:mid,productId:item.id,productName:item.name,oldCost:item.oldCost,newCost:item.newCost,oldUtility:item.oldUtility,newUtility:item.newUtility,timestamp,user:'ADMINISTRADOR',mode:'SELECCIÓN Y LOTE'};
+      newLogs.push(entry); logList=[entry,...logList];
     });
-
-    setProducts(updatedProducts);
-    setPriceLogs(prev => [...newLogs, ...prev]);
-    setSelectedPriceIds([]);
-    setBatchEdits({});
-    setDebouncedBatchEdits({});
-    setBatchError('');
-    setPriceConfirmModal(null);
+    setProducts(updated); setPriceLogs(prev=>[...newLogs,...prev]);
+    setSelectedPriceIds([]); setBatchEdits({}); setDebouncedBatchEdits({}); setBatchError(''); setPriceConfirmModal(null);
   };
 
   const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      setWarningModal({
-        title: 'Archivo pesado',
-        message: 'El archivo es demasiado pesado. El límite máximo es 5 MB.'
-      });
-      return;
-    }
-
-    const fileSizeFormatted = file.size > 1024 * 1024 
-      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` 
-      : `${(file.size / 1024).toFixed(2)} KB`;
-
-    setCsvFileMeta({ name: file.name, size: fileSizeFormatted });
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target.result;
-      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-      
-      const validRows = [];
-      const errors = [];
-      const seenIdsInFile = new Set();
-
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        const parts = line.split(';').map(p => p ? p.trim() : '');
-        if (parts.length < 6) {
-          errors.push(`Línea ${i + 1}: Faltan columnas obligatorias.`);
-          continue;
-        }
-
-        const [id, name, unit, category, cost, utility, taxPercentage, observations] = parts;
-        const cleanId = String(id || '').trim();
-        const cleanName = String(name || '').trim();
-
-        if (!cleanId || !cleanName) {
-          errors.push(`Línea ${i + 1}: Falta el ID o el Nombre del producto.`);
-          continue;
-        }
-
-        if (seenIdsInFile.has(cleanId)) {
-          errors.push(`Línea ${i + 1}: El ID '${cleanId}' está duplicado en este archivo.`);
-          continue;
-        }
-        seenIdsInFile.add(cleanId);
-
-        const existsInDB = products.some(p => p.id === cleanId.padStart(5, '0') || p.id === cleanId);
-        if (existsInDB) {
-          errors.push(`Línea ${i + 1}: El producto con ID '${cleanId}' ya existe.`);
-          continue;
-        }
-
-        const cleanCat = String(category || '').toUpperCase();
-        if (!categoryOptions.includes(cleanCat)) {
-          errors.push(`Línea ${i + 1}: Categoría '${category}' no es válida.`);
-          continue;
-        }
-
-        const parsedCost = parseFloat(String(cost).replace(',', '.'));
-        if (isNaN(parsedCost)) {
-          errors.push(`Línea ${i + 1}: El costo no es válido.`);
-          continue;
-        }
-
-        const parsedUtility = parseFloat(String(utility).replace(',', '.'));
-        if (isNaN(parsedUtility)) {
-          errors.push(`Línea ${i + 1}: La utilidad no es válida.`);
-          continue;
-        }
-
-        const cleanObs = String(observations || '').toUpperCase();
-        if (cleanObs.length > 100) {
-          errors.push(`Línea ${i + 1}: Las observaciones superan los 100 caracteres.`);
-          continue;
-        }
-
-        const parsedTax = taxPercentage ? parseFloat(String(taxPercentage).replace(',', '.')) : 0;
-        const taxObj = taxes.find(t => t.value === parsedTax) || taxes[0];
-
-        validRows.push({
-          id: cleanId.padStart(5, '0'),
-          name: cleanName.toUpperCase().substring(0, 100),
-          unitName: unit ? unit.toUpperCase() : 'UNIDAD',
-          category: cleanCat,
-          taxId: taxObj?.id || '',
-          taxName: taxObj?.name || '0%',
-          taxValue: taxObj?.value || 0,
-          cost: parsedCost,
-          utility: parsedUtility,
-          observations: cleanObs,
-          images: [DEFAULT_CASTILLA_IMAGE],
-          image: DEFAULT_CASTILLA_IMAGE
-        });
+    const file=e.target.files[0]; if(!file) return;
+    if(file.size>5*1024*1024){setWarningModal({title:'Archivo pesado',message:'Máximo 5 MB.'});return;}
+    const reader=new FileReader();
+    reader.onload=(evt)=>{
+      const lines=evt.target.result.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+      const validRows=[]; const errors=[]; const seen=new Set();
+      for(let i=1;i<lines.length;i++){
+        const line=lines[i].trim(); if(!line) continue;
+        const parts=line.split(';').map(p=>p?p.trim():'');
+        if(parts.length<6){errors.push(`Línea ${i+1}: Faltan columnas.`);continue;}
+        const [id,name,unit,category,cost,utility,taxPercentage,observations]=parts;
+        const cleanId=String(id||'').trim(), cleanName=String(name||'').trim();
+        if(!cleanId||!cleanName){errors.push(`Línea ${i+1}: Falta ID o Nombre.`);continue;}
+        if(seen.has(cleanId)){errors.push(`Línea ${i+1}: ID '${cleanId}' duplicado.`);continue;} seen.add(cleanId);
+        if(products.some(p=>p.id===cleanId.padStart(5,'0')||p.id===cleanId)){errors.push(`Línea ${i+1}: ID '${cleanId}' ya existe.`);continue;}
+        const cleanCat=String(category||'').toUpperCase();
+        if(!categoryOptions.includes(cleanCat)){errors.push(`Línea ${i+1}: Categoría '${category}' inválida.`);continue;}
+        const pc=parseFloat(String(cost).replace(',','.')); if(isNaN(pc)){errors.push(`Línea ${i+1}: Costo inválido.`);continue;}
+        const pu=parseFloat(String(utility).replace(',','.')); if(isNaN(pu)){errors.push(`Línea ${i+1}: Utilidad inválida.`);continue;}
+        const obs=String(observations||'').toUpperCase(); if(obs.length>100){errors.push(`Línea ${i+1}: Observaciones >100 chars.`);continue;}
+        const pt=taxPercentage?parseFloat(String(taxPercentage).replace(',','.')):0;
+        const taxObj=taxes.find(t=>t.value===pt)||taxes[0];
+        validRows.push({id:cleanId.padStart(5,'0'),name:cleanName.toUpperCase().substring(0,100),unitName:unit?unit.toUpperCase():'UNIDAD',category:cleanCat,taxId:taxObj?.id||'',taxName:taxObj?.name||'0%',taxValue:taxObj?.value||0,cost:pc,utility:pu,observations:obs,images:[DEFAULT_CASTILLA_IMAGE],image:DEFAULT_CASTILLA_IMAGE});
       }
-
-      setCsvPreview({ validRows, errors, totalFound: validRows.length + errors.length });
+      setCsvPreview({validRows,errors,totalFound:validRows.length+errors.length});
     };
-
-    reader.readAsText(file, 'UTF-8');
-    e.target.value = '';
+    reader.readAsText(file,'UTF-8'); e.target.value='';
   };
 
   const downloadTemplate = () => {
-    const csvContent = "ID;NOMBRE;UNIDAD;CATEGORIA;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE;OBSERVACIONES\n00001;PRODUCTO EJEMPLO 1;UNIDAD;PAPELERIA;10000,50;30;19;PRODUCTO FRAGIL\n00002;PRODUCTO EJEMPLO 2;CAJA;OFICINA;50000;20;5;ALTA ROTACION\n";
-    const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Plantilla_Maestra_Productos.csv";
-    link.click();
+    const csv="ID;NOMBRE;UNIDAD;CATEGORIA;COSTO;UTILIDAD;IMPUESTO_PORCENTAJE;OBSERVACIONES\n00001;PRODUCTO EJEMPLO 1;UNIDAD;PAPELERIA;10000,50;30;19;PRODUCTO FRAGIL\n00002;PRODUCTO EJEMPLO 2;CAJA;OFICINA;50000;20;5;ALTA ROTACION\n";
+    const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8;'});
+    const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download="Plantilla_Maestra_Productos.csv"; link.click();
   };
 
+  // ─── ESTILOS REUTILIZABLES (paleta marca) ───────────────────────────────────
+  // Azul principal : #0071A8
+  // Complementario1: #B7C0C6
+  // Complementario2: #D4DBDB
+  // Fondo limpio   : #FFFFFF
+  // ─────────────────────────────────────────────────────────────────────────────
+
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 gap-4 w-full p-3 md:p-5 text-slate-700">
-      
-      {/* ═══════════════════════════════════════════════════════════════
-          1. ENCABEZADO — Compacto, integrado con acciones y tabs
-      ═══════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col gap-3">
-        {/* Fila superior: Título + Tabs */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#0071A8] flex items-center justify-center shrink-0">
-              <ShoppingCart size={20} className="text-white" />
+    <div
+      style={{ fontFamily: "'Montserrat', sans-serif" }}
+      className="flex flex-col h-full animate-in slide-in-from-bottom-4 duration-500 w-full text-slate-700 overflow-hidden"
+    >
+      {/* ════════════════════════════════════════════════════════════
+          HEADER COMPACTO — sin margen excesivo
+      ════════════════════════════════════════════════════════════ */}
+      <div className="flex-shrink-0 px-4 pt-3 pb-2" style={{ borderBottom: '2px solid #D4DBDB' }}>
+        {/* Fila 1: Icono + Título + Tabs */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: '#0071A8' }}>
+              <ShoppingCart size={18} className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-slate-800 leading-tight">
+              <h2 className="text-base font-bold leading-tight tracking-tight"
+                style={{ color: '#0071A8', fontFamily: "'Montserrat', sans-serif" }}>
                 Gestión de Productos
               </h2>
-              <p className="text-[11px] text-slate-400 font-medium">Control de catálogo, costos y precios</p>
+              <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+                Control de catálogo, costos y precios
+              </p>
             </div>
           </div>
-          
-          {/* Sub-pestañas */}
-          <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
-            <button 
-              onClick={() => setActiveSubTab('create')} 
-              className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'create' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              <Plus size={14} /> Nuevo producto
-            </button>
-            <button 
-              onClick={() => setActiveSubTab('list')} 
-              className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'list' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              <ClipboardList size={14} /> Catálogo
-              <span className="ml-0.5 px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded-md text-[10px] font-bold">{products.length}</span>
-            </button>
-            <button 
-              onClick={() => setActiveSubTab('prices')} 
-              className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'prices' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              <DollarSign size={14} /> Precios y Logs
-            </button>
+
+          {/* ── TABS ── Fondo sólido cuando activo */}
+          <div className="flex items-center gap-1 p-1 rounded-xl"
+            style={{ backgroundColor: '#D4DBDB' }}>
+            {[
+              { key: 'create', icon: <Plus size={13} />, label: 'Nuevo producto' },
+              { key: 'list',   icon: <ClipboardList size={13} />, label: `Catálogo`, badge: products.length },
+              { key: 'prices', icon: <DollarSign size={13} />, label: 'Precios y Logs' },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveSubTab(tab.key)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  backgroundColor: activeSubTab === tab.key ? '#0071A8' : 'transparent',
+                  color: activeSubTab === tab.key ? '#FFFFFF' : '#0071A8',
+                }}
+              >
+                {tab.icon}
+                {tab.label}
+                {tab.badge !== undefined && (
+                  <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
+                    style={{
+                      backgroundColor: activeSubTab === tab.key ? 'rgba(255,255,255,0.25)' : '#B7C0C6',
+                      color: activeSubTab === tab.key ? '#FFFFFF' : '#0071A8',
+                    }}>
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Fila de acciones — integrada bajo el header */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-4 py-2 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-[0.97]">
+        {/* Fila 2: Botones de acción */}
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <button onClick={() => setModalType('bulkUpload')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.97]"
+            style={{ fontFamily:"'Montserrat',sans-serif", backgroundColor:'#0071A8', color:'#FFFFFF' }}>
             <UploadCloud size={13}/> Cargue nuevos (CSV)
           </button>
-          <button onClick={() => setModalType('bulkPriceUpload')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-[0.97]">
+          <button onClick={() => setModalType('bulkPriceUpload')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.97] bg-emerald-600 hover:bg-emerald-700 text-white"
+            style={{ fontFamily:"'Montserrat',sans-serif" }}>
             <FileSpreadsheet size={13}/> Actualizar precios (CSV)
           </button>
-          <button onClick={() => exportCatalogCSV(false)} className="bg-white border border-slate-200 text-slate-600 hover:text-[#0071A8] hover:border-[#0071A8] px-4 py-2 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-[0.97]">
+          <button onClick={() => exportCatalogCSV(false)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.97]"
+            style={{ fontFamily:"'Montserrat',sans-serif", backgroundColor:'#FFFFFF', color:'#0071A8', border:'1px solid #B7C0C6' }}>
             <Download size={13}/> Exportar catálogo
           </button>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          2. TAB: NUEVO PRODUCTO — Grid 4 columnas, más compacto
-      ═══════════════════════════════════════════════════════════════ */}
-      {activeSubTab === 'create' && (
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm w-full space-y-5">
-        <h3 className="font-semibold text-slate-700 flex items-center gap-2 text-xs border-b border-slate-100 pb-3">
-          <ShoppingCart size={15} className="text-[#0071A8]" /> Registro manual de producto
-        </h3>
+      {/* ════════════════════════════════════════════════════════════
+          CONTENIDO — ocupa todo el espacio restante del viewport
+          (overflow-hidden aquí, scroll solo dentro de cada sección)
+          El <Footer/> queda FUERA de este bloque para no recortar el área útil
+      ════════════════════════════════════════════════════════════ */}
+      <div className="flex-1 overflow-hidden px-4 pt-3 pb-4">
 
-        {errorMsg && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 font-semibold text-xs rounded-xl flex items-center gap-2">
-            <AlertTriangle size={14} className="shrink-0" /> {errorMsg}
+        {/* ── TAB: NUEVO PRODUCTO ── */}
+        {activeSubTab === 'create' && (
+          <div className="h-full overflow-y-auto pr-1 pb-6"
+            style={{ fontFamily:"'Montserrat',sans-serif" }}>            <div className="bg-white rounded-xl border p-4 space-y-4"
+              style={{ borderColor:'#D4DBDB' }}>
+              <h3 className="text-xs font-semibold flex items-center gap-1.5 pb-2"
+                style={{ color:'#0071A8', borderBottom:'1px solid #D4DBDB' }}>
+                <ShoppingCart size={14}/> Registro manual de producto
+              </h3>
+
+              {errorMsg && (
+                <div className="p-2.5 rounded-lg text-xs font-medium flex items-center gap-2"
+                  style={{ backgroundColor:'#fef2f2', color:'#dc2626', border:'1px solid #fecaca' }}>
+                  <AlertTriangle size={13} className="shrink-0"/> {errorMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleAdd} className="space-y-3">
+                {/* Fila 1: ID · Nombre · Unidad */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>Código ID</label>
+                    <input type="text" maxLength={5} value={newProd.id}
+                      onChange={e=>{const v=e.target.value.replace(/\D/g,''); setNewProd({...newProd,id:v});}}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-mono font-semibold text-center outline-none transition-all"
+                      style={{backgroundColor:'#f8fafc',border:'1px solid #D4DBDB',color:'#0071A8',fontFamily:"'Montserrat',sans-serif"}}
+                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}
+                      placeholder="00001" required/>
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>Nombre del producto</label>
+                    <input type="text" maxLength={100} value={newProd.name}
+                      onChange={e=>setNewProd({...newProd,name:e.target.value.toUpperCase()})}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none transition-all"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}
+                      placeholder="Descripción detallada del producto..." required/>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>U. Medida</label>
+                    <select value={newProd.unitName} onChange={e=>setNewProd({...newProd,unitName:e.target.value})}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none cursor-pointer"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}} required>
+                      {unitOptions.map(u=><option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Fila 2: Categoría · IVA · Costo · Utilidad */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>Categoría *</label>
+                    <select value={newProd.category} onChange={e=>setNewProd({...newProd,category:e.target.value})}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none cursor-pointer"
+                      style={{border:'1px solid #0071A8',color:'#374151',fontFamily:"'Montserrat',sans-serif"}} required>
+                      <option value="">Seleccione...</option>
+                      {categoryOptions.map(c=><option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>IVA</label>
+                    <select value={newProd.taxId} onChange={e=>setNewProd({...newProd,taxId:e.target.value})}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none cursor-pointer"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}>
+                      <option value="">Seleccione...</option>
+                      {taxes.slice().sort((a,b)=>a.value-b.value).map(t=><option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>Costo ($)</label>
+                    <input type="text" inputMode="numeric" maxLength={7} value={newProd.cost}
+                      onChange={e=>{const v=e.target.value.replace(/\D/g,''); if(v.length<=7) setNewProd({...newProd,cost:v});}}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-mono font-medium outline-none transition-all"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}
+                      placeholder="0" required/>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>Utilidad (%)</label>
+                    <input type="text" inputMode="numeric" maxLength={4} value={newProd.utility}
+                      onChange={e=>{const v=e.target.value.replace(/\D/g,''); if(v.length<=4) setNewProd({...newProd,utility:v});}}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-mono font-medium outline-none transition-all"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}
+                      placeholder="0" required/>
+                  </div>
+                </div>
+
+                {/* Fila 3: Observaciones + Galería */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  <div className="space-y-1 relative">
+                    <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>Observaciones (máx 100 caracteres)</label>
+                    <textarea maxLength={100} rows={3} value={newProd.observations}
+                      onChange={e=>setNewProd({...newProd,observations:e.target.value.toUpperCase()})}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none transition-all resize-none"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif",minHeight:'80px'}}
+                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}
+                      placeholder="Ej: Producto frágil, almacenar en seco..."/>
+                    <span className="absolute bottom-2 right-2 text-[9px] font-medium" style={{color:'#B7C0C6'}}>{newProd.observations.length}/100</span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-semibold" style={{color:'#0071A8'}}>Galería (máx 500 KB c/u)</label>
+                      <span className="text-[9px] font-semibold font-mono" style={{color:'#0071A8'}}>{(newProd.images||[]).filter(Boolean).length}/4</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 p-2 rounded-xl" style={{backgroundColor:'#f8fafc',border:'1px dashed #D4DBDB'}}>
+                      {[0,1,2,3].map(idx => {
+                        const img = newProd.images?.[idx];
+                        return (
+                          <div key={idx} className="relative">
+                            <label className="w-full aspect-square rounded-lg border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden bg-white transition-all group"
+                              style={{border:`1px dashed ${img?'#0071A8':'#D4DBDB'}`}}>
+                              <input type="file" accept="image/jpeg,image/jpg,image/webp" className="hidden" onChange={e=>handleSingleImageUpload(idx,e)}/>
+                              {img
+                                ? <img src={img} alt={`Img ${idx+1}`} className="w-full h-full object-cover"/>
+                                : <div className="flex flex-col items-center transition-colors" style={{color:'#B7C0C6'}}>
+                                    <span className="text-base font-bold leading-none">+</span>
+                                    <span className="text-[8px] font-semibold">Foto {idx+1}</span>
+                                  </div>
+                              }
+                            </label>
+                            {img && (
+                              <button type="button" onClick={()=>removeImageAt(idx)}
+                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow cursor-pointer"
+                                style={{backgroundColor:'#dc2626'}}>
+                                <X size={9} className="text-white"/>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer del formulario: Resumen inline + Botones */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-3"
+                  style={{borderTop:'1px solid #D4DBDB'}}>
+                  <div className="flex items-center gap-2">
+                    {[
+                      {label:'Subtotal', value: currentCalcs.subtotal, bg:'#f8fafc', color:'#374151', border:'#D4DBDB'},
+                      {label:'IVA',      value: currentCalcs.taxAmount, bg:'#fffbeb', color:'#92400e', border:'#fde68a'},
+                      {label:'Final',    value: currentCalcs.finalPrice, bg:'#eff8fc', color:'#0071A8', border:'#b7e0f0'},
+                    ].map(item => (
+                      <div key={item.label} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                        style={{backgroundColor:item.bg, border:`1px solid ${item.border}`}}>
+                        <span className="text-[9px] font-semibold" style={{color:item.color}}>{item.label}</span>
+                        <span className="text-xs font-bold font-mono" style={{color:item.color}}>{formatCurrency(item.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button type="button"
+                      onClick={()=>setNewProd({id:getNextNumericID(),name:'',unitName:'UNIDAD',category:'',taxId:'',cost:'',utility:'',observations:'',images:[]})}
+                      className="px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all"
+                      style={{fontFamily:"'Montserrat',sans-serif",backgroundColor:'#f1f5f9',color:'#64748b'}}>
+                      Limpiar
+                    </button>
+                    <button type="submit"
+                      className="px-5 py-2 rounded-lg text-[11px] font-semibold shadow-sm cursor-pointer transition-all"
+                      style={{fontFamily:"'Montserrat',sans-serif",backgroundColor:'#0071A8',color:'#FFFFFF'}}>
+                      Registrar producto
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
-        <form className="space-y-4" onSubmit={handleAdd}>
-          {/* Fila 1: ID + Nombre + Unidad */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Código ID</label>
-              <input 
-                type="text" maxLength={5} value={newProd.id} 
-                onChange={e => { const val = e.target.value.replace(/\D/g, ''); setNewProd({...newProd, id: val}); }} 
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-semibold text-xs text-center text-slate-700 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 transition-all" 
-                placeholder="00001" required 
-              />
-            </div>
-            
-            <div className="space-y-1 md:col-span-2">
-              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Nombre del producto</label>
-              <input 
-                type="text" maxLength={100} value={newProd.name} 
-                onChange={e => setNewProd({...newProd, name: e.target.value.toUpperCase()})} 
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-semibold text-xs text-slate-700 transition-all" 
-                placeholder="Descripción detallada del producto..." required 
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">U. Medida</label>
-              <select 
-                value={newProd.unitName} onChange={e => setNewProd({...newProd, unitName: e.target.value})} 
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-semibold text-xs cursor-pointer text-slate-700 transition-all" required
-              >
-                {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Fila 2: Categoría + IVA + Costo + Utilidad */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#0071A8] tracking-wide">Categoría *</label>
-              <select 
-                value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})} 
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-semibold text-xs cursor-pointer text-slate-700 transition-all" required
-              >
-                <option value="">Seleccione...</option>
-                {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">IVA</label>
-              <select 
-                value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} 
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-semibold text-xs cursor-pointer text-slate-700 transition-all"
-              >
-                <option value="">Seleccione...</option>
-                {taxes.slice().sort((a, b) => a.value - b.value).map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Costo ($)</label>
-              <input 
-                type="text" inputMode="numeric" maxLength={7} value={newProd.cost} 
-                onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 7) setNewProd({...newProd, cost: v}); }} 
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-mono font-semibold text-xs text-slate-700 transition-all" 
-                placeholder="0" required 
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Utilidad (%)</label>
-              <input 
-                type="text" inputMode="numeric" maxLength={4} value={newProd.utility} 
-                onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 4) setNewProd({...newProd, utility: v}); }} 
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-mono font-semibold text-xs text-slate-700 transition-all" 
-                placeholder="0" required 
-              />
-            </div>
-          </div>
-
-          {/* Fila 3: Observaciones + Galería en la misma fila */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Observaciones */}
-            <div className="space-y-1 relative">
-              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Observaciones (máx 100 caracteres)</label>
-              <textarea 
-                maxLength={100} 
-                rows={3}
-                value={newProd.observations} 
-                onChange={e => setNewProd({...newProd, observations: e.target.value.toUpperCase()})} 
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-semibold text-xs text-slate-700 transition-all resize-none h-full min-h-[80px]" 
-                placeholder="Ej: Producto frágil, almacenar en seco..." 
-              />
-              <span className="absolute bottom-2 right-3 text-[10px] text-slate-400 font-medium">{newProd.observations.length}/100</span>
-            </div>
-
-            {/* Galería de Imágenes — Compacta */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="text-[11px] font-semibold text-slate-500 tracking-wide">
-                  Galería de imágenes (máx 500 KB c/u)
-                </label>
-                <span className="text-[10px] font-mono text-[#0071A8] font-medium">
-                  {(newProd.images || []).filter(Boolean).length}/4
-                </span>
-              </div>
-              <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-dashed border-slate-200">
-                {[0, 1, 2, 3].map((index) => {
-                  const imgUrl = newProd.images && newProd.images[index];
-                  return (
-                    <div key={index} className="relative">
-                      <label className={`w-full aspect-square rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden bg-white hover:border-[#0071A8] group ${imgUrl ? 'border-solid border-[#0071A8]/40' : 'border-slate-300'}`}>
-                        <input 
-                          type="file" 
-                          accept="image/jpeg,image/jpg,image/webp" 
-                          className="hidden" 
-                          onChange={(e) => handleSingleImageUpload(index, e)}
-                        />
-                        {imgUrl ? (
-                          <img src={imgUrl} alt={`Imagen ${index + 1}`} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="flex flex-col items-center text-slate-400 group-hover:text-[#0071A8] transition-colors text-center">
-                            <span className="text-lg leading-none">+</span>
-                            <span className="text-[9px] font-semibold">Foto {index + 1}</span>
-                          </div>
-                        )}
-                      </label>
-                      {imgUrl && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeImageAt(index)}
-                          className="absolute -top-1 -right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 shadow transition-transform hover:scale-110 cursor-pointer"
-                        >
-                          <X size={10} />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Barra inferior: Resumen de precios + Botones de acción */}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-3 border-t border-slate-100">
-            {/* Resumen calculado — inline */}
-            <div className="flex items-center gap-3 flex-1">
-              <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
-                <span className="text-[10px] text-slate-500 font-medium">Subtotal</span>
-                <span className="text-sm font-bold text-slate-700 font-mono">{formatCurrency(currentCalcs.subtotal)}</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">
-                <span className="text-[10px] text-amber-600 font-medium">IVA</span>
-                <span className="text-sm font-bold text-amber-700 font-mono">{formatCurrency(currentCalcs.taxAmount)}</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-[#e9f4f8] px-3 py-2 rounded-lg border border-[#0071A8]/20">
-                <span className="text-[10px] text-[#0071A8] font-medium">Final</span>
-                <span className="text-base font-bold text-[#0071A8] font-mono">{formatCurrency(currentCalcs.finalPrice)}</span>
-              </div>
-            </div>
-
-            {/* Botones */}
-            <div className="flex items-center gap-2">
-              <button 
-                type="button" 
-                onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] })}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl font-semibold text-[11px] transition-all cursor-pointer"
-              >
-                Limpiar
-              </button>
-              <button 
-                type="submit" 
-                className="px-5 py-2.5 bg-[#0071A8] hover:bg-[#005c8a] text-white rounded-xl font-semibold text-[11px] tracking-wide shadow-sm transition-all cursor-pointer"
-              >
-                Registrar producto
+        {/* ── TAB: CATÁLOGO — tabla ajustada al viewport ── */}
+        {activeSubTab === 'list' && (
+          <div className="h-full flex flex-col gap-2 animate-in fade-in duration-300"
+            style={{fontFamily:"'Montserrat',sans-serif"}}>
+            {/* Barra de búsqueda */}
+            <div className="flex-shrink-0 flex items-center gap-3 p-2.5 rounded-xl bg-white"
+              style={{border:'1px solid #D4DBDB'}}>
+              <input type="text" placeholder="Buscar por ID, nombre, categoría o unidad..."
+                value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg text-xs font-medium outline-none"
+                style={{backgroundColor:'#f8fafc',border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}/>
+              <button onClick={()=>exportCatalogCSV(false)}
+                className="px-3 py-2 rounded-lg text-[11px] font-semibold shadow-sm cursor-pointer whitespace-nowrap"
+                style={{fontFamily:"'Montserrat',sans-serif",backgroundColor:'#0071A8',color:'#FFFFFF'}}>
+                Exportar vista
               </button>
             </div>
-          </div>
-        </form>
-      </div>
-      )}
 
-      {/* ═══════════════════════════════════════════════════════════════
-          3. TAB: CATÁLOGO — Tabla más limpia y legible
-      ═══════════════════════════════════════════════════════════════ */}
-      {activeSubTab === 'list' && (
-      <div className="space-y-4 animate-in fade-in duration-300">
-        {/* Barra de búsqueda */}
-        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Buscar por ID, nombre, categoría o unidad..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 focus:border-[#0071A8] rounded-xl px-4 py-2.5 text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
-            />
-          </div>
-          <button onClick={() => exportCatalogCSV(false)} className="px-4 py-2.5 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-xl font-semibold text-[11px] shadow-sm transition-all cursor-pointer whitespace-nowrap">
-            Exportar vista
-          </button>
-        </div>
-        
-        {/* Tabla */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="max-h-[520px] overflow-y-auto overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left min-w-[1000px]">
-              <thead className="bg-slate-50/80 text-slate-500 text-[11px] font-semibold sticky top-0 border-b border-slate-200 backdrop-blur-sm">
-                <tr>
-                  <th className="px-4 py-3 w-14">Foto</th>
-                  <th className="px-4 py-3 w-20">ID</th>
-                  <th className="px-4 py-3">Producto / Categoría</th>
-                  <th className="px-4 py-3 text-center w-24">Stock</th>
-                  <th className="px-4 py-3 text-right w-28">Base</th>
-                  <th className="px-4 py-3 text-right w-24">IVA</th>
-                  <th className="px-4 py-3 text-right w-28">Final</th>
-                  <th className="px-4 py-3 text-right w-24">Gestión</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50 text-xs text-slate-600">
-                {filteredProducts.length === 0 ? (
-                  <tr><td colSpan="8" className="px-6 py-16 text-center text-slate-400 font-medium">Catálogo vacío o búsqueda sin resultados</td></tr>
-                ) : (
-                  filteredProducts.map(p => {
-                    const c = getCalculatedValues(p.cost, p.utility, p.taxId);
-                    const availableStock = calculateAvailableStock(p.id, inventory, orders);
-                    const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
-                    return (
-                      <tr key={p.id} onClick={() => { setSelectedProd(p); setModalType('productDetail'); }} className="hover:bg-slate-50/60 transition-colors cursor-pointer group">
-                        <td className="px-4 py-2.5">
-                          <img src={displayImg} alt={p.name} className="w-9 h-9 rounded-lg object-cover border border-slate-200" />
-                        </td>
-                        <td className="px-4 py-2.5 font-mono text-[#0071A8] font-semibold text-[11px]">{p.id}</td>
-                        <td className="px-4 py-2.5">
-                          <p className="font-semibold text-slate-800 text-xs mb-0.5 leading-tight">{p.name}</p>
-                          <div className="flex gap-1.5 items-center">
-                            <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-medium">{p.category || 'N/A'}</span>
-                            <span className="text-[10px] text-slate-400">{p.unitName}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
-                          <span className={`px-2 py-0.5 rounded-md font-mono text-[11px] font-medium ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
-                            {availableStock.toFixed(2)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono text-slate-500 text-[11px]">{formatCurrency(c.subtotal)}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-slate-400 text-[11px]">{formatCurrency(c.taxAmount)}</td>
-                        <td className="px-4 py-2.5 text-right font-semibold font-mono text-slate-800 text-[11px]">{formatCurrency(c.finalPrice)}</td>
-                        <td className="px-4 py-2.5 text-right">
-                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, category: p.category || '', taxId: p.taxId, cost: p.cost, utility: p.utility, observations: p.observations || '', images: p.images || (p.image ? [p.image] : []) }); setModalType('edit'); }} className="p-1.5 text-slate-400 hover:bg-[#e9f4f8] hover:text-[#0071A8] rounded-lg transition-all cursor-pointer"><Edit size={14}/></button>
-                            <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-all cursor-pointer"><Trash2 size={14}/></button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════
-          4. TAB: PRECIOS Y LOGS — Más limpio y legible
-      ═══════════════════════════════════════════════════════════════ */}
-      {activeSubTab === 'prices' && (
-      <div className="space-y-4 animate-in fade-in duration-300">
-        {/* Barra superior */}
-        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-          <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
-            <button onClick={() => setActivePriceSubView('editor')} className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all cursor-pointer flex-1 md:flex-none ${activePriceSubView === 'editor' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Buscador y selección</button>
-            <button onClick={() => setActivePriceSubView('logs')} className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all cursor-pointer flex-1 md:flex-none ${activePriceSubView === 'logs' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              Historial
-              <span className="ml-1.5 px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded-md text-[10px] font-bold">{priceLogs.length}</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            {selectedPriceIds.length > 0 && (
-              <button onClick={() => exportCatalogCSV(true)} className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[11px] shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
-                <Download size={13} /> Exportar ({selectedPriceIds.length})
-              </button>
-            )}
-            {activePriceSubView === 'editor' && (
-              <div className="relative flex-1 md:max-w-xs">
-                <input type="text" placeholder="Buscar producto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-50 border border-slate-200 focus:border-[#0071A8] rounded-xl px-3 py-2 text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sub-vista: Editor de precios */}
-        {activePriceSubView === 'editor' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex justify-between items-center text-xs text-slate-600">
-                <span className="font-medium">1. Marque los productos a modificar ({filteredProducts.length})</span>
-                <span className="text-[#0071A8] font-semibold">{selectedPriceIds.length} seleccionados</span>
-              </div>
-              <div className="max-h-[300px] overflow-y-auto overflow-x-auto scrollbar-hide">
-                <table className="w-full text-left min-w-[800px]">
-                  <thead className="bg-white text-slate-500 text-[11px] font-semibold sticky top-0 border-b border-slate-100">
+            {/* Tabla — scroll interno, ocupa el resto del viewport */}
+            <div className="flex-1 overflow-hidden rounded-xl bg-white"
+              style={{border:'1px solid #D4DBDB'}}>
+              <div className="h-full overflow-y-auto overflow-x-auto">
+                <table className="w-full text-left min-w-[960px]" style={{fontFamily:"'Montserrat',sans-serif"}}>
+                  <thead className="sticky top-0" style={{backgroundColor:'#f8fafc',borderBottom:'1px solid #D4DBDB'}}>
                     <tr>
-                      <th className="px-3 py-2.5 text-center w-12"></th>
-                      <th className="px-3 py-2.5 w-16">ID</th>
-                      <th className="px-3 py-2.5">Producto</th>
-                      <th className="px-3 py-2.5 text-right">Costo actual</th>
-                      <th className="px-3 py-2.5 text-right">Utilidad</th>
-                      <th className="px-3 py-2.5 text-right">Precio final</th>
+                      {['Foto','ID','Producto / Categoría','Stock','Base','IVA','Final','Gestión'].map(h=>(
+                        <th key={h} className={`px-4 py-2.5 text-[10px] font-semibold ${['Stock','Base','IVA','Final','Gestión'].includes(h)?'text-right':'text-left'}`}
+                          style={{color:'#0071A8'}}>{h}</th>
+                      ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 text-xs text-slate-600">
-                    {filteredProducts.map(p => {
-                      const isSelected = selectedPriceIds.includes(p.id);
-                      const c = getCalculatedValues(p.cost, p.utility, p.taxId);
+                  <tbody>
+                    {filteredProducts.length===0 ? (
+                      <tr><td colSpan="8" className="px-6 py-16 text-center text-xs font-medium" style={{color:'#B7C0C6'}}>Sin resultados</td></tr>
+                    ) : filteredProducts.map(p => {
+                      const c=getCalculatedValues(p.cost,p.utility,p.taxId);
+                      const stock=calculateAvailableStock(p.id,inventory,orders);
+                      const img=(p.images&&p.images[0])||p.image||DEFAULT_CASTILLA_IMAGE;
                       return (
-                        <tr key={p.id} onClick={() => toggleSelectPriceItem(p.id)} className={`hover:bg-slate-50/60 transition-colors cursor-pointer ${isSelected ? 'bg-[#0071A8]/5' : ''}`}>
-                          <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                            <input type="checkbox" checked={isSelected} onChange={() => toggleSelectPriceItem(p.id)} className="cursor-pointer w-3.5 h-3.5 accent-[#0071A8] rounded" />
+                        <tr key={p.id} onClick={()=>{setSelectedProd(p);setModalType('productDetail');}}
+                          className="cursor-pointer group transition-colors hover:bg-[#eff8fc]"
+                          style={{borderBottom:'1px solid #f1f5f9'}}>
+                          <td className="px-4 py-2.5"><img src={img} alt={p.name} className="w-8 h-8 rounded-lg object-cover" style={{border:'1px solid #D4DBDB'}}/></td>
+                          <td className="px-4 py-2.5 text-[11px] font-semibold font-mono" style={{color:'#0071A8'}}>{p.id}</td>
+                          <td className="px-4 py-2.5">
+                            <p className="text-xs font-semibold text-slate-700 leading-tight">{p.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium" style={{backgroundColor:'#eff8fc',color:'#0071A8'}}>{p.category||'N/A'}</span>
+                              <span className="text-[10px]" style={{color:'#B7C0C6'}}>{p.unitName}</span>
+                            </div>
                           </td>
-                          <td className="px-3 py-2.5 font-mono text-[#0071A8] font-semibold text-[11px]">{p.id}</td>
-                          <td className="px-3 py-2.5">
-                            <p className="font-semibold text-slate-700">{p.name}</p>
-                            <span className="text-[10px] text-slate-400">{p.category || 'N/A'}</span>
+                          <td className="px-4 py-2.5 text-right">
+                            <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-semibold"
+                              style={{backgroundColor:stock>0?'#f0fdf4':'#fef2f2',color:stock>0?'#16a34a':'#dc2626'}}>
+                              {stock.toFixed(2)}
+                            </span>
                           </td>
-                          <td className="px-3 py-2.5 text-right font-mono text-slate-500 text-[11px]">{formatCurrency(p.cost)}</td>
-                          <td className="px-3 py-2.5 text-right font-mono text-slate-500 text-[11px]">{p.utility}%</td>
-                          <td className="px-3 py-2.5 text-right font-mono font-semibold text-slate-800 text-[11px]">{formatCurrency(c.finalPrice)}</td>
+                          <td className="px-4 py-2.5 text-right font-mono text-[11px]" style={{color:'#B7C0C6'}}>{formatCurrency(c.subtotal)}</td>
+                          <td className="px-4 py-2.5 text-right font-mono text-[11px]" style={{color:'#B7C0C6'}}>{formatCurrency(c.taxAmount)}</td>
+                          <td className="px-4 py-2.5 text-right font-mono text-[11px] font-semibold text-slate-700">{formatCurrency(c.finalPrice)}</td>
+                          <td className="px-4 py-2.5 text-right">
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e=>e.stopPropagation()}>
+                              <button onClick={()=>{setSelectedProd(p);setEditData({id:p.id,name:p.name,unitName:p.unitName,category:p.category||'',taxId:p.taxId,cost:p.cost,utility:p.utility,observations:p.observations||'',images:p.images||(p.image?[p.image]:[])});setModalType('edit');}}
+                                className="p-1.5 rounded-lg cursor-pointer transition-all hover:bg-[#eff8fc]" style={{color:'#B7C0C6'}}>
+                                <Edit size={13}/>
+                              </button>
+                              <button onClick={()=>{setSelectedProd(p);setModalType('deleteFirst');}}
+                                className="p-1.5 rounded-lg cursor-pointer transition-all hover:bg-red-50" style={{color:'#B7C0C6'}}>
+                                <Trash2 size={13}/>
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
@@ -1375,268 +887,331 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 </table>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Bandeja inferior de edición */}
-            {selectedPriceIds.length > 0 && (
-              <div className="bg-white rounded-2xl border-2 border-[#0071A8]/30 shadow-md overflow-hidden animate-in slide-in-from-bottom-3">
-                <div className="px-4 py-3 bg-[#0071A8]/5 border-b border-[#0071A8]/10 flex justify-between items-center">
-                  <span className="text-xs font-semibold text-slate-700">2. Asigne nuevos costos y utilidades</span>
-                  <button onClick={() => { setSelectedPriceIds([]); setBatchError(''); }} className="px-3 py-1 bg-white border border-slate-200 text-slate-500 rounded-lg text-[10px] font-semibold cursor-pointer hover:bg-slate-50">Limpiar todo</button>
-                </div>
-                {batchError && <div className="mx-4 mt-3 p-2.5 bg-rose-50 border border-rose-200 text-rose-600 font-medium text-xs rounded-xl">{batchError}</div>}
-                <div className="max-h-[320px] overflow-y-auto p-3">
-                  <table className="w-full text-left text-xs">
-                    <thead className="text-slate-500 text-[10px] font-semibold">
-                      <tr>
-                        <th className="px-3 py-2 w-[30%]">Producto</th>
-                        <th className="px-3 py-2 text-center w-[35%]">Costo (actual → nuevo)</th>
-                        <th className="px-3 py-2 text-center w-[25%]">Utilidad % (actual → nueva)</th>
-                        <th className="px-3 py-2 text-right w-[10%]"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {selectedPriceIds.map(id => {
-                        const p = products.find(prod => prod.id === id);
-                        if (!p) return null;
-                        const edits = batchEdits[id] || { cost: '', utility: String(p.utility || '') };
-                        return (
-                          <tr key={p.id} className="hover:bg-slate-50/60">
-                            <td className="px-3 py-2.5 truncate font-semibold text-slate-700">#{p.id} - {p.name}</td>
-                            <td className="px-3 py-2.5 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <span className="font-mono text-slate-400 text-[11px]">{formatCurrency(p.cost)}</span>
-                                <span className="text-slate-300">→</span>
-                                <input type="text" inputMode="numeric" maxLength={7} value={edits.cost} placeholder="Nuevo" onChange={(e) => handleBatchEditChange(p.id, 'cost', e.target.value)} className="w-24 px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-mono text-xs text-center font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
-                              </div>
-                            </td>
-                            <td className="px-3 py-2.5 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <span className="font-mono text-slate-400 text-[11px]">{p.utility}%</span>
-                                <span className="text-slate-300">→</span>
-                                <input type="text" inputMode="numeric" maxLength={4} value={edits.utility} placeholder="Nueva" onChange={(e) => handleBatchEditChange(p.id, 'utility', e.target.value)} className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-mono text-xs text-center font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
-                              </div>
-                            </td>
-                            <td className="px-3 py-2.5 text-right">
-                              <button onClick={() => removeItemFromBatch(p.id)} className="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-all cursor-pointer"><X size={13}/></button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="px-4 py-3 bg-white border-t border-slate-100 flex justify-end">
-                  <button onClick={prepareBatchUpdateConfirmation} className="px-5 py-2.5 bg-[#0071A8] hover:bg-[#005c8a] text-white rounded-xl font-semibold text-[11px] shadow-sm cursor-pointer">Aplicar cambios</button>
-                </div>
+        {/* ── TAB: PRECIOS Y LOGS — viewport fit ── */}
+        {activeSubTab === 'prices' && (
+          <div className="h-full flex flex-col gap-2 animate-in fade-in duration-300"
+            style={{fontFamily:"'Montserrat',sans-serif"}}>
+            {/* Barra superior */}
+            <div className="flex-shrink-0 flex flex-col md:flex-row items-center gap-2 p-2.5 rounded-xl bg-white"
+              style={{border:'1px solid #D4DBDB'}}>
+              <div className="flex p-1 rounded-lg" style={{backgroundColor:'#D4DBDB'}}>
+                {[
+                  {key:'editor', label:'Buscador y selección'},
+                  {key:'logs',   label:`Historial (${priceLogs.length})`},
+                ].map(v=>(
+                  <button key={v.key} onClick={()=>setActivePriceSubView(v.key)}
+                    className="px-3 py-1.5 rounded-md text-[11px] font-semibold cursor-pointer transition-all"
+                    style={{
+                      fontFamily:"'Montserrat',sans-serif",
+                      backgroundColor:activePriceSubView===v.key?'#0071A8':'transparent',
+                      color:activePriceSubView===v.key?'#FFFFFF':'#0071A8',
+                    }}>
+                    {v.label}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Sub-vista: Historial / Bitácora */}
-        {activePriceSubView === 'logs' && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="max-h-[520px] overflow-y-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 text-slate-500 text-[11px] font-semibold sticky top-0 border-b border-slate-200">
-                  <tr>
-                    <th className="px-4 py-3">ID Mov.</th>
-                    <th className="px-4 py-3">Producto</th>
-                    <th className="px-4 py-3 text-center">Costo (antes → ahora)</th>
-                    <th className="px-4 py-3 text-center">Utilidad % (antes → ahora)</th>
-                    <th className="px-4 py-3">Fecha y hora</th>
-                    <th className="px-4 py-3">Modo</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 text-slate-600">
-                  {priceLogs.length === 0 ? (
-                    <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-400 font-medium">No hay registros en la bitácora</td></tr>
-                  ) : (
-                    priceLogs.map(log => (
-                      <tr key={log.moveId} className="hover:bg-slate-50/60">
-                        <td className="px-4 py-2.5 font-mono text-[#0071A8] font-semibold text-[11px]">{log.moveId}</td>
-                        <td className="px-4 py-2.5">
-                          <p className="font-semibold text-slate-700">{log.productName}</p>
-                          <span className="text-[10px] text-slate-400 font-mono">ID: {log.productId}</span>
-                        </td>
-                        <td className="px-4 py-2.5 text-center font-mono text-[11px]">
-                          <span className="text-slate-400">{formatCurrency(log.oldCost)}</span>
-                          <span className="text-slate-300 mx-1">→</span>
-                          <span className="font-semibold text-slate-700">{formatCurrency(log.newCost)}</span>
-                        </td>
-                        <td className="px-4 py-2.5 text-center font-mono text-[11px]">
-                          <span className="text-slate-400">{log.oldUtility}%</span>
-                          <span className="text-slate-300 mx-1">→</span>
-                          <span className="font-semibold text-slate-700">{log.newUtility}%</span>
-                        </td>
-                        <td className="px-4 py-2.5 text-slate-400 font-mono text-[11px]">{log.timestamp}</td>
-                        <td className="px-4 py-2.5">
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-medium">{log.mode}</span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+              <div className="flex items-center gap-2 flex-1 justify-end">
+                {selectedPriceIds.length>0 && (
+                  <button onClick={()=>exportCatalogCSV(true)}
+                    className="px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    style={{fontFamily:"'Montserrat',sans-serif"}}>
+                    <Download size={12}/> Exportar ({selectedPriceIds.length})
+                  </button>
+                )}
+                {activePriceSubView==='editor' && (
+                  <input type="text" placeholder="Buscar producto..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium outline-none max-w-xs w-full"
+                    style={{backgroundColor:'#f8fafc',border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                    onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}/>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-      )}
 
-      {/* ═══════════════════════════════════════════════════════════════
-          MODALES — Más limpios, rounded-2xl, texto legible
-      ═══════════════════════════════════════════════════════════════ */}
-
-      {/* Modal de éxito en precios */}
-      {priceSuccessModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[120] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center border border-slate-100 space-y-4">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto"><Check size={24} /></div>
-            <h3 className="text-base font-bold text-slate-800">Actualización exitosa</h3>
-            <p className="text-xs text-slate-500 font-medium">Se modificaron <span className="text-[#0071A8] font-semibold">{priceSuccessModal.count} precios</span> correctamente.</p>
-            <button onClick={() => setPriceSuccessModal(null)} className="w-full py-2.5 bg-[#0071A8] text-white rounded-xl font-semibold text-xs cursor-pointer">Entendido</button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de advertencia */}
-      {warningModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[130] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center border border-slate-100 space-y-4">
-            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto"><AlertTriangle size={24} /></div>
-            <h3 className="text-base font-bold text-slate-800">{warningModal.title}</h3>
-            <p className="text-xs text-slate-600 font-medium bg-slate-50 p-3 rounded-xl">{warningModal.message}</p>
-            <button onClick={() => setWarningModal(null)} className="w-full py-2.5 bg-slate-800 text-white rounded-xl font-semibold text-xs cursor-pointer">Entendido</button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de confirmación de precios */}
-      {priceConfirmModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xl text-left border border-slate-100 space-y-4">
-            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <AlertTriangle size={18} className="text-amber-500" /> Confirmar actualización de precios
-            </h3>
-            <div className="max-h-60 overflow-y-auto border border-slate-100 rounded-xl">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-semibold sticky top-0">
-                  <tr><th className="px-3 py-2">Producto</th><th className="px-3 py-2 text-center">Costo</th><th className="px-3 py-2 text-center">Precio final</th></tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {priceConfirmModal.items.map((item, idx) => (
-                    <tr key={idx} className={item.isPriceDrop ? 'bg-amber-50/40' : ''}>
-                      <td className="px-3 py-2 font-semibold text-slate-700">{item.name}</td>
-                      <td className="px-3 py-2 text-center font-mono text-[11px]">
-                        <span className="text-slate-400">{formatCurrency(item.oldCost)}</span> → <span className="font-semibold text-slate-700">{formatCurrency(item.newCost)}</span>
-                      </td>
-                      <td className="px-3 py-2 text-center font-mono text-[11px]">
-                        <span className="text-slate-400">{formatCurrency(item.oldFinalPrice)}</span> → <span className="font-bold text-slate-800">{formatCurrency(item.newFinalPrice)}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setPriceConfirmModal(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
-              <button onClick={executeConfirmedBatchUpdates} className="flex-1 py-2.5 bg-[#0071A8] text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer">Confirmar y aplicar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal cargue nuevos productos */}
-      {modalType === 'bulkUpload' && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className={`bg-white rounded-2xl shadow-xl p-6 w-full text-center text-slate-800 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
-            {!csvPreview ? (
-              <>
-                <div className="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4"><FileSpreadsheet size={28} /></div>
-                <h3 className="font-bold text-base mb-1">Cargue masivo de productos</h3>
-                <p className="text-[11px] text-slate-500 font-medium mb-5">ID, Nombre, Unidad, Categoría, Costo, Utilidad, IVA(%), Observaciones</p>
-                <button onClick={downloadTemplate} className="w-full mb-3 py-2.5 border border-[#0071A8] text-[#0071A8] rounded-xl font-semibold text-[11px] hover:bg-slate-50 flex items-center justify-center gap-2 cursor-pointer">
-                  <Download size={14}/> Descargar plantilla maestra
-                </button>
-                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-[#0071A8]/40 transition-colors mb-3">
-                  <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                  <UploadCloud size={22} className="mx-auto text-slate-400 mb-2"/>
-                  <span className="text-xs font-semibold text-slate-500">Seleccionar archivo CSV</span>
-                </label>
-                <button onClick={() => setModalType(null)} className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-200">Cancelar</button>
-              </>
-            ) : (
-              <div className="space-y-4 text-left">
-                <h3 className="font-bold text-base text-slate-800">Vista previa de nuevos productos</h3>
-                <div className="max-h-56 overflow-y-auto border border-slate-100 rounded-xl">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-semibold sticky top-0">
-                      <tr><th className="px-3 py-2">ID</th><th className="px-3 py-2">Producto</th><th className="px-3 py-2 text-right">Costo</th><th className="px-3 py-2 text-center">Utilidad</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {csvPreview.validRows.map((row, idx) => (
-                        <tr key={idx}>
-                          <td className="px-3 py-2 font-mono text-[#0071A8] font-semibold text-[11px]">{row.id}</td>
-                          <td className="px-3 py-2 font-medium text-slate-700">{row.name}</td>
-                          <td className="px-3 py-2 text-right font-mono text-slate-500">{row.cost}</td>
-                          <td className="px-3 py-2 text-center font-mono text-slate-500">{row.utility}%</td>
+            {/* Editor de precios */}
+            {activePriceSubView==='editor' && (
+              <div className="flex-1 overflow-hidden flex flex-col gap-2">
+                {/* Tabla de selección — scroll interno */}
+                <div className="rounded-xl bg-white overflow-hidden" style={{border:'1px solid #D4DBDB', flex: selectedPriceIds.length>0 ? '0 0 auto' : '1'}}>
+                  <div className="px-3 py-2 flex justify-between items-center" style={{backgroundColor:'#f8fafc',borderBottom:'1px solid #D4DBDB'}}>
+                    <span className="text-[11px] font-semibold" style={{color:'#374151'}}>1. Seleccione productos a modificar ({filteredProducts.length})</span>
+                    <span className="text-[10px] font-semibold" style={{color:'#0071A8'}}>{selectedPriceIds.length} seleccionados</span>
+                  </div>
+                  <div style={{maxHeight: selectedPriceIds.length>0 ? '200px' : '100%', overflowY:'auto', overflowX:'auto'}}>
+                    <table className="w-full text-left min-w-[700px]" style={{fontFamily:"'Montserrat',sans-serif"}}>
+                      <thead className="sticky top-0" style={{backgroundColor:'#FFFFFF',borderBottom:'1px solid #D4DBDB'}}>
+                        <tr>
+                          <th className="px-3 py-2 w-10 text-[10px] font-semibold" style={{color:'#0071A8'}}></th>
+                          <th className="px-3 py-2 text-[10px] font-semibold" style={{color:'#0071A8'}}>ID</th>
+                          <th className="px-3 py-2 text-[10px] font-semibold" style={{color:'#0071A8'}}>Producto</th>
+                          <th className="px-3 py-2 text-right text-[10px] font-semibold" style={{color:'#0071A8'}}>Costo</th>
+                          <th className="px-3 py-2 text-right text-[10px] font-semibold" style={{color:'#0071A8'}}>Utilidad</th>
+                          <th className="px-3 py-2 text-right text-[10px] font-semibold" style={{color:'#0071A8'}}>Precio final</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {filteredProducts.map(p => {
+                          const isSel=selectedPriceIds.includes(p.id);
+                          const c=getCalculatedValues(p.cost,p.utility,p.taxId);
+                          return (
+                            <tr key={p.id} onClick={()=>toggleSelectPriceItem(p.id)}
+                              className="cursor-pointer transition-colors"
+                              style={{backgroundColor:isSel?'#eff8fc':'transparent',borderBottom:'1px solid #f8fafc'}}>
+                              <td className="px-3 py-2 text-center" onClick={e=>e.stopPropagation()}>
+                                <input type="checkbox" checked={isSel} onChange={()=>toggleSelectPriceItem(p.id)} className="cursor-pointer w-3.5 h-3.5" style={{accentColor:'#0071A8'}}/>
+                              </td>
+                              <td className="px-3 py-2 font-mono text-[11px] font-semibold" style={{color:'#0071A8'}}>{p.id}</td>
+                              <td className="px-3 py-2">
+                                <p className="text-xs font-semibold text-slate-700">{p.name}</p>
+                                <span className="text-[10px]" style={{color:'#B7C0C6'}}>{p.category||'N/A'}</span>
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono text-[11px]" style={{color:'#B7C0C6'}}>{formatCurrency(p.cost)}</td>
+                              <td className="px-3 py-2 text-right font-mono text-[11px]" style={{color:'#B7C0C6'}}>{p.utility}%</td>
+                              <td className="px-3 py-2 text-right font-mono text-[11px] font-semibold text-slate-700">{formatCurrency(c.finalPrice)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setCsvPreview(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
-                  <button onClick={() => { setProducts([...csvPreview.validRows, ...products]); setCsvPreview(null); setModalType(null); }} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer">Importar {csvPreview.validRows.length} registros</button>
-                </div>
+
+                {/* Bandeja de edición */}
+                {selectedPriceIds.length>0 && (
+                  <div className="flex-1 overflow-hidden flex flex-col rounded-xl bg-white animate-in slide-in-from-bottom-3"
+                    style={{border:'2px solid #0071A8'}}>
+                    <div className="flex-shrink-0 px-3 py-2 flex justify-between items-center" style={{backgroundColor:'#eff8fc',borderBottom:'1px solid #D4DBDB'}}>
+                      <span className="text-[11px] font-semibold" style={{color:'#374151'}}>2. Asigne nuevos costos y utilidades</span>
+                      <button onClick={()=>{setSelectedPriceIds([]);setBatchError('');}}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-semibold cursor-pointer"
+                        style={{backgroundColor:'#FFFFFF',border:'1px solid #D4DBDB',color:'#64748b'}}>
+                        Limpiar
+                      </button>
+                    </div>
+                    {batchError && (
+                      <div className="mx-3 mt-2 p-2 rounded-lg text-xs font-medium"
+                        style={{backgroundColor:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626'}}>
+                        {batchError}
+                      </div>
+                    )}
+                    <div className="flex-1 overflow-y-auto p-2">
+                      <table className="w-full text-left text-xs" style={{fontFamily:"'Montserrat',sans-serif"}}>
+                        <thead>
+                          <tr>
+                            <th className="px-2 py-1.5 text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Producto</th>
+                            <th className="px-2 py-1.5 text-center text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Costo (actual → nuevo)</th>
+                            <th className="px-2 py-1.5 text-center text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Utilidad (actual → nueva)</th>
+                            <th className="px-2 py-1.5 w-8"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedPriceIds.map(id=>{
+                            const p=products.find(prod=>prod.id===id); if(!p) return null;
+                            const ed=batchEdits[id]||{cost:'',utility:String(p.utility||'')};
+                            return (
+                              <tr key={p.id} style={{borderBottom:'1px solid #f8fafc'}}>
+                                <td className="px-2 py-2 font-semibold text-slate-700 truncate">#{p.id} — {p.name}</td>
+                                <td className="px-2 py-2 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <span className="font-mono text-[11px]" style={{color:'#B7C0C6'}}>{formatCurrency(p.cost)}</span>
+                                    <span style={{color:'#D4DBDB'}}>→</span>
+                                    <input type="text" inputMode="numeric" maxLength={7} value={ed.cost} placeholder="Nuevo"
+                                      onChange={e=>handleBatchEditChange(p.id,'cost',e.target.value)}
+                                      className="w-20 px-2 py-1 rounded-lg font-mono text-xs text-center font-semibold outline-none"
+                                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}/>
+                                  </div>
+                                </td>
+                                <td className="px-2 py-2 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <span className="font-mono text-[11px]" style={{color:'#B7C0C6'}}>{p.utility}%</span>
+                                    <span style={{color:'#D4DBDB'}}>→</span>
+                                    <input type="text" inputMode="numeric" maxLength={4} value={ed.utility} placeholder="Nueva"
+                                      onChange={e=>handleBatchEditChange(p.id,'utility',e.target.value)}
+                                      className="w-14 px-2 py-1 rounded-lg font-mono text-xs text-center font-semibold outline-none"
+                                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}/>
+                                  </div>
+                                </td>
+                                <td className="px-2 py-2 text-right">
+                                  <button onClick={()=>removeItemFromBatch(p.id)} className="p-1 rounded-lg cursor-pointer transition-all hover:bg-red-50" style={{color:'#B7C0C6'}}>
+                                    <X size={12}/>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex-shrink-0 px-3 py-2 flex justify-end" style={{borderTop:'1px solid #D4DBDB'}}>
+                      <button onClick={prepareBatchUpdateConfirmation}
+                        className="px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer shadow-sm"
+                        style={{fontFamily:"'Montserrat',sans-serif",backgroundColor:'#0071A8',color:'#FFFFFF'}}>
+                        Aplicar cambios
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        </div>
-      )}
 
-      {/* Modal cargue masivo de precios */}
-      {modalType === 'bulkPriceUpload' && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className={`bg-white rounded-2xl shadow-xl p-6 w-full text-center text-slate-800 ${priceCsvPreview ? 'max-w-2xl' : 'max-w-md'}`}>
-            {!priceCsvPreview ? (
-              <>
-                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><FileSpreadsheet size={28} /></div>
-                <h3 className="font-bold text-base mb-1">Actualización masiva de precios</h3>
-                <button onClick={() => exportCatalogCSV(false)} className="w-full mb-3 py-2.5 border border-slate-200 text-[#0071A8] rounded-xl font-semibold text-[11px] hover:bg-slate-50 flex items-center justify-center gap-2 cursor-pointer">
-                  <Download size={14}/> Descargar catálogo actual
-                </button>
-                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-emerald-300 transition-colors mb-3">
-                  <input type="file" accept=".csv" className="hidden" onChange={handlePriceFileUpload} />
-                  <UploadCloud size={22} className="mx-auto text-slate-400 mb-2"/>
-                  <span className="text-xs font-semibold text-slate-500">Seleccionar CSV modificado</span>
-                </label>
-                <button onClick={() => setModalType(null)} className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-200">Cancelar</button>
-              </>
-            ) : (
-              <div className="space-y-4 text-left">
-                <h3 className="font-bold text-base text-slate-800">Vista previa de cambios de precio</h3>
-                <div className="max-h-56 overflow-y-auto border border-slate-100 rounded-xl">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-semibold sticky top-0">
-                      <tr><th className="px-3 py-2">Producto</th><th className="px-3 py-2 text-center">Costo (antes → nuevo)</th></tr>
+            {/* Historial / Bitácora — scroll interno */}
+            {activePriceSubView==='logs' && (
+              <div className="flex-1 overflow-hidden rounded-xl bg-white" style={{border:'1px solid #D4DBDB'}}>
+                <div className="h-full overflow-y-auto overflow-x-auto">
+                  <table className="w-full text-left" style={{fontFamily:"'Montserrat',sans-serif"}}>
+                    <thead className="sticky top-0" style={{backgroundColor:'#f8fafc',borderBottom:'1px solid #D4DBDB'}}>
+                      <tr>
+                        {['ID Mov.','Producto','Costo (antes → ahora)','Utilidad % (antes → ahora)','Fecha y hora','Modo'].map(h=>(
+                          <th key={h} className={`px-4 py-2.5 text-[10px] font-semibold ${['Costo (antes → ahora)','Utilidad % (antes → ahora)'].includes(h)?'text-center':''}`}
+                            style={{color:'#0071A8'}}>{h}</th>
+                        ))}
+                      </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {priceCsvPreview.validRows.map((row, idx) => (
-                        <tr key={idx}>
-                          <td className="px-3 py-2 font-semibold text-slate-700">#{row.id} - {row.name}</td>
-                          <td className="px-3 py-2 text-center font-mono text-[11px]">
-                            <span className="text-slate-400">{formatCurrency(row.oldCost)}</span> → <span className="font-semibold text-slate-700">{formatCurrency(row.newCost)}</span>
+                    <tbody>
+                      {priceLogs.length===0 ? (
+                        <tr><td colSpan="6" className="px-6 py-16 text-center text-xs font-medium" style={{color:'#B7C0C6'}}>Sin registros en la bitácora</td></tr>
+                      ) : priceLogs.map(log=>(
+                        <tr key={log.moveId} className="transition-colors hover:bg-[#eff8fc]" style={{borderBottom:'1px solid #f8fafc'}}>
+                          <td className="px-4 py-2.5 font-mono text-[11px] font-semibold" style={{color:'#0071A8'}}>{log.moveId}</td>
+                          <td className="px-4 py-2.5">
+                            <p className="text-xs font-semibold text-slate-700">{log.productName}</p>
+                            <span className="text-[10px] font-mono" style={{color:'#B7C0C6'}}>ID: {log.productId}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-center font-mono text-[11px]">
+                            <span style={{color:'#B7C0C6'}}>{formatCurrency(log.oldCost)}</span>
+                            <span className="mx-1" style={{color:'#D4DBDB'}}>→</span>
+                            <span className="font-semibold text-slate-700">{formatCurrency(log.newCost)}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-center font-mono text-[11px]">
+                            <span style={{color:'#B7C0C6'}}>{log.oldUtility}%</span>
+                            <span className="mx-1" style={{color:'#D4DBDB'}}>→</span>
+                            <span className="font-semibold text-slate-700">{log.newUtility}%</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-[11px] font-mono" style={{color:'#B7C0C6'}}>{log.timestamp}</td>
+                          <td className="px-4 py-2.5">
+                            <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold"
+                              style={{backgroundColor:'#eff8fc',color:'#0071A8',border:'1px solid #b7e0f0'}}>
+                              {log.mode}
+                            </span>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════
+          MODALES
+      ════════════════════════════════════════════════════════════ */}
+
+      {/* Éxito de precios */}
+      {priceSuccessModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" style={{backgroundColor:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center space-y-4" style={{fontFamily:"'Montserrat',sans-serif",border:'1px solid #D4DBDB'}}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto" style={{backgroundColor:'#f0fdf4',color:'#16a34a'}}><Check size={24}/></div>
+            <h3 className="text-base font-bold text-slate-800">Actualización exitosa</h3>
+            <p className="text-xs font-medium text-slate-500">Se modificaron <span className="font-bold" style={{color:'#0071A8'}}>{priceSuccessModal.count} precios</span> correctamente.</p>
+            <button onClick={()=>setPriceSuccessModal(null)} className="w-full py-2.5 rounded-xl font-semibold text-xs cursor-pointer" style={{backgroundColor:'#0071A8',color:'#FFFFFF'}}>Entendido</button>
+          </div>
+        </div>
+      )}
+
+      {/* Advertencia */}
+      {warningModal && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4" style={{backgroundColor:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center space-y-4" style={{fontFamily:"'Montserrat',sans-serif",border:'1px solid #D4DBDB'}}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto" style={{backgroundColor:'#fffbeb',color:'#d97706'}}><AlertTriangle size={24}/></div>
+            <h3 className="text-base font-bold text-slate-800">{warningModal.title}</h3>
+            <p className="text-xs font-medium text-slate-600 p-3 rounded-xl" style={{backgroundColor:'#f8fafc'}}>{warningModal.message}</p>
+            <button onClick={()=>setWarningModal(null)} className="w-full py-2.5 rounded-xl font-semibold text-xs cursor-pointer bg-slate-800 text-white">Entendido</button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmación de precios */}
+      {priceConfirmModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{backgroundColor:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}}>
+          <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-xl space-y-4" style={{fontFamily:"'Montserrat',sans-serif",border:'1px solid #D4DBDB'}}>
+            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2"><AlertTriangle size={18} style={{color:'#d97706'}}/> Confirmar actualización</h3>
+            <div className="max-h-56 overflow-y-auto rounded-xl" style={{border:'1px solid #D4DBDB'}}>
+              <table className="w-full text-left text-xs" style={{fontFamily:"'Montserrat',sans-serif"}}>
+                <thead className="sticky top-0" style={{backgroundColor:'#f8fafc',borderBottom:'1px solid #D4DBDB'}}>
+                  <tr>
+                    <th className="px-3 py-2 text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Producto</th>
+                    <th className="px-3 py-2 text-center text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Costo</th>
+                    <th className="px-3 py-2 text-center text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Precio final</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {priceConfirmModal.items.map((item,i)=>(
+                    <tr key={i} style={{backgroundColor:item.isPriceDrop?'#fffbeb':'transparent',borderBottom:'1px solid #f8fafc'}}>
+                      <td className="px-3 py-2 font-semibold text-slate-700">{item.name}</td>
+                      <td className="px-3 py-2 text-center font-mono text-[11px]"><span style={{color:'#B7C0C6'}}>{formatCurrency(item.oldCost)}</span> → <span className="font-semibold text-slate-700">{formatCurrency(item.newCost)}</span></td>
+                      <td className="px-3 py-2 text-center font-mono text-[11px]"><span style={{color:'#B7C0C6'}}>{formatCurrency(item.oldFinalPrice)}</span> → <span className="font-bold text-slate-800">{formatCurrency(item.newFinalPrice)}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={()=>setPriceConfirmModal(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-xs cursor-pointer" style={{border:'1px solid #D4DBDB',color:'#64748b'}}>Cancelar</button>
+              <button onClick={executeConfirmedBatchUpdates} className="flex-1 py-2.5 rounded-xl font-semibold text-xs shadow-sm cursor-pointer" style={{backgroundColor:'#0071A8',color:'#FFFFFF'}}>Confirmar y aplicar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal cargue productos CSV */}
+      {modalType==='bulkUpload' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{backgroundColor:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}}>
+          <div className={`bg-white rounded-2xl shadow-xl p-5 w-full text-center ${csvPreview?'max-w-3xl':'max-w-md'}`} style={{fontFamily:"'Montserrat',sans-serif",border:'1px solid #D4DBDB'}}>
+            {!csvPreview ? (
+              <>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{backgroundColor:'#eff8fc',color:'#0071A8'}}><FileSpreadsheet size={26}/></div>
+                <h3 className="font-bold text-base mb-1 text-slate-800">Cargue masivo de productos</h3>
+                <p className="text-[11px] font-medium mb-4" style={{color:'#B7C0C6'}}>ID · Nombre · Unidad · Categoría · Costo · Utilidad · IVA(%) · Observaciones</p>
+                <button onClick={downloadTemplate} className="w-full mb-3 py-2.5 rounded-xl font-semibold text-[11px] flex items-center justify-center gap-2 cursor-pointer transition-all" style={{border:'1px solid #0071A8',color:'#0071A8'}}>
+                  <Download size={13}/> Descargar plantilla maestra
+                </button>
+                <label className="block w-full py-6 rounded-2xl cursor-pointer transition-all mb-3" style={{border:'2px dashed #D4DBDB'}}>
+                  <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload}/>
+                  <UploadCloud size={22} className="mx-auto mb-2" style={{color:'#B7C0C6'}}/>
+                  <span className="text-xs font-semibold" style={{color:'#B7C0C6'}}>Seleccionar archivo CSV</span>
+                </label>
+                <button onClick={()=>setModalType(null)} className="w-full py-2.5 rounded-xl font-semibold text-xs cursor-pointer" style={{backgroundColor:'#f1f5f9',color:'#64748b'}}>Cancelar</button>
+              </>
+            ) : (
+              <div className="space-y-3 text-left">
+                <h3 className="font-bold text-base text-slate-800">Vista previa ({csvPreview.validRows.length} registros)</h3>
+                <div className="max-h-56 overflow-y-auto rounded-xl" style={{border:'1px solid #D4DBDB'}}>
+                  <table className="w-full text-left text-xs" style={{fontFamily:"'Montserrat',sans-serif"}}>
+                    <thead className="sticky top-0" style={{backgroundColor:'#f8fafc',borderBottom:'1px solid #D4DBDB'}}>
+                      <tr><th className="px-3 py-2 text-[10px] font-semibold" style={{color:'#B7C0C6'}}>ID</th><th className="px-3 py-2 text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Producto</th><th className="px-3 py-2 text-right text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Costo</th><th className="px-3 py-2 text-center text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Utilidad</th></tr>
+                    </thead>
+                    <tbody>
+                      {csvPreview.validRows.map((r,i)=>(
+                        <tr key={i} style={{borderBottom:'1px solid #f8fafc'}}>
+                          <td className="px-3 py-2 font-mono text-[11px] font-semibold" style={{color:'#0071A8'}}>{r.id}</td>
+                          <td className="px-3 py-2 font-medium text-slate-700">{r.name}</td>
+                          <td className="px-3 py-2 text-right font-mono" style={{color:'#B7C0C6'}}>{r.cost}</td>
+                          <td className="px-3 py-2 text-center font-mono" style={{color:'#B7C0C6'}}>{r.utility}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setPriceCsvPreview(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
-                  <button onClick={executePriceBulkUpdate} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer">Confirmar y actualizar</button>
+                  <button onClick={()=>setCsvPreview(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-xs cursor-pointer" style={{border:'1px solid #D4DBDB',color:'#64748b'}}>Cancelar</button>
+                  <button onClick={()=>{setProducts([...csvPreview.validRows,...products]);setCsvPreview(null);setModalType(null);}} className="flex-1 py-2.5 rounded-xl font-semibold text-xs shadow-sm cursor-pointer bg-emerald-600 text-white">Importar {csvPreview.validRows.length}</button>
                 </div>
               </div>
             )}
@@ -1644,138 +1219,179 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         </div>
       )}
 
-      {/* Modal de edición / eliminación */}
-      {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
-          <div className={`bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md p-6 ${modalType === 'deleteSecond' ? 'border-2 border-rose-400' : ''}`}>
+      {/* Modal actualización masiva de precios CSV */}
+      {modalType==='bulkPriceUpload' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{backgroundColor:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}}>
+          <div className={`bg-white rounded-2xl shadow-xl p-5 w-full text-center ${priceCsvPreview?'max-w-2xl':'max-w-md'}`} style={{fontFamily:"'Montserrat',sans-serif",border:'1px solid #D4DBDB'}}>
+            {!priceCsvPreview ? (
+              <>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 bg-emerald-50 text-emerald-600"><FileSpreadsheet size={26}/></div>
+                <h3 className="font-bold text-base mb-3 text-slate-800">Actualización masiva de precios</h3>
+                <button onClick={()=>exportCatalogCSV(false)} className="w-full mb-3 py-2.5 rounded-xl font-semibold text-[11px] flex items-center justify-center gap-2 cursor-pointer" style={{border:'1px solid #D4DBDB',color:'#0071A8'}}>
+                  <Download size={13}/> Descargar catálogo actual
+                </button>
+                <label className="block w-full py-6 rounded-2xl cursor-pointer mb-3" style={{border:'2px dashed #D4DBDB'}}>
+                  <input type="file" accept=".csv" className="hidden" onChange={handlePriceFileUpload}/>
+                  <UploadCloud size={22} className="mx-auto mb-2" style={{color:'#B7C0C6'}}/>
+                  <span className="text-xs font-semibold" style={{color:'#B7C0C6'}}>Seleccionar CSV modificado</span>
+                </label>
+                <button onClick={()=>setModalType(null)} className="w-full py-2.5 rounded-xl font-semibold text-xs cursor-pointer" style={{backgroundColor:'#f1f5f9',color:'#64748b'}}>Cancelar</button>
+              </>
+            ) : (
+              <div className="space-y-3 text-left">
+                <h3 className="font-bold text-base text-slate-800">Cambios detectados ({priceCsvPreview.validRows.length})</h3>
+                <div className="max-h-56 overflow-y-auto rounded-xl" style={{border:'1px solid #D4DBDB'}}>
+                  <table className="w-full text-left text-xs" style={{fontFamily:"'Montserrat',sans-serif"}}>
+                    <thead className="sticky top-0" style={{backgroundColor:'#f8fafc',borderBottom:'1px solid #D4DBDB'}}>
+                      <tr><th className="px-3 py-2 text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Producto</th><th className="px-3 py-2 text-center text-[10px] font-semibold" style={{color:'#B7C0C6'}}>Costo (antes → nuevo)</th></tr>
+                    </thead>
+                    <tbody>
+                      {priceCsvPreview.validRows.map((r,i)=>(
+                        <tr key={i} style={{borderBottom:'1px solid #f8fafc'}}>
+                          <td className="px-3 py-2 font-semibold text-slate-700">#{r.id} — {r.name}</td>
+                          <td className="px-3 py-2 text-center font-mono text-[11px]"><span style={{color:'#B7C0C6'}}>{formatCurrency(r.oldCost)}</span> → <span className="font-semibold text-slate-700">{formatCurrency(r.newCost)}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={()=>setPriceCsvPreview(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-xs cursor-pointer" style={{border:'1px solid #D4DBDB',color:'#64748b'}}>Cancelar</button>
+                  <button onClick={executePriceBulkUpdate} className="flex-1 py-2.5 rounded-xl font-semibold text-xs shadow-sm cursor-pointer bg-emerald-600 text-white">Confirmar y actualizar</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal edición / eliminación */}
+      {(modalType==='edit'||modalType==='updateConfirm'||modalType==='deleteFirst'||modalType==='deleteSecond') && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" style={{backgroundColor:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}}>
+          <div className={`bg-white rounded-2xl shadow-xl w-full max-w-md p-5 ${modalType==='deleteSecond'?'border-2 border-red-400':''}`}
+            style={{fontFamily:"'Montserrat',sans-serif",border:modalType==='deleteSecond'?'2px solid #f87171':'1px solid #D4DBDB'}}>
             <div className="flex flex-col items-center text-center gap-2 mb-4">
-              <div className={`p-2.5 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-500'}`}>
-                {modalType === 'edit' ? <Edit size={22} /> : modalType === 'updateConfirm' ? <Info size={22} /> : <AlertTriangle size={22} />}
+              <div className={`p-2.5 rounded-full ${modalType==='edit'||modalType==='updateConfirm'?'bg-indigo-50 text-indigo-600':'bg-red-50 text-red-500'}`}>
+                {modalType==='edit'?<Edit size={20}/>:modalType==='updateConfirm'?<Info size={20}/>:<AlertTriangle size={20}/>}
               </div>
               <h3 className="font-bold text-base text-slate-800">
-                {modalType === 'edit' ? 'Editar producto' : modalType === 'updateConfirm' ? 'Confirmar cambios' : 'Eliminar producto'}
+                {modalType==='edit'?'Editar producto':modalType==='updateConfirm'?'Confirmar cambios':'Eliminar producto'}
               </h3>
             </div>
-            
-            {modalType === 'edit' && (
+            {modalType==='edit' && (
               <div className="space-y-3 max-h-[50vh] overflow-y-auto px-1">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Código ID</label>
-                  <input type="text" value={editData.id} disabled className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono text-slate-400 text-center" />
+                  <label className="text-[10px] font-semibold block mb-1" style={{color:'#B7C0C6'}}>Código ID</label>
+                  <input type="text" value={editData.id} disabled className="w-full px-3 py-2 rounded-xl text-xs font-mono text-center" style={{backgroundColor:'#f8fafc',border:'1px solid #D4DBDB',color:'#B7C0C6'}}/>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Nombre</label>
-                  <input type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
+                  <label className="text-[10px] font-semibold block mb-1" style={{color:'#B7C0C6'}}>Nombre</label>
+                  <input type="text" value={editData.name} onChange={e=>setEditData({...editData,name:e.target.value.toUpperCase()})}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-medium outline-none"
+                    style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                    onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}/>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Categoría</label>
-                  <select value={editData.category} onChange={(e) => setEditData({...editData, category: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0071A8] cursor-pointer">
-                    {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  <label className="text-[10px] font-semibold block mb-1" style={{color:'#B7C0C6'}}>Categoría</label>
+                  <select value={editData.category} onChange={e=>setEditData({...editData,category:e.target.value})}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                    style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}>
+                    {categoryOptions.map(c=><option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Costo</label>
-                    <input type="number" value={editData.cost} onChange={(e) => setEditData({...editData, cost: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
+                    <label className="text-[10px] font-semibold block mb-1" style={{color:'#B7C0C6'}}>Costo</label>
+                    <input type="number" value={editData.cost} onChange={e=>setEditData({...editData,cost:e.target.value})}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-mono font-medium outline-none"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}/>
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Utilidad %</label>
-                    <input type="number" value={editData.utility} onChange={(e) => setEditData({...editData, utility: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
+                    <label className="text-[10px] font-semibold block mb-1" style={{color:'#B7C0C6'}}>Utilidad %</label>
+                    <input type="number" value={editData.utility} onChange={e=>setEditData({...editData,utility:e.target.value})}
+                      className="w-full px-3 py-2 rounded-xl text-xs font-mono font-medium outline-none"
+                      style={{border:'1px solid #D4DBDB',color:'#374151',fontFamily:"'Montserrat',sans-serif"}}
+                      onFocus={e=>e.target.style.borderColor='#0071A8'} onBlur={e=>e.target.style.borderColor='#D4DBDB'}/>
                   </div>
                 </div>
               </div>
             )}
-            {modalType === 'updateConfirm' && <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl"><p className="text-amber-700 font-medium text-xs text-center">⚠️ Este cambio afectará a todo el sistema.</p></div>}
-            {modalType === 'deleteSecond' && <p className="text-xs text-rose-600 font-medium text-center my-4">Acción irreversible. Se eliminará: <span className="font-bold">{selectedProd?.name}</span></p>}
-
+            {modalType==='updateConfirm' && (
+              <div className="p-3 rounded-xl text-xs font-medium" style={{backgroundColor:'#fffbeb',border:'1px solid #fde68a',color:'#92400e'}}>
+                ⚠️ Este cambio afectará al sistema completo.
+              </div>
+            )}
+            {modalType==='deleteSecond' && (
+              <p className="text-xs font-medium text-center my-4 text-red-600">
+                Acción irreversible. Se eliminará: <span className="font-bold">{selectedProd?.name}</span>
+              </p>
+            )}
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setModalType(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-500 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
-              <button onClick={() => {
-                if (modalType === 'edit') setModalType('updateConfirm');
-                else if (modalType === 'updateConfirm') executeUpdate();
-                else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-                else if (modalType === 'deleteSecond') { setProducts(products.filter(p => p.id !== selectedProd.id)); setModalType(null); }
-              }} className={`flex-1 py-2.5 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#0071A8]' : 'bg-rose-600'}`}>Aceptar</button>
+              <button onClick={()=>setModalType(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-xs cursor-pointer" style={{border:'1px solid #D4DBDB',color:'#64748b'}}>Cancelar</button>
+              <button onClick={()=>{
+                if(modalType==='edit') setModalType('updateConfirm');
+                else if(modalType==='updateConfirm') executeUpdate();
+                else if(modalType==='deleteFirst') setModalType('deleteSecond');
+                else if(modalType==='deleteSecond'){setProducts(products.filter(p=>p.id!==selectedProd.id));setModalType(null);}
+              }} className={`flex-1 py-2.5 rounded-xl font-semibold text-xs shadow-sm cursor-pointer ${modalType==='edit'||modalType==='updateConfirm'?'':'bg-red-600 text-white'}`}
+              style={modalType==='edit'||modalType==='updateConfirm'?{backgroundColor:'#0071A8',color:'#FFFFFF'}:{}}>
+                Aceptar
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {/* Modal detalle de producto */}
-      {modalType === 'productDetail' && selectedProd && (() => {
-        const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
-        const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
-        const prodImages = (selectedProd.images && selectedProd.images.length > 0) ? selectedProd.images : [selectedProd.image || DEFAULT_CASTILLA_IMAGE];
+      {modalType==='productDetail' && selectedProd && (() => {
+        const c=getCalculatedValues(selectedProd.cost,selectedProd.utility,selectedProd.taxId);
+        const stock=calculateAvailableStock(selectedProd.id,inventory,orders);
+        const imgs=(selectedProd.images&&selectedProd.images.length>0)?selectedProd.images:[selectedProd.image||DEFAULT_CASTILLA_IMAGE];
         return (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-lg text-left border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{backgroundColor:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}}>
+            <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-lg space-y-3 max-h-[90vh] overflow-y-auto"
+              style={{fontFamily:"'Montserrat',sans-serif",border:'1px solid #D4DBDB'}}>
+              <div className="flex justify-between items-start pb-3" style={{borderBottom:'1px solid #D4DBDB'}}>
                 <div>
-                  <span className="text-[10px] font-mono font-semibold text-[#0071A8]">Producto #{selectedProd.id}</span>
-                  <h3 className="text-lg font-bold text-slate-800 leading-tight">{selectedProd.name}</h3>
+                  <span className="text-[10px] font-semibold font-mono" style={{color:'#0071A8'}}>Producto #{selectedProd.id}</span>
+                  <h3 className="text-base font-bold text-slate-800 leading-tight">{selectedProd.name}</h3>
                 </div>
-                <button onClick={() => setModalType(null)} className="p-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-pointer hover:bg-slate-200"><X size={16}/></button>
+                <button onClick={()=>setModalType(null)} className="p-1.5 rounded-lg cursor-pointer" style={{backgroundColor:'#f1f5f9',color:'#64748b'}}><X size={15}/></button>
               </div>
-
-              {/* Galería de miniaturas */}
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {prodImages.map((img, i) => <img key={i} src={img} alt="Prod" className="w-14 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />)}
+                {imgs.map((img,i)=><img key={i} src={img} alt="Prod" className="w-12 h-12 rounded-lg object-cover shrink-0" style={{border:'1px solid #D4DBDB'}}/>)}
               </div>
-
-              {/* Info rápida */}
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-slate-50 p-3 rounded-xl">
-                  <span className="text-[10px] text-slate-400 font-medium block mb-0.5">Stock disponible</span>
-                  <span className="font-semibold text-slate-700 font-mono">{availableStock.toFixed(2)}</span>
+                <div className="p-3 rounded-xl" style={{backgroundColor:'#f8fafc'}}>
+                  <span className="text-[10px] font-medium block mb-0.5" style={{color:'#B7C0C6'}}>Stock disponible</span>
+                  <span className="font-semibold text-slate-700 font-mono">{stock.toFixed(2)}</span>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl">
-                  <span className="text-[10px] text-slate-400 font-medium block mb-0.5">Categoría</span>
-                  <span className="font-semibold text-slate-700">{selectedProd.category || 'N/A'}</span>
-                </div>
-              </div>
-
-              {/* Desglose de precio */}
-              <div className="bg-[#f0f7fb] p-4 rounded-xl border border-[#0071A8]/10 space-y-2 text-xs text-slate-600">
-                <div className="flex justify-between">
-                  <span className="font-medium">Subtotal</span>
-                  <span className="font-mono font-semibold">{formatCurrency(c.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-amber-700">
-                  <span className="font-medium">IVA</span>
-                  <span className="font-mono font-semibold">{formatCurrency(c.taxAmount)}</span>
-                </div>
-                <div className="border-t border-[#0071A8]/10 pt-2 flex justify-between text-sm text-[#0071A8]">
-                  <span className="font-semibold">Precio final</span>
-                  <span className="font-mono font-bold">{formatCurrency(c.finalPrice)}</span>
+                <div className="p-3 rounded-xl" style={{backgroundColor:'#f8fafc'}}>
+                  <span className="text-[10px] font-medium block mb-0.5" style={{color:'#B7C0C6'}}>Categoría</span>
+                  <span className="font-semibold text-slate-700">{selectedProd.category||'N/A'}</span>
                 </div>
               </div>
-
-              {/* Acciones */}
+              <div className="p-3 rounded-xl space-y-2 text-xs" style={{backgroundColor:'#eff8fc',border:'1px solid #b7e0f0'}}>
+                <div className="flex justify-between"><span className="font-medium text-slate-600">Subtotal</span><span className="font-mono font-semibold text-slate-700">{formatCurrency(c.subtotal)}</span></div>
+                <div className="flex justify-between" style={{color:'#92400e'}}><span className="font-medium">IVA</span><span className="font-mono font-semibold">{formatCurrency(c.taxAmount)}</span></div>
+                <div className="flex justify-between text-sm pt-2" style={{borderTop:'1px solid #b7e0f0',color:'#0071A8'}}>
+                  <span className="font-semibold">Precio final</span><span className="font-mono font-bold">{formatCurrency(c.finalPrice)}</span>
+                </div>
+              </div>
               <div className="flex justify-between items-center pt-1">
-                <button onClick={() => {
-                  setEditData({
-                    id: selectedProd.id,
-                    name: selectedProd.name,
-                    unitName: selectedProd.unitName,
-                    category: selectedProd.category || '',
-                    taxId: selectedProd.taxId,
-                    cost: selectedProd.cost,
-                    utility: selectedProd.utility,
-                    observations: selectedProd.observations || '',
-                    images: selectedProd.images || (selectedProd.image ? [selectedProd.image] : [])
-                  });
-                  setModalType('edit');
-                }} className="px-4 py-2 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-lg font-semibold text-[11px] shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
-                  <Edit size={13} /> Editar
+                <button onClick={()=>{setEditData({id:selectedProd.id,name:selectedProd.name,unitName:selectedProd.unitName,category:selectedProd.category||'',taxId:selectedProd.taxId,cost:selectedProd.cost,utility:selectedProd.utility,observations:selectedProd.observations||'',images:selectedProd.images||(selectedProd.image?[selectedProd.image]:[])});setModalType('edit');}}
+                  className="px-4 py-2 rounded-lg text-[11px] font-semibold shadow-sm cursor-pointer flex items-center gap-1.5"
+                  style={{backgroundColor:'#0071A8',color:'#FFFFFF'}}>
+                  <Edit size={12}/> Editar
                 </button>
-                <button onClick={() => setModalType(null)} className="px-5 py-2 bg-[#0071A8] text-white rounded-lg font-semibold text-xs cursor-pointer">Cerrar</button>
+                <button onClick={()=>setModalType(null)} className="px-5 py-2 rounded-lg text-xs font-semibold cursor-pointer" style={{border:'1px solid #D4DBDB',color:'#64748b'}}>Cerrar</button>
               </div>
             </div>
           </div>
         );
       })()}
 
-      <Footer />
     </div>
   );
 };

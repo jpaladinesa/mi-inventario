@@ -8,7 +8,11 @@ export default {
   theme: {
     extend: {
       // Aquí puedes personalizar colores o fuentes más adelante
+      fontFamily: {
+        sans: ['Montserrat', 'sans-serif'],
+      },
     },
   },
   plugins: [],
 }
+
