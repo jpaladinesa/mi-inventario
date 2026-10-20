@@ -275,7 +275,7 @@ const ConfigurationListView = ({ title, items, setItems, prefix, labelName, labe
   );
 };
 
-// --- MÓDULO DE PRODUCTOS: DISEÑO UNIFICADO ESTILO CRM ---
+// --- MÓDULO DE PRODUCTOS: DISEÑO VISUAL MEJORADO ---
 const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const [csvPreview, setCsvPreview] = useState(null);
   const [priceCsvPreview, setPriceCsvPreview] = useState(null); 
@@ -394,8 +394,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       setWarningModal({
-        title: 'FORMATO NO VÁLIDO',
-        message: 'USE EXCLUSIVAMENTE IMÁGENES EN FORMATO JPG O WEBP.'
+        title: 'Formato no válido',
+        message: 'Use exclusivamente imágenes en formato JPG o WebP.'
       });
       e.target.value = '';
       return;
@@ -403,8 +403,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
     if (file.size > 500 * 1024) {
       setWarningModal({
-        title: 'EXCESO DE PESO',
-        message: 'LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.'
+        title: 'Exceso de peso',
+        message: 'La imagen supera el peso máximo permitido de 500 KB.'
       });
       e.target.value = '';
       return;
@@ -437,8 +437,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       setWarningModal({
-        title: 'FORMATO NO VÁLIDO',
-        message: 'USE EXCLUSIVAMENTE IMÁGENES EN FORMATO JPG O WEBP.'
+        title: 'Formato no válido',
+        message: 'Use exclusivamente imágenes en formato JPG o WebP.'
       });
       e.target.value = '';
       return;
@@ -446,8 +446,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
     if (file.size > 500 * 1024) {
       setWarningModal({
-        title: 'EXCESO DE PESO',
-        message: 'LA IMAGEN SUPERA EL PESO MÁXIMO PERMITIDO DE 500 KB.'
+        title: 'Exceso de peso',
+        message: 'La imagen supera el peso máximo permitido de 500 KB.'
       });
       e.target.value = '';
       return;
@@ -490,22 +490,22 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   const handleAdd = async (e) => {
     e.preventDefault();
     if (taxes.length === 0) {
-      setErrorMsg('DEBE CREAR AL MENOS UN IMPUESTO EN EL MÓDULO DE IMPUESTOS ANTES DE REGISTRAR PRODUCTOS.');
+      setErrorMsg('Debe crear al menos un impuesto en el módulo de Impuestos antes de registrar productos.');
       return;
     }
 
     if (!newProd.category) {
-      setErrorMsg('DEBE SELECCIONAR UNA CATEGORÍA OBLIGATORIA.');
+      setErrorMsg('Debe seleccionar una categoría obligatoria.');
       return;
     }
 
     if (!newProd.taxId) {
-      setErrorMsg('DEBE SELECCIONAR UN IMPUESTO VÁLIDO.');
+      setErrorMsg('Debe seleccionar un impuesto válido.');
       return;
     } 
 
     const cleanName = newProd.name.toUpperCase().trim();
-    if (products.some(p => p.id === newProd.id)) { setErrorMsg('ESTE CÓDIGO ID YA EXISTE'); return; }
+    if (products.some(p => p.id === newProd.id)) { setErrorMsg('Este código ID ya existe.'); return; }
     
     const taxObj = taxes.find(t => t.id === newProd.taxId);
     const finalImages = (newProd.images && newProd.images.length > 0) ? newProd.images.filter(Boolean) : [DEFAULT_CASTILLA_IMAGE];
@@ -524,7 +524,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] }); 
         setErrorMsg('');
     } catch (error) {
-        setErrorMsg('HUBO UN ERROR AL COMUNICARSE CON EL SERVIDOR');
+        setErrorMsg('Hubo un error al comunicarse con el servidor.');
     }
   };
 
@@ -552,8 +552,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
     if (itemsToExport.length === 0) {
       setWarningModal({
-        title: 'CATÁLOGO VACÍO',
-        message: 'NO HAY PRODUCTOS DISPONIBLES PARA EXPORTAR.'
+        title: 'Catálogo vacío',
+        message: 'No hay productos disponibles para exportar.'
       });
       return;
     }
@@ -579,8 +579,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
     if (file.size > 5 * 1024 * 1024) {
       setWarningModal({
-        title: 'ARCHIVO PESADO',
-        message: 'EL ARCHIVO ES DEMASIADO PESADO. EL LÍMITE MÁXIMO ES 5 MB.'
+        title: 'Archivo pesado',
+        message: 'El archivo es demasiado pesado. El límite máximo es 5 MB.'
       });
       return;
     }
@@ -768,7 +768,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
     });
 
     if (hasIncompleteItems) {
-      setBatchError('TODOS LOS PRODUCTOS EN LA BANDEJA DEBEN TENER UN NUEVO COSTO Y UTILIDAD DEFINIDOS.');
+      setBatchError('Todos los productos en la bandeja deben tener un nuevo costo y utilidad definidos.');
       return;
     }
 
@@ -853,8 +853,8 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
 
     if (file.size > 5 * 1024 * 1024) {
       setWarningModal({
-        title: 'ARCHIVO PESADO',
-        message: 'EL ARCHIVO ES DEMASIADO PESADO. EL LÍMITE MÁXIMO ES 5 MB.'
+        title: 'Archivo pesado',
+        message: 'El archivo es demasiado pesado. El límite máximo es 5 MB.'
       });
       return;
     }
@@ -965,135 +965,190 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-6 w-full p-2 md:p-6 text-slate-700">
+    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 gap-4 w-full p-3 md:p-5 text-slate-700">
       
-      {/* 1. ENCABEZADO PRINCIPAL (IDÉNTICO AL CRM) */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b-2 border-slate-100 pb-5 gap-4">
-        <div>
-          <span className="text-[10px] font-mono font-bold text-[#0071A8] tracking-widest uppercase">MÓDULO ADMINISTRATIVO</span>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 uppercase tracking-tight mt-1 flex items-center gap-2">
-            <ShoppingCart size={22} className="text-[#0071A8]" /> GESTIÓN DE PRODUCTOS
-          </h2>
+      {/* ═══════════════════════════════════════════════════════════════
+          1. ENCABEZADO — Compacto, integrado con acciones y tabs
+      ═══════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col gap-3">
+        {/* Fila superior: Título + Tabs */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0071A8] flex items-center justify-center shrink-0">
+              <ShoppingCart size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg md:text-xl font-bold text-slate-800 leading-tight">
+                Gestión de Productos
+              </h2>
+              <p className="text-[11px] text-slate-400 font-medium">Control de catálogo, costos y precios</p>
+            </div>
+          </div>
+          
+          {/* Sub-pestañas */}
+          <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+            <button 
+              onClick={() => setActiveSubTab('create')} 
+              className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'create' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <Plus size={14} /> Nuevo producto
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('list')} 
+              className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'list' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <ClipboardList size={14} /> Catálogo
+              <span className="ml-0.5 px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded-md text-[10px] font-bold">{products.length}</span>
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('prices')} 
+              className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'prices' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <DollarSign size={14} /> Precios y Logs
+            </button>
+          </div>
         </div>
-        
-        {/* SUB-PESTAÑAS ESTILO PÍLDORA (ESTILO CRM EXACTO) */}
-        <div className="flex bg-white p-1.5 rounded-full shadow-sm border border-slate-200 w-fit">
-          <button 
-            onClick={() => setActiveSubTab('create')} 
-            className={`px-5 py-2.5 rounded-full font-bold text-[10px] uppercase transition-all flex items-center gap-2 cursor-pointer ${activeSubTab === 'create' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}
-          >
-            <Plus size={14} /> NUEVO PRODUCTO
+
+        {/* Fila de acciones — integrada bajo el header */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-4 py-2 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-[0.97]">
+            <UploadCloud size={13}/> Cargue nuevos (CSV)
           </button>
-          <button 
-            onClick={() => setActiveSubTab('list')} 
-            className={`px-5 py-2.5 rounded-full font-bold text-[10px] uppercase transition-all flex items-center gap-2 cursor-pointer ${activeSubTab === 'list' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}
-          >
-            <ClipboardList size={14} /> CATÁLOGO ({products.length})
+          <button onClick={() => setModalType('bulkPriceUpload')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-[0.97]">
+            <FileSpreadsheet size={13}/> Actualizar precios (CSV)
           </button>
-          <button 
-            onClick={() => setActiveSubTab('prices')} 
-            className={`px-5 py-2.5 rounded-full font-bold text-[10px] uppercase transition-all flex items-center gap-2 cursor-pointer ${activeSubTab === 'prices' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}
-          >
-            <DollarSign size={14} /> PRECIOS Y LOGS
+          <button onClick={() => exportCatalogCSV(false)} className="bg-white border border-slate-200 text-slate-600 hover:text-[#0071A8] hover:border-[#0071A8] px-4 py-2 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-[0.97]">
+            <Download size={13}/> Exportar catálogo
           </button>
         </div>
       </div>
 
-      {/* 2. BOTONES DE ACCIÓN */}
-      <div className="flex flex-wrap items-center gap-3 w-full justify-start">
-        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-2.5 rounded-xl text-[10px] font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95">
-          <UploadCloud size={14}/> CARGUE NUEVOS (CSV)
-        </button>
-        
-        <button onClick={() => setModalType('bulkPriceUpload')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95">
-          <FileSpreadsheet size={14}/> ACTUALIZAR PRECIOS (CSV)
-        </button>
-
-        <button onClick={() => exportCatalogCSV(false)} className="bg-white border border-slate-200 text-slate-700 hover:text-[#0071A8] hover:border-[#0071A8] px-5 py-2.5 rounded-xl text-[10px] font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95">
-          <Download size={14}/> EXPORTAR CATÁLOGO
-        </button>
-      </div>
-
+      {/* ═══════════════════════════════════════════════════════════════
+          2. TAB: NUEVO PRODUCTO — Grid 4 columnas, más compacto
+      ═══════════════════════════════════════════════════════════════ */}
       {activeSubTab === 'create' && (
-      <div className="bg-white p-6 md:p-8 rounded-[28px] border border-slate-100 shadow-sm w-full space-y-6">
-        <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase border-b border-slate-100 pb-4">
-          <ShoppingCart size={16} className="text-[#0071A8]" /> REGISTRO MANUAL DE PRODUCTO
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm w-full space-y-5">
+        <h3 className="font-semibold text-slate-700 flex items-center gap-2 text-xs border-b border-slate-100 pb-3">
+          <ShoppingCart size={15} className="text-[#0071A8]" /> Registro manual de producto
         </h3>
-        {errorMsg && <div className="p-4 bg-rose-50 border border-rose-200 text-rose-600 font-bold text-[10px] rounded-xl">{errorMsg}</div>}
-        <form className="space-y-6" onSubmit={handleAdd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 items-end">
-            <div className="space-y-1 lg:col-span-1">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">CÓDIGO ID (5 DÍGITOS)</label>
-              <input type="text" maxLength={5} value={newProd.id} onChange={e => {const val = e.target.value.replace(/\D/g, ''); setNewProd({...newProd, id: val});}} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-xs text-center text-slate-800 focus:border-[#0071A8] transition-all" placeholder="00001" required />
+
+        {errorMsg && (
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 font-semibold text-xs rounded-xl flex items-center gap-2">
+            <AlertTriangle size={14} className="shrink-0" /> {errorMsg}
+          </div>
+        )}
+
+        <form className="space-y-4" onSubmit={handleAdd}>
+          {/* Fila 1: ID + Nombre + Unidad */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Código ID</label>
+              <input 
+                type="text" maxLength={5} value={newProd.id} 
+                onChange={e => { const val = e.target.value.replace(/\D/g, ''); setNewProd({...newProd, id: val}); }} 
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-semibold text-xs text-center text-slate-700 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 transition-all" 
+                placeholder="00001" required 
+              />
             </div>
             
-            <div className="space-y-1 lg:col-span-3 relative">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">NOMBRE DEL PRODUCTO</label>
-              <input type="text" maxLength={100} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value.toUpperCase()})} className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-bold text-xs text-slate-800 transition-all shadow-sm" placeholder="DESCRIPCIÓN DETALLADA..." required />
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Nombre del producto</label>
+              <input 
+                type="text" maxLength={100} value={newProd.name} 
+                onChange={e => setNewProd({...newProd, name: e.target.value.toUpperCase()})} 
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-semibold text-xs text-slate-700 transition-all" 
+                placeholder="Descripción detallada del producto..." required 
+              />
             </div>
 
-            <div className="space-y-1 lg:col-span-2">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">U. MEDIDA</label>
-              <select value={newProd.unitName} onChange={e => setNewProd({...newProd, unitName: e.target.value})} className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-slate-800 transition-all shadow-sm" required>
-                 {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">U. Medida</label>
+              <select 
+                value={newProd.unitName} onChange={e => setNewProd({...newProd, unitName: e.target.value})} 
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-semibold text-xs cursor-pointer text-slate-700 transition-all" required
+              >
+                {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Fila 2: Categoría + IVA + Costo + Utilidad */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-[#0071A8] tracking-wide">Categoría *</label>
+              <select 
+                value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})} 
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-semibold text-xs cursor-pointer text-slate-700 transition-all" required
+              >
+                <option value="">Seleccione...</option>
+                {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
 
-            <div className="space-y-1 lg:col-span-2">
-              <label className="text-[9px] font-bold text-[#0071A8] uppercase tracking-widest">CATEGORÍA *</label>
-              <select value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})} className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-slate-800 transition-all shadow-sm" required>
-                 <option value="">SELECCIONE</option>
-                 {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">IVA</label>
+              <select 
+                value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} 
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-semibold text-xs cursor-pointer text-slate-700 transition-all"
+              >
+                <option value="">Seleccione...</option>
+                {taxes.slice().sort((a, b) => a.value - b.value).map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
               </select>
             </div>
 
-            <div className="space-y-1 lg:col-span-2">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">IVA</label>
-              <select value={newProd.taxId} onChange={e => setNewProd({...newProd, taxId: e.target.value})} className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-slate-800 transition-all shadow-sm">
-                 <option value="">SELECCIONE</option>
-                 {taxes.slice().sort((a, b) => a.value - b.value).map(t => <option key={t.id} value={t.id}>{t.name} - {t.value}%</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1 lg:col-span-1">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">COSTO ($)</label>
-              <input type="text" inputMode="numeric" maxLength={7} value={newProd.cost} onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 7) setNewProd({...newProd, cost: v}); }} className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-bold text-xs text-slate-800 transition-all shadow-sm" placeholder="0" required />
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Costo ($)</label>
+              <input 
+                type="text" inputMode="numeric" maxLength={7} value={newProd.cost} 
+                onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 7) setNewProd({...newProd, cost: v}); }} 
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-mono font-semibold text-xs text-slate-700 transition-all" 
+                placeholder="0" required 
+              />
             </div>
             
-            <div className="space-y-1 lg:col-span-1">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">UTILIDAD (%)</label>
-              <input type="text" inputMode="numeric" maxLength={4} value={newProd.utility} onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 4) setNewProd({...newProd, utility: v}); }} className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-bold text-xs text-slate-800 transition-all shadow-sm" placeholder="0" required />
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Utilidad (%)</label>
+              <input 
+                type="text" inputMode="numeric" maxLength={4} value={newProd.utility} 
+                onChange={e => { const v = e.target.value.replace(/\D/g, ''); if(v.length <= 4) setNewProd({...newProd, utility: v}); }} 
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-mono font-semibold text-xs text-slate-700 transition-all" 
+                placeholder="0" required 
+              />
             </div>
+          </div>
 
-            <div className="space-y-1 lg:col-span-6 relative">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">OBSERVACIONES (MÁX 100 CARACTERES)</label>
+          {/* Fila 3: Observaciones + Galería en la misma fila */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Observaciones */}
+            <div className="space-y-1 relative">
+              <label className="text-[11px] font-semibold text-slate-500 tracking-wide">Observaciones (máx 100 caracteres)</label>
               <textarea 
                 maxLength={100} 
-                rows={2}
+                rows={3}
                 value={newProd.observations} 
                 onChange={e => setNewProd({...newProd, observations: e.target.value.toUpperCase()})} 
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] rounded-xl outline-none font-bold text-xs text-slate-800 transition-all resize-y shadow-sm" 
-                placeholder="EJ: PRODUCTO FRÁGIL, ALMACENAR EN SECO..." 
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20 rounded-xl outline-none font-semibold text-xs text-slate-700 transition-all resize-none h-full min-h-[80px]" 
+                placeholder="Ej: Producto frágil, almacenar en seco..." 
               />
-              <span className="absolute bottom-2 right-3 text-[9px] text-slate-400 font-bold">{newProd.observations.length}/100</span>
+              <span className="absolute bottom-2 right-3 text-[10px] text-slate-400 font-medium">{newProd.observations.length}/100</span>
             </div>
 
-            <div className="space-y-2 lg:col-span-6 bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
-                  GALERÍA DE IMÁGENES (HASTA 4 - MÁX 500 KB C/U)
+            {/* Galería de Imágenes — Compacta */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <label className="text-[11px] font-semibold text-slate-500 tracking-wide">
+                  Galería de imágenes (máx 500 KB c/u)
                 </label>
-                <span className="text-[9px] font-mono text-[#0071A8] font-bold">
-                  {(newProd.images || []).filter(Boolean).length} / 4 CARGADAS
+                <span className="text-[10px] font-mono text-[#0071A8] font-medium">
+                  {(newProd.images || []).filter(Boolean).length}/4
                 </span>
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-dashed border-slate-200">
                 {[0, 1, 2, 3].map((index) => {
                   const imgUrl = newProd.images && newProd.images[index];
                   return (
-                    <div key={index} className="relative flex flex-col items-center">
-                      <label className={`w-full h-20 rounded-xl border border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden bg-white shadow-sm hover:border-[#0071A8] group ${imgUrl ? 'border-solid border-[#0071A8]' : 'border-slate-300'}`}>
+                    <div key={index} className="relative">
+                      <label className={`w-full aspect-square rounded-lg border border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden bg-white hover:border-[#0071A8] group ${imgUrl ? 'border-solid border-[#0071A8]/40' : 'border-slate-300'}`}>
                         <input 
                           type="file" 
                           accept="image/jpeg,image/jpg,image/webp" 
@@ -1103,9 +1158,9 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                         {imgUrl ? (
                           <img src={imgUrl} alt={`Imagen ${index + 1}`} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="flex flex-col items-center text-slate-400 group-hover:text-[#0071A8] transition-colors p-1 text-center">
-                            <span className="text-base font-bold leading-none mb-0.5">+</span>
-                            <span className="text-[8px] font-bold uppercase">FOTO {index + 1}</span>
+                          <div className="flex flex-col items-center text-slate-400 group-hover:text-[#0071A8] transition-colors text-center">
+                            <span className="text-lg leading-none">+</span>
+                            <span className="text-[9px] font-semibold">Foto {index + 1}</span>
                           </div>
                         )}
                       </label>
@@ -1113,7 +1168,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                         <button 
                           type="button" 
                           onClick={() => removeImageAt(index)}
-                          className="absolute -top-1.5 -right-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1 shadow-md transition-transform hover:scale-110 cursor-pointer"
+                          className="absolute -top-1 -right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 shadow transition-transform hover:scale-110 cursor-pointer"
                         >
                           <X size={10} />
                         </button>
@@ -1123,99 +1178,117 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                 })}
               </div>
             </div>
-
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <button 
-              type="button" 
-              onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] })}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-[10px] uppercase transition-all cursor-pointer"
-            >
-              LIMPIAR FORMULARIO
-            </button>
-            <button 
-              type="submit" 
-              className="px-6 py-2.5 bg-[#0071A8] hover:bg-[#005c8a] text-white rounded-xl font-bold uppercase text-[10px] tracking-wider shadow-md transition-all cursor-pointer"
-            >
-              REGISTRAR PRODUCTO
-            </button>
+          {/* Barra inferior: Resumen de precios + Botones de acción */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+            {/* Resumen calculado — inline */}
+            <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                <span className="text-[10px] text-slate-500 font-medium">Subtotal</span>
+                <span className="text-sm font-bold text-slate-700 font-mono">{formatCurrency(currentCalcs.subtotal)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">
+                <span className="text-[10px] text-amber-600 font-medium">IVA</span>
+                <span className="text-sm font-bold text-amber-700 font-mono">{formatCurrency(currentCalcs.taxAmount)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-[#e9f4f8] px-3 py-2 rounded-lg border border-[#0071A8]/20">
+                <span className="text-[10px] text-[#0071A8] font-medium">Final</span>
+                <span className="text-base font-bold text-[#0071A8] font-mono">{formatCurrency(currentCalcs.finalPrice)}</span>
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="flex items-center gap-2">
+              <button 
+                type="button" 
+                onClick={() => setNewProd({ id: getNextNumericID(), name: '', unitName: 'UNIDAD', category: '', taxId: '', cost: '', utility: '', observations: '', images: [] })}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl font-semibold text-[11px] transition-all cursor-pointer"
+              >
+                Limpiar
+              </button>
+              <button 
+                type="submit" 
+                className="px-5 py-2.5 bg-[#0071A8] hover:bg-[#005c8a] text-white rounded-xl font-semibold text-[11px] tracking-wide shadow-sm transition-all cursor-pointer"
+              >
+                Registrar producto
+              </button>
+            </div>
           </div>
         </form>
-
-        <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl"><p className="text-[9px] text-slate-400 font-bold mb-1 uppercase">COSTO + UTILIDAD</p><p className="text-lg font-bold text-slate-800 font-mono">{formatCurrency(currentCalcs.subtotal)}</p></div>
-          <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl"><p className="text-[9px] text-amber-600 font-bold mb-1 uppercase">VALOR IVA</p><p className="text-lg font-bold text-amber-700 font-mono">{formatCurrency(currentCalcs.taxAmount)}</p></div>
-          <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl"><p className="text-[9px] text-indigo-600 font-bold mb-1 uppercase">PRECIO FINAL SUGERIDO</p><p className="text-xl font-bold text-indigo-700 font-mono">{formatCurrency(currentCalcs.finalPrice)}</p></div>
-        </div>
       </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════
+          3. TAB: CATÁLOGO — Tabla más limpia y legible
+      ═══════════════════════════════════════════════════════════════ */}
       {activeSubTab === 'list' && (
-      <div className="space-y-6 animate-in fade-in duration-300">
-        <div className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex items-center justify-between gap-4">
+      <div className="space-y-4 animate-in fade-in duration-300">
+        {/* Barra de búsqueda */}
+        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
           <div className="relative flex-1">
             <input
               type="text"
               placeholder="Buscar por ID, nombre, categoría o unidad..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 focus:border-[#0071A8] rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 outline-none uppercase shadow-sm"
+              className="w-full bg-slate-50 border border-slate-200 focus:border-[#0071A8] rounded-xl px-4 py-2.5 text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
             />
           </div>
-          <button onClick={() => exportCatalogCSV(false)} className="px-4 py-2.5 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-xl font-bold text-[10px] uppercase shadow-sm transition-all cursor-pointer">
-            EXPORTAR VISTA (CSV)
+          <button onClick={() => exportCatalogCSV(false)} className="px-4 py-2.5 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-xl font-semibold text-[11px] shadow-sm transition-all cursor-pointer whitespace-nowrap">
+            Exportar vista
           </button>
         </div>
         
-        <div className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden">
-          <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left min-w-[1100px] uppercase">
-              <thead className="bg-slate-50 text-slate-500 text-[10px] font-bold tracking-wider sticky top-0 border-b border-slate-200">
+        {/* Tabla */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="max-h-[520px] overflow-y-auto overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left min-w-[1000px]">
+              <thead className="bg-slate-50/80 text-slate-500 text-[11px] font-semibold sticky top-0 border-b border-slate-200 backdrop-blur-sm">
                 <tr>
-                  <th className="px-5 py-3.5">FOTO</th>
-                  <th className="px-5 py-3.5">CÓDIGO ID</th>
-                  <th className="px-5 py-3.5">PRODUCTO / CATEGORÍA</th>
-                  <th className="px-5 py-3.5 text-center">STOCK DISP.</th>
-                  <th className="px-5 py-3.5 text-right">VALOR BASE</th>
-                  <th className="px-5 py-3.5 text-right">IVA</th>
-                  <th className="px-5 py-3.5 text-right">FINAL</th>
-                  <th className="px-5 py-3.5 text-right">GESTIÓN</th>
+                  <th className="px-4 py-3 w-14">Foto</th>
+                  <th className="px-4 py-3 w-20">ID</th>
+                  <th className="px-4 py-3">Producto / Categoría</th>
+                  <th className="px-4 py-3 text-center w-24">Stock</th>
+                  <th className="px-4 py-3 text-right w-28">Base</th>
+                  <th className="px-4 py-3 text-right w-24">IVA</th>
+                  <th className="px-4 py-3 text-right w-28">Final</th>
+                  <th className="px-4 py-3 text-right w-24">Gestión</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50 text-xs font-semibold text-slate-700">
+              <tbody className="divide-y divide-slate-50 text-xs text-slate-600">
                 {filteredProducts.length === 0 ? (
-                  <tr><td colSpan="8" className="px-6 py-16 text-center text-slate-400 font-semibold">CATÁLOGO VACÍO O BÚSQUEDA SIN RESULTADOS</td></tr>
+                  <tr><td colSpan="8" className="px-6 py-16 text-center text-slate-400 font-medium">Catálogo vacío o búsqueda sin resultados</td></tr>
                 ) : (
                   filteredProducts.map(p => {
                     const c = getCalculatedValues(p.cost, p.utility, p.taxId);
                     const availableStock = calculateAvailableStock(p.id, inventory, orders);
                     const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
                     return (
-                      <tr key={p.id} onClick={() => { setSelectedProd(p); setModalType('productDetail'); }} className="hover:bg-slate-50 transition-colors cursor-pointer group">
-                        <td className="px-5 py-3">
-                          <img src={displayImg} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
+                      <tr key={p.id} onClick={() => { setSelectedProd(p); setModalType('productDetail'); }} className="hover:bg-slate-50/60 transition-colors cursor-pointer group">
+                        <td className="px-4 py-2.5">
+                          <img src={displayImg} alt={p.name} className="w-9 h-9 rounded-lg object-cover border border-slate-200" />
                         </td>
-                        <td className="px-5 py-3 font-mono text-[#0071A8] font-bold">{p.id}</td>
-                        <td className="px-5 py-3">
-                          <p className="font-bold text-slate-800 mb-0.5">{p.name}</p>
-                          <div className="flex gap-2 items-center">
-                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold border border-indigo-100">{p.category || 'N/A'}</span>
-                            <span className="text-[9px] text-slate-400 font-semibold">{p.unitName}</span>
+                        <td className="px-4 py-2.5 font-mono text-[#0071A8] font-semibold text-[11px]">{p.id}</td>
+                        <td className="px-4 py-2.5">
+                          <p className="font-semibold text-slate-800 text-xs mb-0.5 leading-tight">{p.name}</p>
+                          <div className="flex gap-1.5 items-center">
+                            <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-medium">{p.category || 'N/A'}</span>
+                            <span className="text-[10px] text-slate-400">{p.unitName}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-3 text-center">
-                          <span className={`px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={`px-2 py-0.5 rounded-md font-mono text-[11px] font-medium ${availableStock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
                             {availableStock.toFixed(2)}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-right font-mono text-slate-500">{formatCurrency(c.subtotal)}</td>
-                        <td className="px-5 py-3 text-right font-mono text-slate-500">{formatCurrency(c.taxAmount)}</td>
-                        <td className="px-5 py-3 text-right font-bold font-mono text-slate-800">{formatCurrency(c.finalPrice)}</td>
-                        <td className="px-5 py-3 text-right">
-                          <div className="flex justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, category: p.category || '', taxId: p.taxId, cost: p.cost, utility: p.utility, observations: p.observations || '', images: p.images || (p.image ? [p.image] : []) }); setModalType('edit'); }} className="p-2 text-slate-400 hover:bg-[#e9f4f8] hover:text-[#0071A8] rounded-xl transition-all cursor-pointer"><Edit size={14}/></button>
-                            <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all cursor-pointer"><Trash2 size={14}/></button>
+                        <td className="px-4 py-2.5 text-right font-mono text-slate-500 text-[11px]">{formatCurrency(c.subtotal)}</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-slate-400 text-[11px]">{formatCurrency(c.taxAmount)}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold font-mono text-slate-800 text-[11px]">{formatCurrency(c.finalPrice)}</td>
+                        <td className="px-4 py-2.5 text-right">
+                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => { setSelectedProd(p); setEditData({ id: p.id, name: p.name, unitName: p.unitName, category: p.category || '', taxId: p.taxId, cost: p.cost, utility: p.utility, observations: p.observations || '', images: p.images || (p.image ? [p.image] : []) }); setModalType('edit'); }} className="p-1.5 text-slate-400 hover:bg-[#e9f4f8] hover:text-[#0071A8] rounded-lg transition-all cursor-pointer"><Edit size={14}/></button>
+                            <button onClick={() => { setSelectedProd(p); setModalType('deleteFirst'); }} className="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-all cursor-pointer"><Trash2 size={14}/></button>
                           </div>
                         </td>
                       </tr>
@@ -1229,61 +1302,72 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════
+          4. TAB: PRECIOS Y LOGS — Más limpio y legible
+      ═══════════════════════════════════════════════════════════════ */}
       {activeSubTab === 'prices' && (
-      <div className="space-y-6 animate-in fade-in duration-300">
-        <div className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex bg-slate-50 p-1 rounded-xl w-full md:w-auto border border-slate-100">
-            <button onClick={() => setActivePriceSubView('editor')} className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${activePriceSubView === 'editor' ? 'bg-[#0071A8] text-white shadow-sm' : 'text-slate-500 hover:text-[#0071A8]'}`}>BUSCADOR Y SELECCIÓN</button>
-            <button onClick={() => setActivePriceSubView('logs')} className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${activePriceSubView === 'logs' ? 'bg-[#0071A8] text-white shadow-sm' : 'text-slate-500 hover:text-[#0071A8]'}`}>HISTORIAL / BITÁCORA ({priceLogs.length})</button>
+      <div className="space-y-4 animate-in fade-in duration-300">
+        {/* Barra superior */}
+        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
+            <button onClick={() => setActivePriceSubView('editor')} className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all cursor-pointer flex-1 md:flex-none ${activePriceSubView === 'editor' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Buscador y selección</button>
+            <button onClick={() => setActivePriceSubView('logs')} className={`px-4 py-2 rounded-lg font-semibold text-[11px] transition-all cursor-pointer flex-1 md:flex-none ${activePriceSubView === 'logs' ? 'bg-white text-[#0071A8] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              Historial
+              <span className="ml-1.5 px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded-md text-[10px] font-bold">{priceLogs.length}</span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             {selectedPriceIds.length > 0 && (
-              <button onClick={() => exportCatalogCSV(true)} className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[10px] uppercase shadow-sm transition-all cursor-pointer flex items-center gap-2">
-                <Download size={14} /> EXPORTAR SELECCIÓN ({selectedPriceIds.length})
+              <button onClick={() => exportCatalogCSV(true)} className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[11px] shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
+                <Download size={13} /> Exportar ({selectedPriceIds.length})
               </button>
             )}
             {activePriceSubView === 'editor' && (
               <div className="relative flex-1 md:max-w-xs">
-                <input type="text" placeholder="Buscar producto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-50 border border-slate-200 focus:border-[#0071A8] rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 outline-none uppercase" />
+                <input type="text" placeholder="Buscar producto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-50 border border-slate-200 focus:border-[#0071A8] rounded-xl px-3 py-2 text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400" />
               </div>
             )}
           </div>
         </div>
 
+        {/* Sub-vista: Editor de precios */}
         {activePriceSubView === 'editor' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center text-xs font-bold text-slate-600">
-                <span>1. MARCA LOS PRODUCTOS A MODIFICAR ({filteredProducts.length})</span>
-                <span className="text-[#0071A8]">{selectedPriceIds.length} SELECCIONADOS</span>
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex justify-between items-center text-xs text-slate-600">
+                <span className="font-medium">1. Marque los productos a modificar ({filteredProducts.length})</span>
+                <span className="text-[#0071A8] font-semibold">{selectedPriceIds.length} seleccionados</span>
               </div>
               <div className="max-h-[300px] overflow-y-auto overflow-x-auto scrollbar-hide">
-                <table className="w-full text-left min-w-[900px] uppercase">
-                  <thead className="bg-white text-slate-400 text-[10px] font-bold sticky top-0 border-b border-slate-100">
+                <table className="w-full text-left min-w-[800px]">
+                  <thead className="bg-white text-slate-500 text-[11px] font-semibold sticky top-0 border-b border-slate-100">
                     <tr>
-                      <th className="px-4 py-3 text-center w-12">CHECK</th>
-                      <th className="px-4 py-3">ID</th>
-                      <th className="px-4 py-3">PRODUCTO</th>
-                      <th className="px-4 py-3 text-right">COSTO ACTUAL</th>
-                      <th className="px-4 py-3 text-right">UTILIDAD %</th>
-                      <th className="px-4 py-3 text-right">PRECIO FINAL</th>
+                      <th className="px-3 py-2.5 text-center w-12"></th>
+                      <th className="px-3 py-2.5 w-16">ID</th>
+                      <th className="px-3 py-2.5">Producto</th>
+                      <th className="px-3 py-2.5 text-right">Costo actual</th>
+                      <th className="px-3 py-2.5 text-right">Utilidad</th>
+                      <th className="px-3 py-2.5 text-right">Precio final</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 text-xs font-medium text-slate-700">
+                  <tbody className="divide-y divide-slate-50 text-xs text-slate-600">
                     {filteredProducts.map(p => {
                       const isSelected = selectedPriceIds.includes(p.id);
                       const c = getCalculatedValues(p.cost, p.utility, p.taxId);
                       return (
-                        <tr key={p.id} onClick={() => toggleSelectPriceItem(p.id)} className={`hover:bg-slate-50 transition-colors cursor-pointer ${isSelected ? 'bg-indigo-50/50' : ''}`}>
-                          <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                            <input type="checkbox" checked={isSelected} onChange={() => toggleSelectPriceItem(p.id)} className="cursor-pointer w-4 h-4 accent-[#0071A8] rounded" />
+                        <tr key={p.id} onClick={() => toggleSelectPriceItem(p.id)} className={`hover:bg-slate-50/60 transition-colors cursor-pointer ${isSelected ? 'bg-[#0071A8]/5' : ''}`}>
+                          <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                            <input type="checkbox" checked={isSelected} onChange={() => toggleSelectPriceItem(p.id)} className="cursor-pointer w-3.5 h-3.5 accent-[#0071A8] rounded" />
                           </td>
-                          <td className="px-4 py-3 font-mono text-[#0071A8] font-bold">{p.id}</td>
-                          <td className="px-4 py-3"><p className="font-bold text-slate-800">{p.name}</p><span className="text-[10px] text-slate-400">{p.category || 'N/A'}</span></td>
-                          <td className="px-4 py-3 text-right font-mono text-slate-500">{formatCurrency(p.cost)}</td>
-                          <td className="px-4 py-3 text-right font-mono text-slate-500">{p.utility}%</td>
-                          <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{formatCurrency(c.finalPrice)}</td>
+                          <td className="px-3 py-2.5 font-mono text-[#0071A8] font-semibold text-[11px]">{p.id}</td>
+                          <td className="px-3 py-2.5">
+                            <p className="font-semibold text-slate-700">{p.name}</p>
+                            <span className="text-[10px] text-slate-400">{p.category || 'N/A'}</span>
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-500 text-[11px]">{formatCurrency(p.cost)}</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-500 text-[11px]">{p.utility}%</td>
+                          <td className="px-3 py-2.5 text-right font-mono font-semibold text-slate-800 text-[11px]">{formatCurrency(c.finalPrice)}</td>
                         </tr>
                       );
                     })}
@@ -1292,47 +1376,48 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
               </div>
             </div>
 
+            {/* Bandeja inferior de edición */}
             {selectedPriceIds.length > 0 && (
-              <div className="bg-white rounded-[28px] border-2 border-[#0071A8] shadow-lg overflow-hidden animate-in slide-in-from-bottom-3">
-                <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-700 uppercase">2. BANDEJA INFERIOR: ASIGNA NUEVOS COSTOS Y UTILIDADES</span>
-                  <button onClick={() => { setSelectedPriceIds([]); setBatchError(''); }} className="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-bold cursor-pointer">LIMPIAR</button>
+              <div className="bg-white rounded-2xl border-2 border-[#0071A8]/30 shadow-md overflow-hidden animate-in slide-in-from-bottom-3">
+                <div className="px-4 py-3 bg-[#0071A8]/5 border-b border-[#0071A8]/10 flex justify-between items-center">
+                  <span className="text-xs font-semibold text-slate-700">2. Asigne nuevos costos y utilidades</span>
+                  <button onClick={() => { setSelectedPriceIds([]); setBatchError(''); }} className="px-3 py-1 bg-white border border-slate-200 text-slate-500 rounded-lg text-[10px] font-semibold cursor-pointer hover:bg-slate-50">Limpiar todo</button>
                 </div>
-                {batchError && <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-600 font-bold text-xs rounded-xl">{batchError}</div>}
-                <div className="max-h-[350px] overflow-y-auto p-3">
-                  <table className="w-full text-left uppercase text-xs">
-                    <thead className="text-slate-400 text-[10px] font-bold">
+                {batchError && <div className="mx-4 mt-3 p-2.5 bg-rose-50 border border-rose-200 text-rose-600 font-medium text-xs rounded-xl">{batchError}</div>}
+                <div className="max-h-[320px] overflow-y-auto p-3">
+                  <table className="w-full text-left text-xs">
+                    <thead className="text-slate-500 text-[10px] font-semibold">
                       <tr>
-                        <th className="px-3 py-2 w-[30%]">PRODUCTO</th>
-                        <th className="px-3 py-2 text-center w-[35%]">COSTO (ACTUAL ➔ NUEVO)</th>
-                        <th className="px-3 py-2 text-center w-[25%]">UTILIDAD % (ACTUAL ➔ NUEVA)</th>
-                        <th className="px-3 py-2 text-right w-[10%]">QUITAR</th>
+                        <th className="px-3 py-2 w-[30%]">Producto</th>
+                        <th className="px-3 py-2 text-center w-[35%]">Costo (actual → nuevo)</th>
+                        <th className="px-3 py-2 text-center w-[25%]">Utilidad % (actual → nueva)</th>
+                        <th className="px-3 py-2 text-right w-[10%]"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50 font-medium">
+                    <tbody className="divide-y divide-slate-50">
                       {selectedPriceIds.map(id => {
                         const p = products.find(prod => prod.id === id);
                         if (!p) return null;
                         const edits = batchEdits[id] || { cost: '', utility: String(p.utility || '') };
                         return (
-                          <tr key={p.id} className="hover:bg-slate-50">
-                            <td className="px-3 py-3 truncate font-bold text-slate-800">#{p.id} - {p.name}</td>
-                            <td className="px-3 py-3 text-center">
+                          <tr key={p.id} className="hover:bg-slate-50/60">
+                            <td className="px-3 py-2.5 truncate font-semibold text-slate-700">#{p.id} - {p.name}</td>
+                            <td className="px-3 py-2.5 text-center">
                               <div className="flex items-center justify-center gap-2">
-                                <span className="font-mono text-slate-400 text-xs">{formatCurrency(p.cost)}</span>
-                                <span>➔</span>
-                                <input type="text" inputMode="numeric" maxLength={7} value={edits.cost} placeholder="NUEVO" onChange={(e) => handleBatchEditChange(p.id, 'cost', e.target.value)} className="w-24 px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-mono text-xs text-center font-bold text-slate-800 outline-none focus:border-[#0071A8]" />
+                                <span className="font-mono text-slate-400 text-[11px]">{formatCurrency(p.cost)}</span>
+                                <span className="text-slate-300">→</span>
+                                <input type="text" inputMode="numeric" maxLength={7} value={edits.cost} placeholder="Nuevo" onChange={(e) => handleBatchEditChange(p.id, 'cost', e.target.value)} className="w-24 px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-mono text-xs text-center font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
+                            <td className="px-3 py-2.5 text-center">
                               <div className="flex items-center justify-center gap-2">
-                                <span className="font-mono text-slate-400 text-xs">{p.utility}%</span>
-                                <span>➔</span>
-                                <input type="text" inputMode="numeric" maxLength={4} value={edits.utility} placeholder="NUEVA" onChange={(e) => handleBatchEditChange(p.id, 'utility', e.target.value)} className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-mono text-xs text-center font-bold text-slate-800 outline-none focus:border-[#0071A8]" />
+                                <span className="font-mono text-slate-400 text-[11px]">{p.utility}%</span>
+                                <span className="text-slate-300">→</span>
+                                <input type="text" inputMode="numeric" maxLength={4} value={edits.utility} placeholder="Nueva" onChange={(e) => handleBatchEditChange(p.id, 'utility', e.target.value)} className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-lg font-mono text-xs text-center font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-right">
-                              <button onClick={() => removeItemFromBatch(p.id)} className="p-1.5 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg transition-all cursor-pointer"><X size={14}/></button>
+                            <td className="px-3 py-2.5 text-right">
+                              <button onClick={() => removeItemFromBatch(p.id)} className="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-all cursor-pointer"><X size={13}/></button>
                             </td>
                           </tr>
                         );
@@ -1340,40 +1425,54 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     </tbody>
                   </table>
                 </div>
-                <div className="p-4 bg-white border-t border-slate-100 flex justify-end">
-                  <button onClick={prepareBatchUpdateConfirmation} className="px-6 py-2.5 bg-[#0071A8] hover:bg-[#005c8a] text-white rounded-xl font-bold text-[10px] uppercase shadow-md cursor-pointer">APLICAR CAMBIOS DE LA BANDEJA</button>
+                <div className="px-4 py-3 bg-white border-t border-slate-100 flex justify-end">
+                  <button onClick={prepareBatchUpdateConfirmation} className="px-5 py-2.5 bg-[#0071A8] hover:bg-[#005c8a] text-white rounded-xl font-semibold text-[11px] shadow-sm cursor-pointer">Aplicar cambios</button>
                 </div>
               </div>
             )}
           </div>
         )}
 
+        {/* Sub-vista: Historial / Bitácora */}
         {activePriceSubView === 'logs' && (
-          <div className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden">
-            <div className="max-h-[500px] overflow-y-auto">
-              <table className="w-full text-left uppercase text-xs">
-                <thead className="bg-slate-50 text-slate-400 text-[10px] font-bold sticky top-0">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="max-h-[520px] overflow-y-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/80 text-slate-500 text-[11px] font-semibold sticky top-0 border-b border-slate-200">
                   <tr>
-                    <th className="px-5 py-3.5">ID MOVIMIENTO</th>
-                    <th className="px-5 py-3.5">PRODUCTO</th>
-                    <th className="px-5 py-3.5 text-center">COSTO (ANTES → AHORA)</th>
-                    <th className="px-5 py-3.5 text-center">UTILIDAD % (ANTES → AHORA)</th>
-                    <th className="px-5 py-3.5">FECHA Y HORA</th>
-                    <th className="px-5 py-3.5">MODO</th>
+                    <th className="px-4 py-3">ID Mov.</th>
+                    <th className="px-4 py-3">Producto</th>
+                    <th className="px-4 py-3 text-center">Costo (antes → ahora)</th>
+                    <th className="px-4 py-3 text-center">Utilidad % (antes → ahora)</th>
+                    <th className="px-4 py-3">Fecha y hora</th>
+                    <th className="px-4 py-3">Modo</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 font-medium">
+                <tbody className="divide-y divide-slate-50 text-slate-600">
                   {priceLogs.length === 0 ? (
-                    <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-400 font-semibold">NO HAY REGISTROS EN LA BITÁCORA</td></tr>
+                    <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-400 font-medium">No hay registros en la bitácora</td></tr>
                   ) : (
                     priceLogs.map(log => (
-                      <tr key={log.moveId} className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-mono text-[#0071A8] font-bold">{log.moveId}</td>
-                        <td className="px-5 py-3"><p className="font-bold text-slate-800">{log.productName}</p><span className="text-[10px] text-slate-400 font-mono">ID: {log.productId}</span></td>
-                        <td className="px-5 py-3 text-center font-mono"><span className="text-slate-400">{formatCurrency(log.oldCost)}</span> ➔ <span className="font-bold text-slate-800">{formatCurrency(log.newCost)}</span></td>
-                        <td className="px-5 py-3 text-center font-mono"><span className="text-slate-400">{log.oldUtility}%</span> ➔ <span className="font-bold text-slate-800">{log.newUtility}%</span></td>
-                        <td className="px-5 py-3 text-slate-500 font-mono text-[11px]">{log.timestamp}</td>
-                        <td className="px-5 py-3"><span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[9px] font-bold border border-indigo-100">{log.mode}</span></td>
+                      <tr key={log.moveId} className="hover:bg-slate-50/60">
+                        <td className="px-4 py-2.5 font-mono text-[#0071A8] font-semibold text-[11px]">{log.moveId}</td>
+                        <td className="px-4 py-2.5">
+                          <p className="font-semibold text-slate-700">{log.productName}</p>
+                          <span className="text-[10px] text-slate-400 font-mono">ID: {log.productId}</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-center font-mono text-[11px]">
+                          <span className="text-slate-400">{formatCurrency(log.oldCost)}</span>
+                          <span className="text-slate-300 mx-1">→</span>
+                          <span className="font-semibold text-slate-700">{formatCurrency(log.newCost)}</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-center font-mono text-[11px]">
+                          <span className="text-slate-400">{log.oldUtility}%</span>
+                          <span className="text-slate-300 mx-1">→</span>
+                          <span className="font-semibold text-slate-700">{log.newUtility}%</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-400 font-mono text-[11px]">{log.timestamp}</td>
+                        <td className="px-4 py-2.5">
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-medium">{log.mode}</span>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1385,94 +1484,111 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
       </div>
       )}
 
-      {/* --- MODALES --- */}
+      {/* ═══════════════════════════════════════════════════════════════
+          MODALES — Más limpios, rounded-2xl, texto legible
+      ═══════════════════════════════════════════════════════════════ */}
+
+      {/* Modal de éxito en precios */}
       {priceSuccessModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[120] flex items-center justify-center p-4 uppercase">
-          <div className="bg-white rounded-[28px] shadow-xl p-6 w-full max-w-sm text-center border border-slate-100 space-y-4">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[120] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center border border-slate-100 space-y-4">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto"><Check size={24} /></div>
-            <h3 className="text-base font-bold text-slate-800">ACTUALIZACIÓN EXITOSA</h3>
-            <p className="text-xs text-slate-500 font-medium">Se modificaron <span className="text-[#0071A8] font-bold">{priceSuccessModal.count} precios</span> correctamente.</p>
-            <button onClick={() => setPriceSuccessModal(null)} className="w-full py-2.5 bg-[#0071A8] text-white rounded-xl font-bold text-xs uppercase cursor-pointer">ENTENDIDO</button>
+            <h3 className="text-base font-bold text-slate-800">Actualización exitosa</h3>
+            <p className="text-xs text-slate-500 font-medium">Se modificaron <span className="text-[#0071A8] font-semibold">{priceSuccessModal.count} precios</span> correctamente.</p>
+            <button onClick={() => setPriceSuccessModal(null)} className="w-full py-2.5 bg-[#0071A8] text-white rounded-xl font-semibold text-xs cursor-pointer">Entendido</button>
           </div>
         </div>
       )}
 
+      {/* Modal de advertencia */}
       {warningModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[130] flex items-center justify-center p-4 uppercase">
-          <div className="bg-white rounded-[28px] shadow-xl p-6 w-full max-w-sm text-center border border-slate-100 space-y-4">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[130] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center border border-slate-100 space-y-4">
             <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto"><AlertTriangle size={24} /></div>
             <h3 className="text-base font-bold text-slate-800">{warningModal.title}</h3>
-            <p className="text-xs text-slate-600 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100">{warningModal.message}</p>
-            <button onClick={() => setWarningModal(null)} className="w-full py-2.5 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase cursor-pointer">ENTENDIDO</button>
+            <p className="text-xs text-slate-600 font-medium bg-slate-50 p-3 rounded-xl">{warningModal.message}</p>
+            <button onClick={() => setWarningModal(null)} className="w-full py-2.5 bg-slate-800 text-white rounded-xl font-semibold text-xs cursor-pointer">Entendido</button>
           </div>
         </div>
       )}
 
+      {/* Modal de confirmación de precios */}
       {priceConfirmModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 uppercase">
-          <div className="bg-white rounded-[28px] shadow-xl p-6 w-full max-w-xl text-left border border-slate-100 space-y-4">
-            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2"><AlertTriangle size={20} className="text-amber-500" /> CONFIRMAR ACTUALIZACIÓN DE PRECIOS</h3>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xl text-left border border-slate-100 space-y-4">
+            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <AlertTriangle size={18} className="text-amber-500" /> Confirmar actualización de precios
+            </h3>
             <div className="max-h-60 overflow-y-auto border border-slate-100 rounded-xl">
-              <table className="w-full text-left uppercase text-xs">
-                <thead className="bg-slate-50 text-slate-400 text-[10px] font-bold sticky top-0">
-                  <tr><th className="px-3 py-2">PRODUCTO</th><th className="px-3 py-2 text-center">COSTO</th><th className="px-3 py-2 text-center">PRECIO FINAL</th></tr>
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-semibold sticky top-0">
+                  <tr><th className="px-3 py-2">Producto</th><th className="px-3 py-2 text-center">Costo</th><th className="px-3 py-2 text-center">Precio final</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 font-medium">
+                <tbody className="divide-y divide-slate-50">
                   {priceConfirmModal.items.map((item, idx) => (
-                    <tr key={idx} className={item.isPriceDrop ? 'bg-amber-50/50' : ''}>
-                      <td className="px-3 py-2 font-bold">{item.name}</td>
-                      <td className="px-3 py-2 text-center font-mono">{formatCurrency(item.oldCost)} ➔ {formatCurrency(item.newCost)}</td>
-                      <td className="px-3 py-2 text-center font-mono font-bold">{formatCurrency(item.oldFinalPrice)} ➔ {formatCurrency(item.newFinalPrice)}</td>
+                    <tr key={idx} className={item.isPriceDrop ? 'bg-amber-50/40' : ''}>
+                      <td className="px-3 py-2 font-semibold text-slate-700">{item.name}</td>
+                      <td className="px-3 py-2 text-center font-mono text-[11px]">
+                        <span className="text-slate-400">{formatCurrency(item.oldCost)}</span> → <span className="font-semibold text-slate-700">{formatCurrency(item.newCost)}</span>
+                      </td>
+                      <td className="px-3 py-2 text-center font-mono text-[11px]">
+                        <span className="text-slate-400">{formatCurrency(item.oldFinalPrice)}</span> → <span className="font-bold text-slate-800">{formatCurrency(item.newFinalPrice)}</span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setPriceConfirmModal(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase cursor-pointer">CANCELAR</button>
-              <button onClick={executeConfirmedBatchUpdates} className="flex-1 py-2.5 bg-[#0071A8] text-white rounded-xl font-bold text-xs uppercase shadow-md cursor-pointer">CONFIRMAR Y APLICAR</button>
+              <button onClick={() => setPriceConfirmModal(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
+              <button onClick={executeConfirmedBatchUpdates} className="flex-1 py-2.5 bg-[#0071A8] text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer">Confirmar y aplicar</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* --- MODAL CARGUE NUEVOS --- */}
+      {/* Modal cargue nuevos productos */}
       {modalType === 'bulkUpload' && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase">
-          <div className={`bg-white rounded-[28px] shadow-xl p-6 w-full text-center text-slate-800 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className={`bg-white rounded-2xl shadow-xl p-6 w-full text-center text-slate-800 ${csvPreview ? 'max-w-3xl' : 'max-w-md'}`}>
             {!csvPreview ? (
               <>
                 <div className="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4"><FileSpreadsheet size={28} /></div>
-                <h3 className="font-bold text-base mb-1">CARGUE MASIVO DE PRODUCTOS</h3>
-                <p className="text-[11px] text-slate-400 font-medium mb-5">ID, NOMBRE, UNIDAD, CATEGORIA, COSTO, UTILIDAD, IVA(%), OBSERVACIONES</p>
-                <button onClick={downloadTemplate} className="w-full mb-4 py-2.5 border border-[#0071A8] text-[#0071A8] rounded-xl font-bold text-[10px] hover:bg-slate-50 uppercase flex items-center justify-center gap-2 cursor-pointer">
-                  <Download size={14}/> DESCARGAR PLANTILLA MAESTRA
+                <h3 className="font-bold text-base mb-1">Cargue masivo de productos</h3>
+                <p className="text-[11px] text-slate-500 font-medium mb-5">ID, Nombre, Unidad, Categoría, Costo, Utilidad, IVA(%), Observaciones</p>
+                <button onClick={downloadTemplate} className="w-full mb-3 py-2.5 border border-[#0071A8] text-[#0071A8] rounded-xl font-semibold text-[11px] hover:bg-slate-50 flex items-center justify-center gap-2 cursor-pointer">
+                  <Download size={14}/> Descargar plantilla maestra
                 </button>
-                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-4">
+                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-[#0071A8]/40 transition-colors mb-3">
                   <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                  <UploadCloud size={24} className="mx-auto text-slate-400 mb-2"/>
-                  <span className="text-xs font-bold text-slate-600 uppercase">SELECCIONAR ARCHIVO CSV</span>
+                  <UploadCloud size={22} className="mx-auto text-slate-400 mb-2"/>
+                  <span className="text-xs font-semibold text-slate-500">Seleccionar archivo CSV</span>
                 </label>
-                <button onClick={() => setModalType(null)} className="w-full py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs cursor-pointer">CANCELAR</button>
+                <button onClick={() => setModalType(null)} className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-200">Cancelar</button>
               </>
             ) : (
               <div className="space-y-4 text-left">
-                <h3 className="font-bold text-base text-slate-800">VISTA PREVIA DE NUEVOS PRODUCTOS</h3>
+                <h3 className="font-bold text-base text-slate-800">Vista previa de nuevos productos</h3>
                 <div className="max-h-56 overflow-y-auto border border-slate-100 rounded-xl">
-                  <table className="w-full text-left uppercase text-xs">
-                    <thead className="bg-slate-50 text-slate-400 text-[10px] font-bold sticky top-0">
-                      <tr><th className="px-3 py-2">ID</th><th className="px-3 py-2">PRODUCTO</th><th className="px-3 py-2 text-right">COSTO</th><th className="px-3 py-2 text-center">UTILIDAD</th></tr>
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-semibold sticky top-0">
+                      <tr><th className="px-3 py-2">ID</th><th className="px-3 py-2">Producto</th><th className="px-3 py-2 text-right">Costo</th><th className="px-3 py-2 text-center">Utilidad</th></tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50 font-medium">
+                    <tbody className="divide-y divide-slate-50">
                       {csvPreview.validRows.map((row, idx) => (
-                        <tr key={idx}><td className="px-3 py-2 font-mono text-[#0071A8] font-bold">{row.id}</td><td className="px-3 py-2">{row.name}</td><td className="px-3 py-2 text-right font-mono">{row.cost}</td><td className="px-3 py-2 text-center">{row.utility}%</td></tr>
+                        <tr key={idx}>
+                          <td className="px-3 py-2 font-mono text-[#0071A8] font-semibold text-[11px]">{row.id}</td>
+                          <td className="px-3 py-2 font-medium text-slate-700">{row.name}</td>
+                          <td className="px-3 py-2 text-right font-mono text-slate-500">{row.cost}</td>
+                          <td className="px-3 py-2 text-center font-mono text-slate-500">{row.utility}%</td>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setCsvPreview(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase cursor-pointer">CANCELAR</button>
-                  <button onClick={() => { setProducts([...csvPreview.validRows, ...products]); setCsvPreview(null); setModalType(null); }} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase shadow-md cursor-pointer">IMPORTAR {csvPreview.validRows.length} REGISTROS</button>
+                  <button onClick={() => setCsvPreview(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
+                  <button onClick={() => { setProducts([...csvPreview.validRows, ...products]); setCsvPreview(null); setModalType(null); }} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer">Importar {csvPreview.validRows.length} registros</button>
                 </div>
               </div>
             )}
@@ -1480,42 +1596,47 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         </div>
       )}
 
-      {/* --- MODAL CARGUE PRECIOS --- */}
+      {/* Modal cargue masivo de precios */}
       {modalType === 'bulkPriceUpload' && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase">
-          <div className={`bg-white rounded-[28px] shadow-xl p-6 w-full text-center text-slate-800 ${priceCsvPreview ? 'max-w-2xl' : 'max-w-md'}`}>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className={`bg-white rounded-2xl shadow-xl p-6 w-full text-center text-slate-800 ${priceCsvPreview ? 'max-w-2xl' : 'max-w-md'}`}>
             {!priceCsvPreview ? (
               <>
                 <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><FileSpreadsheet size={28} /></div>
-                <h3 className="font-bold text-base mb-1">ACTUALIZACIÓN MASIVA DE PRECIOS</h3>
-                <button onClick={() => exportCatalogCSV(false)} className="w-full mb-4 py-2.5 border border-slate-200 text-[#0071A8] rounded-xl font-bold text-[10px] hover:bg-slate-50 uppercase flex items-center justify-center gap-2 cursor-pointer">
-                  <Download size={14}/> 📥 DESCARGAR CATÁLOGO ACTUAL
+                <h3 className="font-bold text-base mb-1">Actualización masiva de precios</h3>
+                <button onClick={() => exportCatalogCSV(false)} className="w-full mb-3 py-2.5 border border-slate-200 text-[#0071A8] rounded-xl font-semibold text-[11px] hover:bg-slate-50 flex items-center justify-center gap-2 cursor-pointer">
+                  <Download size={14}/> Descargar catálogo actual
                 </button>
-                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors mb-4">
+                <label className="block w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-emerald-300 transition-colors mb-3">
                   <input type="file" accept=".csv" className="hidden" onChange={handlePriceFileUpload} />
-                  <UploadCloud size={24} className="mx-auto text-slate-400 mb-2"/>
-                  <span className="text-xs font-bold text-slate-600 uppercase">SELECCIONAR CSV MODIFICADO</span>
+                  <UploadCloud size={22} className="mx-auto text-slate-400 mb-2"/>
+                  <span className="text-xs font-semibold text-slate-500">Seleccionar CSV modificado</span>
                 </label>
-                <button onClick={() => setModalType(null)} className="w-full py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs cursor-pointer">CANCELAR</button>
+                <button onClick={() => setModalType(null)} className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-200">Cancelar</button>
               </>
             ) : (
               <div className="space-y-4 text-left">
-                <h3 className="font-bold text-base text-slate-800">VISTA PREVIA DE CAMBIOS DE PRECIO</h3>
+                <h3 className="font-bold text-base text-slate-800">Vista previa de cambios de precio</h3>
                 <div className="max-h-56 overflow-y-auto border border-slate-100 rounded-xl">
-                  <table className="w-full text-left uppercase text-xs">
-                    <thead className="bg-slate-50 text-slate-400 text-[10px] font-bold sticky top-0">
-                      <tr><th className="px-3 py-2">PRODUCTO</th><th className="px-3 py-2 text-center">COSTO (ANTES ➔ NUEVO)</th></tr>
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-semibold sticky top-0">
+                      <tr><th className="px-3 py-2">Producto</th><th className="px-3 py-2 text-center">Costo (antes → nuevo)</th></tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50 font-medium">
+                    <tbody className="divide-y divide-slate-50">
                       {priceCsvPreview.validRows.map((row, idx) => (
-                        <tr key={idx}><td className="px-3 py-2 font-bold">#{row.id} - {row.name}</td><td className="px-3 py-2 text-center font-mono">{formatCurrency(row.oldCost)} ➔ {formatCurrency(row.newCost)}</td></tr>
+                        <tr key={idx}>
+                          <td className="px-3 py-2 font-semibold text-slate-700">#{row.id} - {row.name}</td>
+                          <td className="px-3 py-2 text-center font-mono text-[11px]">
+                            <span className="text-slate-400">{formatCurrency(row.oldCost)}</span> → <span className="font-semibold text-slate-700">{formatCurrency(row.newCost)}</span>
+                          </td>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setPriceCsvPreview(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase cursor-pointer">CANCELAR</button>
-                  <button onClick={executePriceBulkUpdate} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase shadow-md cursor-pointer">CONFIRMAR Y ACTUALIZAR</button>
+                  <button onClick={() => setPriceCsvPreview(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
+                  <button onClick={executePriceBulkUpdate} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer">Confirmar y actualizar</button>
                 </div>
               </div>
             )}
@@ -1523,79 +1644,114 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
         </div>
       )}
 
-      {/* --- MODAL EDICIÓN Y ELIMINACIÓN --- */}
+      {/* Modal de edición / eliminación */}
       {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto">
-          <div className={`bg-white rounded-[28px] shadow-xl overflow-hidden w-full max-w-md p-6 ${modalType === 'deleteSecond' ? 'border-2 border-rose-500' : ''}`}>
-            <div className="flex flex-col items-center text-center gap-3 mb-4">
-              <div className={`p-3 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-500'}`}>
-                {modalType === 'edit' ? <Edit size={24} /> : modalType === 'updateConfirm' ? <Info size={24} /> : <AlertTriangle size={24} />}
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+          <div className={`bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md p-6 ${modalType === 'deleteSecond' ? 'border-2 border-rose-400' : ''}`}>
+            <div className="flex flex-col items-center text-center gap-2 mb-4">
+              <div className={`p-2.5 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-500'}`}>
+                {modalType === 'edit' ? <Edit size={22} /> : modalType === 'updateConfirm' ? <Info size={22} /> : <AlertTriangle size={22} />}
               </div>
               <h3 className="font-bold text-base text-slate-800">
-                {modalType === 'edit' ? 'EDITAR PRODUCTO' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR PRODUCTO'}
+                {modalType === 'edit' ? 'Editar producto' : modalType === 'updateConfirm' ? 'Confirmar cambios' : 'Eliminar producto'}
               </h3>
             </div>
             
             {modalType === 'edit' && (
               <div className="space-y-3 max-h-[50vh] overflow-y-auto px-1">
-                <div><label className="text-[9px] font-bold text-slate-400">CÓDIGO ID</label><input type="text" value={editData.id} disabled className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 text-center" /></div>
-                <div><label className="text-[9px] font-bold text-slate-400">NOMBRE</label><input type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0071A8]" /></div>
                 <div>
-                  <label className="text-[9px] font-bold text-slate-400">CATEGORÍA</label>
-                  <select value={editData.category} onChange={(e) => setEditData({...editData, category: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0071A8]">
+                  <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Código ID</label>
+                  <input type="text" value={editData.id} disabled className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono text-slate-400 text-center" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Nombre</label>
+                  <input type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Categoría</label>
+                  <select value={editData.category} onChange={(e) => setEditData({...editData, category: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0071A8] cursor-pointer">
                     {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="text-[9px] font-bold text-slate-400">COSTO</label><input type="number" value={editData.cost} onChange={(e) => setEditData({...editData, cost: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0071A8]" /></div>
-                  <div><label className="text-[9px] font-bold text-slate-400">UTILIDAD %</label><input type="number" value={editData.utility} onChange={(e) => setEditData({...editData, utility: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0071A8]" /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Costo</label>
+                    <input type="number" value={editData.cost} onChange={(e) => setEditData({...editData, cost: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Utilidad %</label>
+                    <input type="number" value={editData.utility} onChange={(e) => setEditData({...editData, utility: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-700 outline-none focus:border-[#0071A8] focus:ring-1 focus:ring-[#0071A8]/20" />
+                  </div>
                 </div>
               </div>
             )}
-            {modalType === 'updateConfirm' && <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl"><p className="text-indigo-700 font-bold text-[10px] text-center uppercase">⚠️ SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
-            {modalType === 'deleteSecond' && <p className="text-xs text-rose-600 font-bold text-center my-4">ACCIÓN IRREVERSIBLE. SE ELIMINARÁ: {selectedProd?.name}</p>}
+            {modalType === 'updateConfirm' && <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl"><p className="text-amber-700 font-medium text-xs text-center">⚠️ Este cambio afectará a todo el sistema.</p></div>}
+            {modalType === 'deleteSecond' && <p className="text-xs text-rose-600 font-medium text-center my-4">Acción irreversible. Se eliminará: <span className="font-bold">{selectedProd?.name}</span></p>}
 
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setModalType(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase cursor-pointer">CANCELAR</button>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setModalType(null)} className="flex-1 py-2.5 border border-slate-200 text-slate-500 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50">Cancelar</button>
               <button onClick={() => {
                 if (modalType === 'edit') setModalType('updateConfirm');
                 else if (modalType === 'updateConfirm') executeUpdate();
                 else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                 else if (modalType === 'deleteSecond') { setProducts(products.filter(p => p.id !== selectedProd.id)); setModalType(null); }
-              }} className={`flex-1 py-2.5 text-white rounded-xl font-bold text-xs uppercase shadow-md cursor-pointer ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#0071A8]' : 'bg-rose-600'}`}>ACEPTAR</button>
+              }} className={`flex-1 py-2.5 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#0071A8]' : 'bg-rose-600'}`}>Aceptar</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* --- MODAL DETALLE PRODUCTO --- */}
+      {/* Modal detalle de producto */}
       {modalType === 'productDetail' && selectedProd && (() => {
         const c = getCalculatedValues(selectedProd.cost, selectedProd.utility, selectedProd.taxId);
         const availableStock = calculateAvailableStock(selectedProd.id, inventory, orders);
         const prodImages = (selectedProd.images && selectedProd.images.length > 0) ? selectedProd.images : [selectedProd.image || DEFAULT_CASTILLA_IMAGE];
         return (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase">
-            <div className="bg-white rounded-[28px] shadow-xl p-6 w-full max-w-lg text-left border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-lg text-left border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start border-b border-slate-100 pb-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-[#0071A8]">PRODUCTO #{selectedProd.id}</span>
-                  <h3 className="text-lg font-bold text-slate-800">{selectedProd.name}</h3>
+                  <span className="text-[10px] font-mono font-semibold text-[#0071A8]">Producto #{selectedProd.id}</span>
+                  <h3 className="text-lg font-bold text-slate-800 leading-tight">{selectedProd.name}</h3>
                 </div>
-                <button onClick={() => setModalType(null)} className="p-2 rounded-xl bg-slate-100 text-slate-500 cursor-pointer"><X size={16}/></button>
+                <button onClick={() => setModalType(null)} className="p-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-pointer hover:bg-slate-200"><X size={16}/></button>
               </div>
+
+              {/* Galería de miniaturas */}
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {prodImages.map((img, i) => <img key={i} src={img} alt="Prod" className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0" />)}
+                {prodImages.map((img, i) => <img key={i} src={img} alt="Prod" className="w-14 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />)}
               </div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="bg-slate-50 p-3 rounded-xl"><span className="text-[9px] text-slate-400 font-bold block">STOCK DISPONIBLE</span><span className="font-bold text-slate-800 font-mono">{availableStock.toFixed(2)}</span></div>
-                <div className="bg-slate-50 p-3 rounded-xl"><span className="text-[9px] text-slate-400 font-bold block">CATEGORÍA</span><span className="font-bold text-slate-800">{selectedProd.category || 'N/A'}</span></div>
+
+              {/* Info rápida */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-slate-50 p-3 rounded-xl">
+                  <span className="text-[10px] text-slate-400 font-medium block mb-0.5">Stock disponible</span>
+                  <span className="font-semibold text-slate-700 font-mono">{availableStock.toFixed(2)}</span>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl">
+                  <span className="text-[10px] text-slate-400 font-medium block mb-0.5">Categoría</span>
+                  <span className="font-semibold text-slate-700">{selectedProd.category || 'N/A'}</span>
+                </div>
               </div>
-              <div className="bg-[#e9f4f8] p-4 rounded-2xl border border-[#0071A8]/20 space-y-2 text-xs font-bold text-slate-700">
-                <div className="flex justify-between"><span>SUBTOTAL:</span><span className="font-mono">{formatCurrency(c.subtotal)}</span></div>
-                <div className="flex justify-between text-amber-700"><span>IVA:</span><span className="font-mono">{formatCurrency(c.taxAmount)}</span></div>
-                <div className="border-t border-[#0071A8]/20 pt-2 flex justify-between text-sm text-[#0071A8]"><span>PRECIO FINAL:</span><span className="font-mono">{formatCurrency(c.finalPrice)}</span></div>
+
+              {/* Desglose de precio */}
+              <div className="bg-[#f0f7fb] p-4 rounded-xl border border-[#0071A8]/10 space-y-2 text-xs text-slate-600">
+                <div className="flex justify-between">
+                  <span className="font-medium">Subtotal</span>
+                  <span className="font-mono font-semibold">{formatCurrency(c.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-amber-700">
+                  <span className="font-medium">IVA</span>
+                  <span className="font-mono font-semibold">{formatCurrency(c.taxAmount)}</span>
+                </div>
+                <div className="border-t border-[#0071A8]/10 pt-2 flex justify-between text-sm text-[#0071A8]">
+                  <span className="font-semibold">Precio final</span>
+                  <span className="font-mono font-bold">{formatCurrency(c.finalPrice)}</span>
+                </div>
               </div>
-              <div className="flex justify-between items-center pt-2">
+
+              {/* Acciones */}
+              <div className="flex justify-between items-center pt-1">
                 <button onClick={() => {
                   setEditData({
                     id: selectedProd.id,
@@ -1609,10 +1765,10 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
                     images: selectedProd.images || (selectedProd.image ? [selectedProd.image] : [])
                   });
                   setModalType('edit');
-                }} className="px-4 py-2.5 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-xl font-bold text-[10px] uppercase shadow-sm transition-all cursor-pointer">
-                  ✏️ EDITAR Y FOTOS
+                }} className="px-4 py-2 bg-[#134b60] hover:bg-[#0f3c4c] text-white rounded-lg font-semibold text-[11px] shadow-sm transition-all cursor-pointer flex items-center gap-1.5">
+                  <Edit size={13} /> Editar
                 </button>
-                <button onClick={() => setModalType(null)} className="px-6 py-2.5 bg-[#0071A8] text-white rounded-xl font-bold text-xs uppercase cursor-pointer">CERRAR</button>
+                <button onClick={() => setModalType(null)} className="px-5 py-2 bg-[#0071A8] text-white rounded-lg font-semibold text-xs cursor-pointer">Cerrar</button>
               </div>
             </div>
           </div>
