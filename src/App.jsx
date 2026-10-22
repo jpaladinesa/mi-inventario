@@ -6343,7 +6343,7 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
   );
 };
 
-// --- MÓDULO CRM (100% COMPLETO Y CORREGIDO: TIPOGRAFÍA MONTSERRAT REFINADA) ---
+// --- MÓDULO CRM E INTELIGENCIA COMERCIAL: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const CRMView = ({ products, clients, inventory, orders }) => {
   const [activeSubTab, setActiveSubTab] = useState('metrics');
   
@@ -6351,6 +6351,12 @@ const CRMView = ({ products, clients, inventory, orders }) => {
   const [filterType, setFilterType] = useState('all'); // 'all', 'today', 'week', 'month', 'custom'
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // Helper seguro para formateo de moneda (respeta global si existe)
+  const safeFormatCurrency = (val) => {
+    if (typeof formatCurrency === 'function') return formatCurrency(val);
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val || 0);
+  };
 
   // Función robusta para leer fechas
   const parseDate = (dateStr) => {
@@ -6531,349 +6537,520 @@ const CRMView = ({ products, clients, inventory, orders }) => {
   const statusColors = { NUEVA: '#0071A8', 'EN ALISTAMIENTO': '#f59e0b', 'EN CAMINO': '#6366f1', ENTREGADA: '#10b981', ANULADA: '#f43f5e' };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 gap-6 w-full p-2 md:p-6 print:p-0 print:gap-4 print:text-black print:bg-white">
-      
-      {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b-4 border-[#0071A8] pb-4 print:border-b-2 print:border-black">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 uppercase tracking-tight flex items-center gap-2 print:text-black">
-            <TrendingUp size={24} className="text-[#0071A8] print:text-black" /> CRM E INTELIGENCIA COMERCIAL
-          </h2>
-          <p className="text-[11px] md:text-xs text-slate-500 font-medium mt-1 print:text-black">Reporte Ejecutivo y Análisis de Comportamiento</p>
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in slide-in-from-bottom-4 duration-500 print:h-auto print:overflow-visible print:bg-white print:text-black"
+    >
+      {/* 1. CABECERA COMPACTA Y ACCIÓN DE IMPRESIÓN */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:border-b-2 print:border-black"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm print:hidden"
+            style={{ backgroundColor: '#0071A8' }}
+          >
+            <TrendingUp size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight uppercase print:text-black"
+              style={{ color: '#0071A8' }}
+            >
+              CRM e Inteligencia Comercial
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Reporte analítico, métricas de retención y análisis de ventas
+            </p>
+          </div>
         </div>
         
-        <div className="flex flex-wrap gap-3 items-center print:hidden">
-          <button onClick={() => window.print()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-[10px] uppercase shadow-md flex items-center gap-2 transition-all">
-            <Printer size={14}/> PDF / IMPRIMIR
+        <div className="flex items-center gap-2 print:hidden">
+          <button 
+            type="button"
+            onClick={() => window.print()} 
+            className="px-3 py-1.5 rounded-xl font-semibold text-xs text-white shadow-sm flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-90 active:scale-95"
+            style={{ backgroundColor: '#0071A8' }}
+          >
+            <Printer size={14}/> Imprimir Reporte
           </button>
         </div>
       </div>
 
-      {/* FILTROS */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center bg-white p-4 rounded-[20px] shadow-sm border border-slate-100 print:hidden">
-        <div className="flex items-center gap-2 text-[#0071A8] font-bold text-xs uppercase shrink-0">
-          <Calendar size={16} /> PERÍODO:
-        </div>
+      {/* 2. BARRA DE FILTROS TEMPORALES Y PESTAÑAS (FIJOS AL TOPE) */}
+      <div className="flex-shrink-0 px-4 py-2 bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b print:hidden" style={{ borderColor: '#D4DBDB' }}>
         
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-          <button onClick={() => handleQuickDate('today')} className={`px-4 py-1.5 rounded-lg font-semibold text-[10px] uppercase transition-all ${filterType === 'today' ? 'bg-[#0071A8] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>HOY</button>
-          <button onClick={() => handleQuickDate('week')} className={`px-4 py-1.5 rounded-lg font-semibold text-[10px] uppercase transition-all ${filterType === 'week' ? 'bg-[#0071A8] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>ESTA SEMANA</button>
-          <button onClick={() => handleQuickDate('month')} className={`px-4 py-1.5 rounded-lg font-semibold text-[10px] uppercase transition-all ${filterType === 'month' ? 'bg-[#0071A8] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>ESTE MES</button>
-          <button onClick={() => handleQuickDate('all')} className={`px-4 py-1.5 rounded-lg font-semibold text-[10px] uppercase transition-all ${filterType === 'all' ? 'bg-[#0071A8] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>HISTÓRICO</button>
+        {/* Filtros de Fecha */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex items-center gap-1.5 font-semibold text-[11px]" style={{ color: '#0071A8' }}>
+            <Calendar size={14} />
+            <span>Período:</span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button 
+              type="button"
+              onClick={() => handleQuickDate('today')} 
+              className="px-2.5 py-1 rounded-full font-semibold text-[10px] uppercase transition-all cursor-pointer"
+              style={filterType === 'today' ? { backgroundColor: '#0071A8', color: '#FFFFFF' } : { backgroundColor: '#FFFFFF', color: '#0071A8', border: '1px solid #D4DBDB' }}
+            >
+              Hoy
+            </button>
+            <button 
+              type="button"
+              onClick={() => handleQuickDate('week')} 
+              className="px-2.5 py-1 rounded-full font-semibold text-[10px] uppercase transition-all cursor-pointer"
+              style={filterType === 'week' ? { backgroundColor: '#0071A8', color: '#FFFFFF' } : { backgroundColor: '#FFFFFF', color: '#0071A8', border: '1px solid #D4DBDB' }}
+            >
+              Esta Semana
+            </button>
+            <button 
+              type="button"
+              onClick={() => handleQuickDate('month')} 
+              className="px-2.5 py-1 rounded-full font-semibold text-[10px] uppercase transition-all cursor-pointer"
+              style={filterType === 'month' ? { backgroundColor: '#0071A8', color: '#FFFFFF' } : { backgroundColor: '#FFFFFF', color: '#0071A8', border: '1px solid #D4DBDB' }}
+            >
+              Este Mes
+            </button>
+            <button 
+              type="button"
+              onClick={() => handleQuickDate('all')} 
+              className="px-2.5 py-1 rounded-full font-semibold text-[10px] uppercase transition-all cursor-pointer"
+              style={filterType === 'all' ? { backgroundColor: '#0071A8', color: '#FFFFFF' } : { backgroundColor: '#FFFFFF', color: '#0071A8', border: '1px solid #D4DBDB' }}
+            >
+              Histórico
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
+          {/* Rango Personalizado */}
+          <div className="flex items-center gap-2 text-[10px] font-medium text-slate-600">
+            <div className="flex items-center gap-1">
+              <span className="font-semibold uppercase" style={{ color: '#0071A8' }}>Desde:</span>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => { setStartDate(e.target.value); setFilterType('custom'); }} 
+                className="border rounded-md px-2 py-0.5 text-xs text-slate-700 outline-none"
+                style={{ borderColor: '#D4DBDB' }} 
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="font-semibold uppercase" style={{ color: '#0071A8' }}>Hasta:</span>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => { setEndDate(e.target.value); setFilterType('custom'); }} 
+                className="border rounded-md px-2 py-0.5 text-xs text-slate-700 outline-none"
+                style={{ borderColor: '#D4DBDB' }} 
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="h-6 w-px bg-slate-200 hidden lg:block mx-2"></div>
-
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase text-slate-500">DESDE:</span>
-            <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setFilterType('custom'); }} className="border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-[#0071A8] focus:outline-none focus:border-[#0071A8]" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase text-slate-500">HASTA:</span>
-            <input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setFilterType('custom'); }} className="border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-[#0071A8] focus:outline-none focus:border-[#0071A8]" />
-          </div>
+        {/* Sub-Pestañas Píldora */}
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
+          {[
+            { id: 'metrics', label: 'Métricas', icon: <BarChart2 size={13}/> },
+            { id: 'behavior', label: 'Interés', icon: <Eye size={13}/> },
+            { id: 'rankings', label: 'Rankings', icon: <Users size={13}/> },
+            { id: 'segmentation', label: 'Seguimiento', icon: <AlertTriangle size={13}/> },
+            { id: 'reports', label: 'Exportar', icon: <Download size={13}/> }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveSubTab(tab.id)}
+              className="px-3 py-1.5 rounded-full font-semibold text-xs transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs"
+              style={
+                activeSubTab === tab.id
+                  ? { backgroundColor: '#0071A8', color: '#FFFFFF' }
+                  : { backgroundColor: '#FFFFFF', color: '#0071A8', border: '1px solid #D4DBDB' }
+              }
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* PESTAÑAS */}
-      <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100 overflow-x-auto scrollbar-hide print:hidden">
-        <button onClick={() => setActiveSubTab('metrics')} className={`px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeSubTab === 'metrics' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}>
-          <BarChart2 size={15}/> MÉTRICAS Y EMBUDO
-        </button>
-        <button onClick={() => setActiveSubTab('behavior')} className={`px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeSubTab === 'behavior' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}>
-          <Eye size={15}/> INTERÉS DE CLIENTES
-        </button>
-        <button onClick={() => setActiveSubTab('rankings')} className={`px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeSubTab === 'rankings' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}>
-          <Users size={15}/> RANKINGS
-        </button>
-        <button onClick={() => setActiveSubTab('segmentation')} className={`px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeSubTab === 'segmentation' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}>
-          <AlertTriangle size={15}/> SEGUIMIENTO
-        </button>
-        <button onClick={() => setActiveSubTab('reports')} className={`px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeSubTab === 'reports' ? 'bg-[#0071A8] text-white shadow-md' : 'text-slate-500 hover:text-[#0071A8]'}`}>
-          <Download size={15}/> EXPORTAR DATOS
-        </button>
-      </div>
-
-      {/* MÉTRICAS */}
-      {activeSubTab === 'metrics' && (
-        <div className="flex flex-col gap-6 w-full animate-in fade-in duration-300 print:block">
+      {/* 3. ÁREA DE CONTENIDO PRINCIPAL (SCROLL INTERNO) */}
+      <div className="flex-1 overflow-y-auto p-4 bg-slate-50 print:p-0 print:bg-white print:overflow-visible">
+        <div className="max-w-7xl mx-auto space-y-4">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full print:grid-cols-4 print:gap-2">
-            <div className="bg-white p-5 rounded-[24px] border border-slate-100 shadow-sm flex flex-col justify-between print:border-black print:shadow-none print:rounded-lg">
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1 print:text-black">TOTAL VENTAS (PERÍODO)</p>
-              <p className="text-2xl font-bold text-emerald-600 font-mono print:text-black">{formatCurrency(totalVentas)}</p>
-              <span className="text-[10px] text-slate-400 font-medium mt-1 print:text-black">{totalPedidos} pedidos cerrados</span>
-            </div>
-            <div className="bg-white p-5 rounded-[24px] border border-slate-100 shadow-sm flex flex-col justify-between print:border-black print:shadow-none print:rounded-lg">
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1 print:text-black">TICKET PROMEDIO (AOV)</p>
-              <p className="text-2xl font-bold text-[#0071A8] font-mono print:text-black">{formatCurrency(ticketPromedio)}</p>
-              <span className="text-[10px] text-slate-400 font-medium mt-1 print:text-black">Gasto medio por cliente</span>
-            </div>
-            <div className="bg-white p-5 rounded-[24px] border border-slate-100 shadow-sm flex flex-col justify-between print:border-black print:shadow-none print:rounded-lg">
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1 print:text-black">TASA DE CONVERSIÓN</p>
-              <p className="text-2xl font-bold text-indigo-600 font-mono print:text-black">{behaviorMetrics.conversionRate}%</p>
-              <span className="text-[10px] text-slate-400 font-medium mt-1 print:text-black">De visitantes a compradores</span>
-            </div>
-            <div className="bg-white p-5 rounded-[24px] border border-slate-100 shadow-sm flex flex-col justify-between print:border-black print:shadow-none print:rounded-lg">
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1 print:text-black">CARRITOS ABANDONADOS</p>
-              <p className="text-2xl font-bold text-amber-600 font-mono print:text-black">{formatCurrency(behaviorMetrics.abandonedValue)}</p>
-              <span className="text-[10px] text-slate-400 font-medium mt-1 print:text-black">{behaviorMetrics.abandonedCartsCount} intentos de compra</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full print:grid-cols-2 print:block">
-            
-            {/* Embudo */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-5 print:border-black print:shadow-none print:rounded-lg print:mb-6">
-              <h3 className="font-bold text-xs text-[#0071A8] uppercase flex items-center gap-2 print:text-black">
-                <BarChart2 size={16} className="text-[#0071A8] print:hidden" /> EMBUDO COMERCIAL Y CONVERSIÓN
-              </h3>
+          {/* PESTAÑA: MÉTRICAS Y EMBUDO */}
+          {activeSubTab === 'metrics' && (
+            <div className="flex flex-col gap-4 animate-in fade-in duration-300 print:block">
               
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold text-slate-600 uppercase mb-1 print:text-black">
-                    <span>1. INGRESOS AL SISTEMA</span>
-                    <span className="font-mono font-medium">{behaviorMetrics.activeLogins} USUARIOS (100%)</span>
-                  </div>
-                  <div className="w-full h-6 bg-slate-100 rounded-xl overflow-hidden print:border print:border-black">
-                    <div className="h-full bg-[#0071A8] text-white flex items-center justify-end px-3 text-[10px] font-bold print:bg-black" style={{ width: '100%' }}>100%</div>
-                  </div>
+              {/* Tarjetas Superiores */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 print:grid-cols-4 print:gap-2">
+                
+                <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-col justify-between" style={{ borderColor: '#D4DBDB' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#0071A8' }}>
+                    Total Ventas
+                  </p>
+                  <p className="text-xl font-bold text-emerald-600 font-mono">
+                    {safeFormatCurrency(totalVentas)}
+                  </p>
+                  <span className="text-[10px] font-medium mt-1" style={{ color: '#B7C0C6' }}>
+                    {totalPedidos} pedidos cerrados
+                  </span>
                 </div>
 
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold text-slate-600 uppercase mb-1 print:text-black">
-                    <span>2. CONSULTAS A CATÁLOGO</span>
-                    <span className="font-mono font-medium">{behaviorMetrics.consultedProductsCount} BÚSQUEDAS (78%)</span>
-                  </div>
-                  <div className="w-full h-6 bg-slate-100 rounded-xl overflow-hidden print:border print:border-black">
-                    <div className="h-full bg-indigo-500 text-white flex items-center justify-end px-3 text-[10px] font-bold print:bg-gray-600" style={{ width: '78%' }}>78%</div>
-                  </div>
+                <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-col justify-between" style={{ borderColor: '#D4DBDB' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#0071A8' }}>
+                    Ticket Promedio (AOV)
+                  </p>
+                  <p className="text-xl font-bold font-mono" style={{ color: '#0071A8' }}>
+                    {safeFormatCurrency(ticketPromedio)}
+                  </p>
+                  <span className="text-[10px] font-medium mt-1" style={{ color: '#B7C0C6' }}>
+                    Gasto medio por cliente
+                  </span>
                 </div>
 
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold text-slate-600 uppercase mb-1 print:text-black">
-                    <span>3. CARRITOS / INTENTOS</span>
-                    <span className="font-mono font-medium">{totalPedidos + behaviorMetrics.abandonedCartsCount} INTENTOS (45%)</span>
-                  </div>
-                  <div className="w-full h-6 bg-slate-100 rounded-xl overflow-hidden print:border print:border-black">
-                    <div className="h-full bg-amber-500 text-white flex items-center justify-end px-3 text-[10px] font-bold print:bg-gray-400" style={{ width: '45%' }}>45%</div>
-                  </div>
+                <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-col justify-between" style={{ borderColor: '#D4DBDB' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#0071A8' }}>
+                    Tasa de Conversión
+                  </p>
+                  <p className="text-xl font-bold text-indigo-600 font-mono">
+                    {behaviorMetrics.conversionRate}%
+                  </p>
+                  <span className="text-[10px] font-medium mt-1" style={{ color: '#B7C0C6' }}>
+                    Visitantes a compradores
+                  </span>
                 </div>
 
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold text-slate-600 uppercase mb-1 print:text-black">
-                    <span>4. PEDIDOS CONCRETADOS</span>
-                    <span className="font-mono font-bold text-emerald-600 print:text-black">{validOrders.length} PEDIDOS ({behaviorMetrics.conversionRate}%)</span>
-                  </div>
-                  <div className="w-full h-6 bg-slate-100 rounded-xl overflow-hidden print:border print:border-black">
-                    <div className="h-full bg-emerald-500 text-white flex items-center justify-end px-3 text-[10px] font-bold print:bg-black" style={{ width: `${Math.max(Number(behaviorMetrics.conversionRate), 10)}%` }}>{behaviorMetrics.conversionRate}%</div>
-                  </div>
+                <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-col justify-between" style={{ borderColor: '#D4DBDB' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#0071A8' }}>
+                    Carritos Abandonados
+                  </p>
+                  <p className="text-xl font-bold text-amber-600 font-mono">
+                    {safeFormatCurrency(behaviorMetrics.abandonedValue)}
+                  </p>
+                  <span className="text-[10px] font-medium mt-1" style={{ color: '#B7C0C6' }}>
+                    {behaviorMetrics.abandonedCartsCount} compras no cerradas
+                  </span>
                 </div>
-              </div>
-            </div>
 
-            {/* Torta */}
-            <div className="bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-4 flex flex-col justify-between print:border-black print:shadow-none print:rounded-lg">
-              <h3 className="font-bold text-xs text-[#0071A8] uppercase flex items-center gap-2 print:text-black">
-                <PieChart size={16} className="text-[#0071A8] print:hidden" /> ESTADOS DE PEDIDO
-              </h3>
-
-              <div className="flex justify-center items-center relative my-2">
-                <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 36 36">
-                  <path className="text-slate-100 print:text-gray-200" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path strokeWidth="4" stroke={statusColors.ENTREGADA} strokeDasharray={`${((orderStatusCounts.ENTREGADA || 0) / totalForDonut) * 100}, 100`} fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" className="print:stroke-black" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-bold text-[#0071A8] font-mono print:text-black">{totalPedidos}</span>
-                  <span className="text-[9px] uppercase text-slate-400 font-medium print:text-black">TOTAL</span>
-                </div>
               </div>
 
-              <div className="space-y-2 text-[10px] uppercase font-bold text-slate-600 print:text-black">
-                <div className="flex justify-between items-center"><span>NUEVAS</span><span className="font-mono font-medium">{orderStatusCounts.NUEVA}</span></div>
-                <div className="flex justify-between items-center"><span>ALISTAMIENTO</span><span className="font-mono font-medium">{orderStatusCounts['EN ALISTAMIENTO']}</span></div>
-                <div className="flex justify-between items-center"><span>EN CAMINO</span><span className="font-mono font-medium">{orderStatusCounts['EN CAMINO']}</span></div>
-                <div className="flex justify-between items-center"><span>ENTREGADAS</span><span className="font-mono font-medium">{orderStatusCounts.ENTREGADA}</span></div>
-                <div className="flex justify-between items-center"><span>ANULADAS</span><span className="font-mono font-medium">{orderStatusCounts.ANULADA}</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              {/* Embudo y Distribución de Estados */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 print:grid-cols-2 print:block">
+                
+                {/* Embudo */}
+                <div className="lg:col-span-2 bg-white p-5 rounded-2xl border shadow-sm space-y-4 print:border-black print:mb-4" style={{ borderColor: '#D4DBDB' }}>
+                  <h3 className="font-bold text-xs uppercase flex items-center gap-2" style={{ color: '#0071A8' }}>
+                    <BarChart2 size={16} /> Embudo Comercial y Conversión
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-xs font-semibold text-slate-700 uppercase mb-1">
+                        <span>1. Ingresos al Sistema</span>
+                        <span className="font-mono font-medium">{behaviorMetrics.activeLogins} usuarios (100%)</span>
+                      </div>
+                      <div className="w-full h-5 bg-slate-100 rounded-lg overflow-hidden">
+                        <div className="h-full text-white flex items-center justify-end px-2 text-[10px] font-bold" style={{ width: '100%', backgroundColor: '#0071A8' }}>
+                          100%
+                        </div>
+                      </div>
+                    </div>
 
-      {/* COMPORTAMIENTO */}
-      {activeSubTab === 'behavior' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full animate-in fade-in duration-300 print:block">
-          <div className="bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-5 print:border-black print:shadow-none print:rounded-lg print:mb-6">
-            <h3 className="font-bold text-xs text-[#0071A8] uppercase flex items-center gap-2 print:text-black">
-              <Eye size={16} className="text-[#0071A8] print:hidden" /> INTERÉS vs VENTAS (TOP 10)
-            </h3>
-            <div className="space-y-3">
-              {productRanking.map((p, i) => (
-                <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-2 print:border-b print:border-black print:bg-white print:rounded-none print:p-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold uppercase text-[11px] text-[#0071A8] print:text-black">{p.name}</span>
-                    <span className="text-[11px] font-mono font-bold text-emerald-600 print:text-black">{formatCurrency(p.totalRevenue)}</span>
-                  </div>
-                  <div className="flex gap-4 text-[10px] font-medium text-slate-500 uppercase print:text-black">
-                    <span className="bg-white px-2 py-1 rounded border border-slate-200 print:border-none print:p-0">VISTAS: {p.views}</span>
-                    <span className="bg-white px-2 py-1 rounded border border-slate-200 print:border-none print:p-0">VENDIDOS: {p.totalQty}</span>
+                    <div>
+                      <div className="flex justify-between text-xs font-semibold text-slate-700 uppercase mb-1">
+                        <span>2. Consultas al Catálogo</span>
+                        <span className="font-mono font-medium">{behaviorMetrics.consultedProductsCount} búsquedas (78%)</span>
+                      </div>
+                      <div className="w-full h-5 bg-slate-100 rounded-lg overflow-hidden">
+                        <div className="h-full bg-indigo-500 text-white flex items-center justify-end px-2 text-[10px] font-bold" style={{ width: '78%' }}>
+                          78%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs font-semibold text-slate-700 uppercase mb-1">
+                        <span>3. Intentos de Compra / Carritos</span>
+                        <span className="font-mono font-medium">{totalPedidos + behaviorMetrics.abandonedCartsCount} intentos (45%)</span>
+                      </div>
+                      <div className="w-full h-5 bg-slate-100 rounded-lg overflow-hidden">
+                        <div className="h-full bg-amber-500 text-white flex items-center justify-end px-2 text-[10px] font-bold" style={{ width: '45%' }}>
+                          45%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs font-semibold text-slate-700 uppercase mb-1">
+                        <span>4. Pedidos Concretados</span>
+                        <span className="font-mono font-bold text-emerald-600">{validOrders.length} pedidos ({behaviorMetrics.conversionRate}%)</span>
+                      </div>
+                      <div className="w-full h-5 bg-slate-100 rounded-lg overflow-hidden">
+                        <div className="h-full bg-emerald-600 text-white flex items-center justify-end px-2 text-[10px] font-bold" style={{ width: `${Math.max(Number(behaviorMetrics.conversionRate), 10)}%` }}>
+                          {behaviorMetrics.conversionRate}%
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-              {productRanking.length === 0 && <p className="text-[11px] font-medium text-slate-500">Sin datos en este rango.</p>}
-            </div>
-          </div>
 
-          <div className="bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-4 flex flex-col justify-start print:border-black print:shadow-none print:rounded-lg">
-            <h3 className="font-bold text-xs text-[#0071A8] uppercase flex items-center gap-2 print:text-black">
-              <ShoppingCart size={16} className="text-amber-500 print:hidden" /> OPORTUNIDADES COMERCIALES
-            </h3>
-            <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl print:border-black print:bg-white print:rounded-lg">
-              <div className="flex items-center gap-2 text-amber-800 font-bold uppercase text-[11px] print:text-black">
-                <AlertTriangle size={16} className="text-amber-600 shrink-0 print:hidden" />
-                <span>{behaviorMetrics.abandonedCartsCount} CLIENTES DEJARON CARRITOS ABANDONADOS</span>
+                {/* Gráfico de Torta / Donut */}
+                <div className="bg-white p-5 rounded-2xl border shadow-sm space-y-3 flex flex-col justify-between" style={{ borderColor: '#D4DBDB' }}>
+                  <h3 className="font-bold text-xs uppercase flex items-center gap-2" style={{ color: '#0071A8' }}>
+                    <PieChart size={16} /> Estados de Pedido
+                  </h3>
+
+                  <div className="flex justify-center items-center relative my-1">
+                    <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                      <path className="text-slate-100" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path strokeWidth="4" stroke={statusColors.ENTREGADA} strokeDasharray={`${((orderStatusCounts.ENTREGADA || 0) / totalForDonut) * 100}, 100`} fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-xl font-bold font-mono" style={{ color: '#0071A8' }}>{totalPedidos}</span>
+                      <span className="text-[9px] uppercase font-semibold" style={{ color: '#B7C0C6' }}>Total</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs font-medium text-slate-600">
+                    <div className="flex justify-between items-center"><span className="text-[10px] font-semibold" style={{ color: '#0071A8' }}>NUEVAS</span><span className="font-mono font-bold">{orderStatusCounts.NUEVA}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-[10px] font-semibold text-amber-600">ALISTAMIENTO</span><span className="font-mono font-bold">{orderStatusCounts['EN ALISTAMIENTO']}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-[10px] font-semibold text-indigo-600">EN CAMINO</span><span className="font-mono font-bold">{orderStatusCounts['EN CAMINO']}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-[10px] font-semibold text-emerald-600">ENTREGADAS</span><span className="font-mono font-bold">{orderStatusCounts.ENTREGADA}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-[10px] font-semibold text-rose-600">ANULADAS</span><span className="font-mono font-bold">{orderStatusCounts.ANULADA}</span></div>
+                  </div>
+                </div>
+
               </div>
-              <p className="text-[11px] text-amber-700 font-medium mt-2 print:text-black">
-                Ventas potenciales estancadas estimadas en: <strong className="font-mono text-sm font-bold">{formatCurrency(behaviorMetrics.abandonedValue)}</strong>
-              </p>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* RANKINGS */}
-      {activeSubTab === 'rankings' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full animate-in fade-in duration-300 print:block">
-          <div className="bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-4 print:border-black print:shadow-none print:rounded-lg print:mb-6">
-            <h3 className="font-bold text-xs text-[#0071A8] uppercase flex items-center gap-2 print:text-black">
-              <Users size={16} className="text-[#0071A8] print:hidden" /> TOP CLIENTES VIP
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase print:bg-white print:text-black print:border-b print:border-black">
-                  <tr>
-                    <th className="px-3 py-2">CLIENTE</th>
-                    <th className="px-3 py-2 text-center">PEDIDOS</th>
-                    <th className="px-3 py-2 text-right">FACTURACIÓN</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 text-[11px] text-[#0071A8] print:text-black print:divide-black/20">
-                  {clientRanking.map((c, i) => (
-                    <tr key={i}>
-                      <td className="px-3 py-3 font-bold uppercase">{c.name}</td>
-                      <td className="px-3 py-3 text-center font-mono font-medium">{c.ordersCount}</td>
-                      <td className="px-3 py-3 text-right font-mono font-bold text-emerald-600 print:text-black">{formatCurrency(c.totalSpent)}</td>
-                    </tr>
-                  ))}
-                  {clientRanking.length === 0 && <tr><td colSpan="3" className="p-4 text-center text-slate-400 font-medium">Sin datos.</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-4 print:border-black print:shadow-none print:rounded-lg">
-            <h3 className="font-bold text-xs text-[#0071A8] uppercase flex items-center gap-2 print:text-black">
-              <Package size={16} className="text-[#0071A8] print:hidden" /> TOP PRODUCTOS
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase print:bg-white print:text-black print:border-b print:border-black">
-                  <tr>
-                    <th className="px-3 py-2">PRODUCTO</th>
-                    <th className="px-3 py-2 text-center">UNIDADES</th>
-                    <th className="px-3 py-2 text-right">INGRESOS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 text-[11px] text-[#0071A8] print:text-black print:divide-black/20">
+          {/* PESTAÑA: INTERÉS DE CLIENTES */}
+          {activeSubTab === 'behavior' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full animate-in fade-in duration-300">
+              
+              <div className="bg-white p-5 rounded-2xl border shadow-sm space-y-4" style={{ borderColor: '#D4DBDB' }}>
+                <h3 className="font-bold text-xs uppercase flex items-center gap-2" style={{ color: '#0071A8' }}>
+                  <Eye size={16} /> Interés vs Ventas (Top 10)
+                </h3>
+                <div className="space-y-2.5">
                   {productRanking.map((p, i) => (
-                    <tr key={i}>
-                      <td className="px-3 py-3 font-bold uppercase">{p.name}</td>
-                      <td className="px-3 py-3 text-center font-mono font-medium">{p.totalQty}</td>
-                      <td className="px-3 py-3 text-right font-mono font-bold text-emerald-600 print:text-black">{formatCurrency(p.totalRevenue)}</td>
-                    </tr>
+                    <div key={i} className="p-2.5 rounded-xl bg-slate-50 border flex flex-col gap-1.5" style={{ borderColor: '#D4DBDB' }}>
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-xs uppercase text-slate-800">{p.name}</span>
+                        <span className="text-xs font-mono font-bold text-emerald-600">{safeFormatCurrency(p.totalRevenue)}</span>
+                      </div>
+                      <div className="flex gap-2 text-[10px] font-medium text-slate-600">
+                        <span className="bg-white px-2 py-0.5 rounded border" style={{ borderColor: '#D4DBDB' }}>
+                          Vistas estimadas: {p.views}
+                        </span>
+                        <span className="bg-white px-2 py-0.5 rounded border" style={{ borderColor: '#D4DBDB' }}>
+                          Vendidos: {p.totalQty} {p.unit}
+                        </span>
+                      </div>
+                    </div>
                   ))}
-                  {productRanking.length === 0 && <tr><td colSpan="3" className="p-4 text-center text-slate-400 font-medium">Sin datos.</td></tr>}
-                </tbody>
-              </table>
+                  {productRanking.length === 0 && <p className="text-xs text-slate-400 font-medium py-4 text-center">Sin datos de productos en este período.</p>}
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border shadow-sm space-y-3 flex flex-col justify-start" style={{ borderColor: '#D4DBDB' }}>
+                <h3 className="font-bold text-xs uppercase flex items-center gap-2" style={{ color: '#0071A8' }}>
+                  <ShoppingCart size={16} className="text-amber-500" /> Oportunidades Comerciales
+                </h3>
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-center gap-2 text-amber-800 font-bold uppercase text-xs">
+                    <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                    <span>{behaviorMetrics.abandonedCartsCount} Clientes con carritos sin concretar</span>
+                  </div>
+                  <p className="text-xs text-amber-700 font-medium mt-2 leading-relaxed">
+                    Ventas potenciales estancadas estimadas en: <strong className="font-mono text-sm font-bold text-amber-900">{safeFormatCurrency(behaviorMetrics.abandonedValue)}</strong>
+                  </p>
+                  <p className="text-[10px] text-amber-600 mt-1 font-medium">
+                    Sugerencia: Reactivar con recordatorios o descuentos puntuales desde el módulo de promociones.
+                  </p>
+                </div>
+              </div>
+
             </div>
-          </div>
+          )}
+
+          {/* PESTAÑA: RANKINGS */}
+          {activeSubTab === 'rankings' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full animate-in fade-in duration-300">
+              
+              {/* Clientes VIP */}
+              <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-col overflow-hidden" style={{ borderColor: '#D4DBDB' }}>
+                <h3 className="font-bold text-xs uppercase mb-3 flex items-center gap-2" style={{ color: '#0071A8' }}>
+                  <Users size={16} /> Top Clientes VIP
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[320px]">
+                    <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+                      <tr>
+                        <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>Cliente</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-center" style={{ color: '#0071A8' }}>Pedidos</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-right" style={{ color: '#0071A8' }}>Facturación</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                      {clientRanking.map((c, i) => (
+                        <tr key={i} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-2 font-medium text-slate-800 uppercase">{c.name}</td>
+                          <td className="px-3 py-2 text-center font-mono font-medium text-slate-700">{c.ordersCount}</td>
+                          <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600">{safeFormatCurrency(c.totalSpent)}</td>
+                        </tr>
+                      ))}
+                      {clientRanking.length === 0 && (
+                        <tr><td colSpan="3" className="p-4 text-center text-slate-400 font-medium">Sin datos disponibles.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Top Productos */}
+              <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-col overflow-hidden" style={{ borderColor: '#D4DBDB' }}>
+                <h3 className="font-bold text-xs uppercase mb-3 flex items-center gap-2" style={{ color: '#0071A8' }}>
+                  <Package size={16} /> Top Productos Vendidos
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[320px]">
+                    <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+                      <tr>
+                        <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>Producto</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-center" style={{ color: '#0071A8' }}>Unidades</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-right" style={{ color: '#0071A8' }}>Ingresos</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                      {productRanking.map((p, i) => (
+                        <tr key={i} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-2 font-medium text-slate-800 uppercase">{p.name}</td>
+                          <td className="px-3 py-2 text-center font-mono font-medium text-slate-700">{p.totalQty}</td>
+                          <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600">{safeFormatCurrency(p.totalRevenue)}</td>
+                        </tr>
+                      ))}
+                      {productRanking.length === 0 && (
+                        <tr><td colSpan="3" className="p-4 text-center text-slate-400 font-medium">Sin datos disponibles.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* PESTAÑA: SEGUIMIENTO Y CHURN */}
+          {activeSubTab === 'segmentation' && (
+            <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-col space-y-3 animate-in fade-in duration-300" style={{ borderColor: '#D4DBDB' }}>
+              <div className="border-b pb-2 flex items-center justify-between" style={{ borderColor: '#D4DBDB' }}>
+                <div>
+                  <h3 className="font-bold text-xs uppercase flex items-center gap-2" style={{ color: '#0071A8' }}>
+                    <AlertTriangle size={16} className="text-amber-500" /> Segmentación y Riesgo de Pérdida (Churn)
+                  </h3>
+                  <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+                    Evaluación del estado comercial del cliente según días de inactividad
+                  </p>
+                </div>
+                <span className="text-[10px] font-semibold" style={{ color: '#0071A8' }}>
+                  {clientSegmentation.length} Clientes analizados
+                </span>
+              </div>
+
+              <div className="overflow-x-auto max-h-[460px]">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead className="sticky top-0 z-10" style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+                    <tr>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>Cliente / Contacto</th>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>Estado Retención</th>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-center" style={{ color: '#0071A8' }}>Días Inactivo</th>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-center" style={{ color: '#0071A8' }}>Órdenes</th>
+                      <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-right" style={{ color: '#0071A8' }}>Total Facturado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                    {clientSegmentation.map((c, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-3 py-2">
+                          <p className="font-semibold text-slate-800 uppercase">{c.name}</p>
+                          <p className="text-[10px] text-slate-400 font-medium">{c.phone} • {c.doc}</p>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase border ${c.badgeClass}`}>
+                            {c.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-center font-mono font-medium text-slate-700">{c.daysInactive}</td>
+                        <td className="px-3 py-2 text-center font-mono font-medium text-slate-700">{c.totalOrders}</td>
+                        <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600">{safeFormatCurrency(c.totalSpent)}</td>
+                      </tr>
+                    ))}
+                    {clientSegmentation.length === 0 && (
+                      <tr><td colSpan="5" className="p-4 text-center text-slate-400 font-medium">Sin datos de segmentación.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* PESTAÑA: EXPORTAR REPORTES */}
+          {activeSubTab === 'reports' && (
+            <div className="bg-white p-5 rounded-2xl border shadow-sm space-y-4 animate-in fade-in duration-300" style={{ borderColor: '#D4DBDB' }}>
+              <div className="border-b pb-3" style={{ borderColor: '#D4DBDB' }}>
+                <h3 className="font-bold text-xs uppercase tracking-tight" style={{ color: '#0071A8' }}>
+                  Centro de Exportación de Datos (Excel / CSV)
+                </h3>
+                <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+                  Descarga directa con codificación UTF-8 para análisis en hojas de cálculo
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button 
+                  type="button"
+                  onClick={exportOrdersReport} 
+                  className="p-5 bg-slate-50 border rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-slate-100 transition-all cursor-pointer shadow-xs"
+                  style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
+                >
+                  <Download size={22}/>
+                  <span className="font-bold text-xs uppercase">Descargar Pedidos</span>
+                  <span className="text-[9px] text-slate-400 font-medium">Detalle con clientes y valores</span>
+                </button>
+                
+                <button 
+                  type="button"
+                  onClick={exportClientsReport} 
+                  className="p-5 bg-slate-50 border rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-slate-100 transition-all cursor-pointer shadow-xs"
+                  style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
+                >
+                  <Download size={22}/>
+                  <span className="font-bold text-xs uppercase">Descargar Clientes (CRM)</span>
+                  <span className="text-[9px] text-slate-400 font-medium">Segmentación y días inactivo</span>
+                </button>
+                
+                <button 
+                  type="button"
+                  onClick={exportBehaviorReport} 
+                  className="p-5 bg-slate-50 border rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-slate-100 transition-all cursor-pointer shadow-xs"
+                  style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
+                >
+                  <Download size={22}/>
+                  <span className="font-bold text-xs uppercase">Descargar Interés Productos</span>
+                  <span className="text-[9px] text-slate-400 font-medium">Vistas vs facturación lograda</span>
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
-      )}
+      </div>
 
-      {/* SEGUIMIENTO */}
-      {activeSubTab === 'segmentation' && (
-        <div className="bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-4 w-full animate-in fade-in duration-300 print:border-black print:shadow-none print:rounded-lg">
-          <div className="border-b border-slate-100 pb-3 print:border-black">
-            <h3 className="font-bold text-xs text-[#0071A8] uppercase flex items-center gap-2 print:text-black">
-              <AlertTriangle size={16} className="text-amber-500 print:hidden" /> SEGMENTACIÓN Y RIESGO (CHURN)
-            </h3>
-            <p className="text-[11px] text-slate-500 font-medium mt-1 print:text-black">Estado comercial basado en inactividad.</p>
-          </div>
-
-          <div className="overflow-x-auto max-h-[500px] print:max-h-none">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase sticky top-0 print:bg-white print:text-black print:border-b print:border-black">
-                <tr>
-                  <th className="px-4 py-3">CLIENTE</th>
-                  <th className="px-4 py-3">ESTADO</th>
-                  <th className="px-4 py-3 text-center">DÍAS INACTIVO</th>
-                  <th className="px-4 py-3 text-center">ÓRDENES</th>
-                  <th className="px-4 py-3 text-right">COMPRADO</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50 text-[11px] text-[#0071A8] print:text-black print:divide-black/20">
-                {clientSegmentation.map((c, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50">
-                    <td className="px-4 py-3">
-                      <p className="font-bold uppercase">{c.name}</p>
-                      <p className="text-[10px] text-slate-500 font-medium print:text-black">{c.phone}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-[9px] font-bold uppercase border ${c.badgeClass} print:border-none print:p-0 print:text-black`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center font-mono font-medium">{c.daysInactive}</td>
-                    <td className="px-4 py-3 text-center font-mono font-medium">{c.totalOrders}</td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600 print:text-black">{formatCurrency(c.totalSpent)}</td>
-                  </tr>
-                ))}
-                {clientSegmentation.length === 0 && <tr><td colSpan="5" className="p-4 text-center text-slate-400 font-medium">Sin datos.</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* REPORTES */}
-      {activeSubTab === 'reports' && (
-        <div className="bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm space-y-6 w-full animate-in fade-in duration-300 print:hidden">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <h3 className="font-bold text-sm text-[#0071A8] uppercase tracking-tight">
-              CENTRO DE EXPORTACIÓN (EXCEL / CSV)
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button onClick={exportOrdersReport} className="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-slate-100 transition-all text-[#0071A8]">
-              <Download size={24}/>
-              <span className="font-bold text-[11px] uppercase">DESCARGAR PEDIDOS</span>
-            </button>
-            <button onClick={exportClientsReport} className="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-slate-100 transition-all text-indigo-600">
-              <Download size={24}/>
-              <span className="font-bold text-[11px] uppercase">DESCARGAR CLIENTES (CRM)</span>
-            </button>
-            <button onClick={exportBehaviorReport} className="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-slate-100 transition-all text-emerald-600">
-              <Download size={24}/>
-              <span className="font-bold text-[11px] uppercase">DESCARGAR COMPORTAMIENTO</span>
-            </button>
-          </div>
-        </div>
-      )}
-      
-      <Footer />
     </div>
   );
 };
