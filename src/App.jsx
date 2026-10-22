@@ -1396,7 +1396,7 @@ const ProductsView = ({ products, setProducts, taxes, inventory, orders }) => {
   );
 };
 
-// --- MÓDULO DE INVENTARIO ---
+// --- MÓDULO DE INVENTARIO: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const InventoryView = ({ inventory, setInventory, products, orders }) => {
   const [selectedProd, setSelectedProd] = useState(null);
   const [quantity, setQuantity] = useState('');
@@ -1416,8 +1416,22 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
 
   const handleSave = () => {
     const id = `IV${String(inventory.length + 1).padStart(6, '0')}`;
-    setInventory([{ id, productId: selectedProd.id, productName: selectedProd.name, unitName: selectedProd.unitName, quantity: parseFloat(quantity), date: new Date().toLocaleString(), user: 'ADMINISTRADOR' }, ...inventory]);
-    setSelectedProd(null); setQuantity(''); setModalType(null); setSearchTerm('');
+    setInventory([
+      { 
+        id, 
+        productId: selectedProd.id, 
+        productName: selectedProd.name, 
+        unitName: selectedProd.unitName, 
+        quantity: parseFloat(quantity), 
+        date: new Date().toLocaleString(), 
+        user: 'ADMINISTRADOR' 
+      }, 
+      ...inventory
+    ]);
+    setSelectedProd(null); 
+    setQuantity(''); 
+    setModalType(null); 
+    setSearchTerm('');
   };
 
   const executeUpdate = () => {
@@ -1517,317 +1531,522 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="flex justify-between items-end border-b-4 border-[#2596be] pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">CARGUE DE INVENTARIO</h2>
-        <button onClick={() => setModalType('bulkUpload')} className="bg-[#134b60] hover:bg-[#0f3c4c] text-white px-5 py-3 rounded-2xl text-[10px] font-black flex items-center gap-2 shadow-xl shadow-[#134b60]/20 transition-all cursor-pointer active:scale-95"><UploadCloud size={16}/> CARGUE MASIVO EXCEL</button>
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+    >
+      {/* 1. ENCABEZADO COMPACTO */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+            style={{ backgroundColor: '#0071A8' }}
+          >
+            <Boxes size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight"
+              style={{ color: '#0071A8' }}
+            >
+              Cargue de Inventario
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Gestión y registro de entradas de stock
+            </p>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => setModalType('bulkUpload')} 
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.97]"
+          style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
+        >
+          <UploadCloud size={13}/> Cargue masivo (CSV)
+        </button>
       </div>
       
-      {/* --- FORMULARIO Y BÚSQUEDA INTELIGENTE DE INVENTARIO --- */}
-      <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          
-          {/* Buscador Inteligente Único */}
-          <div className="relative flex-1">
-            <input 
-              type="text"
-              placeholder="Buscador inteligente: ID o nombre de producto..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                if (selectedProd) setSelectedProd(null);
-              }}
-              className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all uppercase"
-            />
-            {!selectedProd && filteredOptions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl border-2 border-[#e9f4f8] shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-slate-100 uppercase text-xs font-bold">
-                {filteredOptions.map(p => (
-                  <div 
-                    key={p.id}
-                    onClick={() => {
-                      setSelectedProd(p);
-                      setSearchTerm(`${p.id} - ${p.name}`);
-                    }}
-                    className="px-4 py-3 hover:bg-[#e9f4f8]/50 cursor-pointer flex justify-between items-center text-[#134b60]"
-                  >
-                    <div>
-                      <span className="font-mono text-[#2596be] mr-2">{p.id}</span>
-                      <span>{p.name}</span>
+      {/* 2. ÁREA PRINCIPAL: FORMULARIO SUPERIOR + TABLA CON SCROLL INTERNO */}
+      <div className="flex-1 overflow-hidden px-4 pt-3 pb-4 flex flex-col gap-3">
+        
+        {/* CAJA DE REGISTRO RÁPIDO */}
+        <div 
+          className="bg-white p-3.5 rounded-xl border flex-shrink-0 shadow-sm"
+          style={{ borderColor: '#D4DBDB' }}
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+            
+            {/* Buscador inteligente */}
+            <div className="relative flex-1 w-full">
+              <label className="text-[10px] font-semibold block mb-1" style={{ color: '#0071A8' }}>
+                Buscador de Producto (ID o Nombre)
+              </label>
+              <input 
+                type="text"
+                placeholder="Escribe para buscar un producto..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (selectedProd) setSelectedProd(null);
+                }}
+                className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none transition-all"
+                style={{ 
+                  backgroundColor: '#f8fafc', 
+                  border: '1px solid #D4DBDB', 
+                  color: '#374151' 
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+              />
+              {!selectedProd && filteredOptions.length > 0 && (
+                <div 
+                  className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl max-h-56 overflow-y-auto z-50 divide-y text-xs"
+                  style={{ border: '1px solid #D4DBDB', borderColor: '#D4DBDB' }}
+                >
+                  {filteredOptions.map(p => (
+                    <div 
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedProd(p);
+                        setSearchTerm(`${p.id} - ${p.name}`);
+                      }}
+                      className="px-3.5 py-2.5 hover:bg-[#eff8fc] cursor-pointer flex justify-between items-center transition-colors"
+                    >
+                      <div>
+                        <span className="font-mono font-semibold mr-2" style={{ color: '#0071A8' }}>{p.id}</span>
+                        <span className="font-medium text-slate-700">{p.name}</span>
+                      </div>
+                      <span className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>{p.unitName}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400">{p.unitName}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Cantidad y acciones */}
+            <div className="flex items-end gap-2 w-full md:w-auto">
+              <div className="w-full md:w-32">
+                <label className="text-[10px] font-semibold block mb-1" style={{ color: '#0071A8' }}>
+                  Cantidad
+                </label>
+                <input 
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ''))}
+                  disabled={!selectedProd}
+                  className="w-full px-3 py-2 rounded-lg text-xs font-mono font-semibold text-center outline-none transition-all disabled:opacity-40"
+                  style={{ 
+                    border: '1px solid #D4DBDB', 
+                    color: '#0071A8',
+                    backgroundColor: selectedProd ? '#FFFFFF' : '#f8fafc' 
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                  onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                />
+              </div>
+
+              <button 
+                onClick={() => setModalType('confirm')}
+                disabled={!selectedProd || !quantity}
+                className="px-4 py-2 rounded-lg text-[11px] font-semibold shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-40 whitespace-nowrap"
+                style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
+              >
+                Procesar
+              </button>
+              
+              <button 
+                onClick={() => {
+                  setSelectedProd(null);
+                  setQuantity('');
+                  setSearchTerm('');
+                }}
+                className="px-3.5 py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all hover:bg-slate-200 whitespace-nowrap"
+                style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+              >
+                Limpiar
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* 3. TABLA DE HISTORIAL CON SCROLL INTERNO (VIEWPORT FIT) */}
+        <div 
+          className="flex-1 overflow-hidden rounded-xl bg-white shadow-sm flex flex-col"
+          style={{ border: '1px solid #D4DBDB' }}
+        >
+          <div className="h-full overflow-y-auto overflow-x-auto">
+            <table className="w-full text-left min-w-[900px]">
+              <thead 
+                className="sticky top-0 z-10"
+                style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+              >
+                <tr>
+                  <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>ID Mov.</th>
+                  <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Código ID</th>
+                  <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Producto</th>
+                  <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Cantidad</th>
+                  <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Fecha y Hora</th>
+                  <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Usuario</th>
+                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Gestión</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                {inventory.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-16 text-center font-medium" style={{ color: '#B7C0C6' }}>
+                      No hay movimientos de inventario registrados
+                    </td>
+                  </tr>
+                ) : (
+                  inventory.map(ev => (
+                    <tr 
+                      key={ev.id} 
+                      onClick={() => { setSelectedItem(ev); setModalType('detail'); }}
+                      className="cursor-pointer group transition-colors hover:bg-[#eff8fc]"
+                      style={{ borderBottom: '1px solid #f8fafc' }}
+                    >
+                      <td className="px-4 py-2.5 font-mono text-[11px] font-semibold" style={{ color: '#0071A8' }}>{ev.id}</td>
+                      <td className="px-4 py-2.5 font-mono text-[11px] font-semibold" style={{ color: '#0071A8' }}>{ev.productId}</td>
+                      <td className="px-4 py-2.5">
+                        <p className="font-semibold text-slate-700 leading-tight">{ev.productName}</p>
+                        <p className="text-[10px]" style={{ color: '#B7C0C6' }}>{ev.unitName}</p>
+                      </td>
+                      <td className="px-4 py-2.5 text-center font-mono font-semibold text-emerald-600">
+                        +{ev.quantity}
+                      </td>
+                      <td className="px-4 py-2.5 text-center font-mono text-[11px]" style={{ color: '#64748b' }}>{ev.date}</td>
+                      <td className="px-4 py-2.5 text-center">
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-medium bg-slate-100 text-slate-600">
+                          {ev.user}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => { setSelectedItem(ev); setEditData({ quantity: ev.quantity }); setModalType('edit'); }} 
+                            className="p-1.5 rounded-lg cursor-pointer transition-all hover:bg-[#eff8fc]"
+                            style={{ color: '#0071A8' }}
+                          >
+                            <Edit size={13}/>
+                          </button>
+                          <button 
+                            onClick={() => { setSelectedItem(ev); setModalType('deleteFirst'); }} 
+                            className="p-1.5 rounded-lg cursor-pointer transition-all hover:bg-rose-50 text-rose-500"
+                          >
+                            <Trash2 size={13}/>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MODALES REESTILIZADOS
+      ═══════════════════════════════════════════════════════════════ */}
+
+      {/* MODAL DETALLE DE MOVIMIENTO */}
+      {modalType === 'detail' && selectedItem && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-md space-y-4" style={{ border: '1px solid #D4DBDB' }}>
+            <div className="flex items-start justify-between pb-3" style={{ borderBottom: '1px solid #D4DBDB' }}>
+              <div>
+                <span className="text-[10px] font-mono font-semibold" style={{ color: '#0071A8' }}>
+                  Movimiento #{selectedItem.id}
+                </span>
+                <h3 className="text-base font-bold text-slate-800 leading-tight">
+                  {selectedItem.productName}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setModalType(null)} 
+                className="p-1.5 rounded-lg cursor-pointer"
+                style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+              >
+                <X size={15} />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Código ID</span>
+                <span className="font-mono font-semibold text-slate-700">{selectedItem.productId}</span>
+              </div>
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Cantidad Ingresada</span>
+                <span className="font-mono font-bold text-emerald-600">+{selectedItem.quantity} {selectedItem.unitName}</span>
+              </div>
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Fecha y Hora</span>
+                <span className="font-mono text-[11px] text-slate-600">{selectedItem.date}</span>
+              </div>
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Responsable</span>
+                <span className="text-slate-700 font-medium">{selectedItem.user}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button 
+                onClick={() => setModalType(null)} 
+                className="px-5 py-2 rounded-xl font-semibold text-xs cursor-pointer shadow-sm"
+                style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
+              >
+                Cerrar detalle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CARGUE MASIVO CSV */}
+      {modalType === 'bulkUpload' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div 
+            className={`bg-white rounded-2xl shadow-xl p-5 w-full text-center transition-all ${csvPreview ? 'max-w-2xl' : 'max-w-md'}`}
+            style={{ border: '1px solid #D4DBDB' }}
+          >
+            {!csvPreview ? (
+              <>
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"
+                  style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}
+                >
+                  <FileSpreadsheet size={24} />
+                </div>
+                <h3 className="font-bold text-base mb-1 text-slate-800">Cargue Masivo de Inventario</h3>
+                <p className="text-[11px] font-medium mb-4" style={{ color: '#B7C0C6' }}>Formato requerido: CÓDIGO_ID, CANTIDAD</p>
+                
+                <button 
+                  onClick={downloadTemplate} 
+                  className="w-full mb-3 py-2.5 rounded-xl font-semibold text-[11px] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  style={{ border: '1px solid #0071A8', color: '#0071A8' }}
+                >
+                  <Download size={13}/> Descargar plantilla de ejemplo
+                </button>
+
+                <label 
+                  className="block w-full py-6 rounded-2xl cursor-pointer transition-all mb-3 hover:bg-slate-50"
+                  style={{ border: '2px dashed #D4DBDB' }}
+                >
+                  <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                  <UploadCloud size={24} className="mx-auto mb-1.5" style={{ color: '#B7C0C6' }}/>
+                  <span className="text-xs font-semibold" style={{ color: '#0071A8' }}>Seleccionar archivo CSV</span>
+                </label>
+                
+                <button 
+                  onClick={() => { setCsvPreview(null); setModalType(null); }} 
+                  className="w-full py-2.5 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-200"
+                  style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <div className="space-y-3 text-left">
+                <div className="flex justify-between items-center pb-2" style={{ borderBottom: '1px solid #D4DBDB' }}>
+                  <div>
+                    <h3 className="font-bold text-base text-slate-800">Vista Previa de Inventario</h3>
+                    <p className="text-[10px]" style={{ color: '#B7C0C6' }}>{csvFileMeta.name} ({csvFileMeta.size})</p>
                   </div>
-                ))}
+                  <div className="flex gap-2">
+                    <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-semibold border border-emerald-100">
+                      {csvPreview.validRows.length} válidos
+                    </span>
+                    {csvPreview.errors.length > 0 && (
+                      <span className="px-2.5 py-0.5 bg-rose-50 text-rose-500 rounded-lg text-[10px] font-semibold border border-rose-100">
+                        {csvPreview.errors.length} errores
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="max-h-56 overflow-y-auto rounded-xl" style={{ border: '1px solid #D4DBDB' }}>
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0" style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+                      <tr>
+                        <th className="px-3 py-2 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Código ID</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Producto</th>
+                        <th className="px-3 py-2 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {csvPreview.validRows.length === 0 ? (
+                        <tr><td colSpan="3" className="px-4 py-8 text-center text-slate-400">No hay registros válidos</td></tr>
+                      ) : (
+                        csvPreview.validRows.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/60">
+                            <td className="px-3 py-2 font-mono text-[11px] font-semibold" style={{ color: '#0071A8' }}>{row.productId}</td>
+                            <td className="px-3 py-2 font-medium text-slate-700">{row.productName}</td>
+                            <td className="px-3 py-2 text-center font-mono font-bold text-emerald-600">+{row.quantity} {row.unitName}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {csvPreview.errors.length > 0 && (
+                  <div className="max-h-24 overflow-y-auto bg-rose-50 border border-rose-100 p-2.5 rounded-xl space-y-1">
+                    <p className="text-[10px] font-bold text-rose-600">Líneas con inconsistencias:</p>
+                    {csvPreview.errors.map((err, idx) => (
+                      <p key={idx} className="text-[10px] text-rose-700 font-medium">• {err}</p>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-1">
+                  <button 
+                    onClick={() => setCsvPreview(null)} 
+                    className="flex-1 py-2.5 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                    style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
+                  >
+                    Volver
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setInventory([...csvPreview.validRows, ...inventory]);
+                      setCsvPreview(null);
+                      setModalType(null);
+                    }} 
+                    disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-40"
+                  >
+                    Confirmar ({csvPreview.validRows.length})
+                  </button>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Cantidad y Botones Compactos a la Derecha */}
-          <div className="flex items-center gap-3">
-            <input 
-              type="text"
-              inputMode="numeric"
-              placeholder="CANTIDAD"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ''))}
-              disabled={!selectedProd}
-              className="w-32 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none font-mono uppercase disabled:opacity-50"
-            />
-            <button 
-              onClick={() => setModalType('confirm')}
-              disabled={!selectedProd || !quantity}
-              className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] disabled:opacity-50 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-            >
-              PROCESAR
-            </button>
-            <button 
-              onClick={() => {
-                setSelectedProd(null);
-                setQuantity('');
-                setSearchTerm('');
-              }}
-              className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-            >
-              LIMPIAR
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* TABLA DE INVENTARIO OPTIMIZADA */}
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left min-w-[1300px] uppercase">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-5">ID MOV.</th>
-                <th className="px-6 py-5">CÓDIGO ID</th>
-                <th className="px-6 py-5">PRODUCTO</th>
-                <th className="px-6 py-5 text-center">CANTIDAD</th>
-                <th className="px-6 py-5 text-center">FECHA / HORA</th>
-                <th className="px-6 py-5 text-center">USUARIO</th>
-                <th className="px-6 py-5 text-right">GESTIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {inventory.length === 0 ? (
-                <tr><td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">HISTORIAL VACÍO</td></tr>
-              ) : (
-                inventory.map(ev => (
-                  <tr 
-                    key={ev.id} 
-                    onClick={() => { setSelectedItem(ev); setModalType('detail'); }}
-                    className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
-                  >
-                    <td className="px-6 py-4 font-mono text-slate-400">{ev.id}</td>
-                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{ev.productId}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-black text-[#134b60]">{ev.productName}</p>
-                      <p className="text-[9px] text-slate-400">{ev.unitName}</p>
-                    </td>
-                    <td className="px-6 py-4 text-center font-mono text-emerald-600 font-black">{ev.quantity}</td>
-                    <td className="px-6 py-4 text-center text-slate-400 text-[10px] font-mono">{ev.date}</td>
-                    <td className="px-6 py-4 text-center text-[9px] font-black text-slate-500">{ev.user}</td>
-                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedItem(ev); setEditData({ quantity: ev.quantity }); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
-                        <button onClick={() => { setSelectedItem(ev); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* MODAL DE DETALLE DE MOVIMIENTO */}
-      {modalType === 'detail' && selectedItem && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-lg text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE MOVIMIENTO #{selectedItem.id}</span>
-                <h3 className="text-xl font-black text-[#134b60]">{selectedItem.productName}</h3>
-              </div>
-              <button onClick={() => setModalType(null)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-xs font-bold text-[#134b60]">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">CÓDIGO ID</span>
-                <span className="font-mono text-[#2596be]">{selectedItem.productId}</span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">CANTIDAD REGISTRADA</span>
-                <span className="px-3 py-1 rounded-xl font-mono text-xs inline-block font-black bg-emerald-50 text-emerald-600 border border-emerald-100">
-                  {selectedItem.quantity} {selectedItem.unitName}
-                </span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">FECHA / HORA</span>
-                <span className="font-mono text-[10px]">{selectedItem.date}</span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">USUARIO RESPONSABLE</span>
-                <span>{selectedItem.user}</span>
-              </div>
-            </div>
-            <div className="flex justify-end pt-2">
-              <button onClick={() => setModalType(null)} className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95">
-                CERRAR DETALLE
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
-      {modalType === 'bulkUpload' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-            <div className={`bg-white rounded-3xl shadow-2xl p-6 md:p-8 w-full text-center text-[#134b60] transition-all duration-300 ${csvPreview ? 'max-w-sm md:max-w-3xl lg:max-w-5xl' : 'max-w-md'}`}>
-                {!csvPreview ? (
-                  <>
-                    <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><FileSpreadsheet size={40} /></div>
-                    <h3 className="font-black text-xl mb-2 tracking-tighter">CARGUE MASIVO INVENTARIO (CSV)</h3>
-                    <p className="text-[10px] text-slate-400 font-bold mb-6">FORMATO ESPERADO: CÓDIGO_ID, CANTIDAD</p>
-                    
-                    <button onClick={downloadTemplate} className="w-full mb-6 py-3.5 border-2 border-[#2596be] text-[#2596be] rounded-2xl font-black text-[10px] hover:bg-[#e9f4f8] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                        <Download size={14}/> DESCARGAR PLANTILLA MAESTRA DE EJEMPLO
-                    </button>
-
-                    <label className="block w-full py-8 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors mb-6 group">
-                        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                        <UploadCloud size={32} className="mx-auto text-slate-300 group-hover:text-[#2596be] mb-2 transition-colors"/>
-                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">SELECCIONAR ARCHIVO CSV</span>
-                    </label>
-                    <button onClick={() => { setCsvPreview(null); setModalType(null); }} className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs hover:bg-slate-200 uppercase transition-colors cursor-pointer">CANCELAR</button>
-                  </>
-                ) : (
-                  <div className="space-y-6 animate-in fade-in duration-300 w-full text-left">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                      <div>
-                        <h3 className="font-black text-xl text-[#134b60] tracking-tighter">VISTA PREVIA DEL INVENTARIO</h3>
-                        <p className="text-[10px] text-slate-400 font-bold mt-0.5">{csvFileMeta.name} ({csvFileMeta.size})</p>
-                      </div>
-                      <div className="flex gap-3 text-right">
-                        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black">
-                          {csvPreview.validRows.length} VÁLIDOS
-                        </span>
-                        <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${csvPreview.errors.length > 0 ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                          {csvPreview.errors.length} ERRORES
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="max-h-64 overflow-y-auto border-2 border-slate-100 rounded-2xl scrollbar-hide">
-                      <table className="w-full text-left uppercase">
-                        <thead className="bg-[#134b60] text-white text-[9px] font-black sticky top-0 tracking-widest z-10">
-                          <tr>
-                            <th className="px-4 py-3">CÓDIGO ID</th>
-                            <th className="px-4 py-3">PRODUCTO</th>
-                            <th className="px-4 py-3 text-center">CANTIDAD</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-[10px] font-bold text-[#134b60]">
-                          {csvPreview.validRows.length === 0 ? (
-                            <tr><td colSpan="3" className="px-4 py-8 text-center text-slate-300">NO HAY REGISTROS VÁLIDOS</td></tr>
-                          ) : (
-                            csvPreview.validRows.map((row, idx) => (
-                              <tr key={idx} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                                <td className="px-4 py-3 font-mono text-[#2596be] font-black">{row.productId}</td>
-                                <td className="px-4 py-3">{row.productName}</td>
-                                <td className="px-4 py-3 text-center font-mono text-emerald-600 font-black">{row.quantity} {row.unitName}</td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {csvPreview.errors.length > 0 && (
-                      <div className="max-h-28 overflow-y-auto bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl space-y-1 scrollbar-hide">
-                        <p className="text-[10px] font-black text-rose-600 uppercase mb-2">FILAS IGNORADAS:</p>
-                        {csvPreview.errors.map((err, idx) => (
-                          <p key={idx} className="text-[9px] font-bold text-rose-700">{err}</p>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex gap-4 pt-2">
-                      <button onClick={() => setCsvPreview(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-50 transition-all cursor-pointer">CANCELAR</button>
-                      <button 
-                        onClick={() => {
-                          setInventory([...csvPreview.validRows, ...inventory]);
-                          setCsvPreview(null);
-                          setModalType(null);
-                        }} 
-                        disabled={csvPreview.validRows.length === 0 || csvPreview.errors.length > 0}
-                        className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
-                      >
-                        CONFIRMAR E IMPORTAR {csvPreview.validRows.length} REGISTROS
-                      </button>
-                    </div>
-                  </div>
-                )}
-            </div>
-        </div>
-      )}
-
+      {/* MODAL DE CONFIRMAR CARGUE MANUAL */}
       {modalType === 'confirm' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-8 text-center text-[#134b60]">
-            <div className="w-20 h-20 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><Boxes size={40}/></div>
-            <h3 className="font-black text-xl mb-4 tracking-tighter">¿CONFIRMAR CARGUE?</h3>
-            <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl mb-8">
-              <p className="text-emerald-500 text-4xl font-black font-mono">{quantity} <span className="text-xs text-slate-400">{selectedProd?.unitName}</span></p>
-              <p className="text-[10px] font-bold text-slate-400 mt-2 tracking-widest uppercase">DISPONIBLE ACTUAL: {selectedProd && calculateAvailableStock(selectedProd.id, inventory, orders)}</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-sm text-center space-y-4" style={{ border: '1px solid #D4DBDB' }}>
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto"
+              style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}
+            >
+              <Boxes size={24}/>
             </div>
-            <div className="flex gap-4">
-              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">VOLVER</button>
-              <button onClick={handleSave} className="flex-1 py-4 bg-[#2596be] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 hover:bg-[#1e7a9b] uppercase transition-all cursor-pointer active:scale-95">ACEPTAR</button>
+            
+            <h3 className="font-bold text-base text-slate-800">¿Confirmar Ingreso?</h3>
+            
+            <div className="p-3.5 rounded-xl" style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB' }}>
+              <p className="text-2xl font-bold font-mono text-emerald-600">
+                +{quantity} <span className="text-xs text-slate-500 font-sans">{selectedProd?.unitName}</span>
+              </p>
+              <p className="text-[11px] font-semibold text-slate-700 mt-1 truncate">
+                {selectedProd?.name}
+              </p>
+              <p className="text-[10px] mt-1 font-medium" style={{ color: '#B7C0C6' }}>
+                Stock actual: {selectedProd && calculateAvailableStock(selectedProd.id, inventory, orders)}
+              </p>
+            </div>
+
+            <div className="flex gap-2.5">
+              <button 
+                onClick={() => setModalType(null)} 
+                className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
+              >
+                Volver
+              </button>
+              <button 
+                onClick={handleSave} 
+                className="flex-1 py-2 rounded-xl font-semibold text-xs shadow-sm cursor-pointer transition-all active:scale-95"
+                style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* MODAL DE EDICIÓN Y ELIMINACIÓN */}
       {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : ''}`}>
-            <div className="p-8 text-[#134b60]">
-              <div className="flex flex-col items-center text-center gap-4 mb-8">
-                <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div 
+            className={`bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 ${modalType === 'deleteSecond' ? 'border-2 border-rose-400' : ''}`}
+            style={{ border: modalType === 'deleteSecond' ? '2px solid #f87171' : '1px solid #D4DBDB' }}
+          >
+            <div className="flex flex-col items-center text-center gap-2 mb-3">
+              <div className={`p-2.5 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#eff8fc] text-[#0071A8]' : 'bg-rose-50 text-rose-500'}`}>
+                {modalType === 'edit' ? <Edit size={20} /> : modalType === 'updateConfirm' ? <Info size={20} /> : <AlertTriangle size={20} />}
+              </div>
+              <h3 className="font-bold text-base text-slate-800">
+                {modalType === 'edit' ? 'Editar Cantidad' : modalType === 'updateConfirm' ? 'Confirmar Modificación' : 'Eliminar Registro'}
+              </h3>
+            </div>
+
+            <div className="space-y-3">
+              {modalType === 'edit' && (
+                <div>
+                  <label className="text-[10px] font-semibold block mb-1" style={{ color: '#0071A8' }}>Nueva Cantidad</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={editData.quantity} 
+                    onChange={(e) => setEditData({...editData, quantity: e.target.value})} 
+                    className="w-full px-3 py-2 rounded-xl text-center text-xs font-mono font-semibold outline-none transition-all"
+                    style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                    onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                    onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                  />
                 </div>
-                <h3 className="font-black text-xl uppercase tracking-tighter">
-                  {modalType === 'edit' ? 'EDITAR CANTIDAD' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR REGISTRO'}
-                </h3>
-              </div>
-              <div className="space-y-4">
-                {modalType === 'edit' && (
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NUEVA CANTIDAD</label>
-                    <input type="number" step="0.01" value={editData.quantity} onChange={(e) => setEditData({...editData, quantity: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-center text-sm outline-none focus:border-[#2596be] text-[#134b60] transition-all" />
-                  </div>
-                )}
-                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase tracking-tight">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ AL STOCK GENERAL.</p></div>}
-                {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-100 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ AL STOCK Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DEL REGISTRO {selectedItem?.id}.</p></div>}
-              </div>
-              <div className="flex gap-4 mt-10">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
-                <button onClick={() => {
-                   if (modalType === 'edit') setModalType('updateConfirm');
-                   else if (modalType === 'updateConfirm') executeUpdate();
-                   else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-                   else if (modalType === 'deleteSecond') { setInventory(inventory.filter(i => i.id !== selectedItem.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
-              </div>
+              )}
+              {modalType === 'updateConfirm' && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <p className="text-amber-700 font-medium text-xs text-center">⚠️ Esta modificación actualizará el cálculo de stock general.</p>
+                </div>
+              )}
+              {modalType === 'deleteSecond' && (
+                <p className="text-xs font-medium text-center my-3 text-rose-600">
+                  Acción irreversible. Se borrará el registro <span className="font-mono font-bold">{selectedItem?.id}</span>.
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2.5 mt-4">
+              <button 
+                onClick={() => setModalType(null)} 
+                className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  if (modalType === 'edit') setModalType('updateConfirm');
+                  else if (modalType === 'updateConfirm') executeUpdate();
+                  else if (modalType === 'deleteFirst') setModalType('deleteSecond');
+                  else if (modalType === 'deleteSecond') { setInventory(inventory.filter(i => i.id !== selectedItem.id)); setModalType(null); }
+                }} 
+                className={`flex-1 py-2 rounded-xl font-semibold text-xs shadow-sm cursor-pointer transition-all ${modalType === 'edit' || modalType === 'updateConfirm' ? '' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
+                style={modalType === 'edit' || modalType === 'updateConfirm' ? { backgroundColor: '#0071A8', color: '#FFFFFF' } : {}}
+              >
+                Aceptar
+              </button>
             </div>
           </div>
         </div>
       )}
-      <Footer />
+
     </div>
   );
 };
