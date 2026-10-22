@@ -4927,7 +4927,7 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
   );
 };
 
-// --- MÓDULO DE GESTIÓN DE ACCESOS Y ROLES (CON RESTRICCIÓN PARA CLIENTES) ---
+// --- MÓDULO DE GESTIÓN DE ACCESOS Y ROLES: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const AccessManagementView = ({ users, setUsers, clients }) => {
   const AVAILABLE_MODULES = [
     { id: 'dashboard', label: 'DASHBOARD', group: 'GESTIÓN GENERAL' },
@@ -4996,7 +4996,6 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   };
 
   const handlePermissionToggle = (modId, roleCheck, isEdit = false) => {
-    // Si el rol es CLIENT y el módulo pertenece a Gestión General, se bloquea por completo
     if (roleCheck === 'CLIENT' && modId !== 'client_home' && modId !== 'client_new_order' && modId !== 'client_orders_history') {
       return;
     }
@@ -5015,11 +5014,11 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   const handleAdd = (e) => {
     e.preventDefault();
     if (newUser.role !== 'SUPERADMIN' && !newUser.relatedId && newUser.role !== 'ADMIN' && newUser.role !== 'OPERADOR') { 
-      setErrorMsg('DEBE SELECCIONAR UN CLIENTE O ASIGNAR UN ROL VÁLIDO.'); 
+      setErrorMsg('Debe vincular un cliente o asignar un rol administrativo.'); 
       return; 
     }
     if (users.some(u => u.email.toLowerCase() === newUser.email.toLowerCase())) { 
-      setErrorMsg('EL CORREO YA ESTÁ REGISTRADO EN EL SISTEMA.'); 
+      setErrorMsg('El correo electrónico ya se encuentra registrado.'); 
       return; 
     }
 
@@ -5038,7 +5037,7 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
 
   const executeUpdate = () => {
     if (users.some(u => u.id !== selectedUser.id && u.email.toLowerCase() === editData.email.toLowerCase())) { 
-      alert('ESTE CORREO ESTÁ EN USO POR OTRO USUARIO'); 
+      alert('Este correo está en uso por otro usuario'); 
       return; 
     }
     setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...editData, name: editData.name.toUpperCase() } : u));
@@ -5046,410 +5045,561 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   };
 
   return (
-    <div className="flex flex-col w-full min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-5 pb-10">
-      
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-2 border-slate-100 pb-3 w-full">
-        <div className="border-b-4 border-[#2596be] pb-1">
-          <h2 className="text-lg md:text-xl font-black text-[#134b60] uppercase tracking-tight">GESTIÓN DE ACCESOS Y ROLES</h2>
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+    >
+      {/* 1. ENCABEZADO COMPACTO */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+            style={{ backgroundColor: '#0071A8' }}
+          >
+            <ShieldCheck size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight"
+              style={{ color: '#0071A8' }}
+            >
+              Gestión de Accesos y Roles
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Control de credenciales, roles y permisos de navegación
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+        {/* Pestañas de Navegación Superiores */}
+        <div 
+          className="flex items-center gap-1 p-1 rounded-xl"
+          style={{ backgroundColor: '#D4DBDB' }}
+        >
           <button 
+            type="button"
             onClick={() => setActiveTab('create')}
-            className={`px-4 py-2 rounded-lg text-[10px] font-black transition-all cursor-pointer ${activeTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#134b60]'}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+            style={{
+              backgroundColor: activeTab === 'create' ? '#0071A8' : 'transparent',
+              color: activeTab === 'create' ? '#FFFFFF' : '#0071A8',
+            }}
           >
-            ➕ NUEVO ACCESO
+            <Plus size={13} /> Nuevo acceso
           </button>
           <button 
+            type="button"
             onClick={() => setActiveTab('list')}
-            className={`px-4 py-2 rounded-lg text-[10px] font-black transition-all cursor-pointer ${activeTab === 'list' ? 'bg-white text-[#134b60] shadow-sm' : 'text-slate-400 hover:text-[#134b60]'}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+            style={{
+              backgroundColor: activeTab === 'list' ? '#0071A8' : 'transparent',
+              color: activeTab === 'list' ? '#FFFFFF' : '#0071A8',
+            }}
           >
-            📋 LISTA DE USUARIOS ({users.length})
+            <ClipboardList size={13} /> Lista de Usuarios
+            <span 
+              className="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
+              style={{
+                backgroundColor: activeTab === 'list' ? 'rgba(255,255,255,0.25)' : '#B7C0C6',
+                color: activeTab === 'list' ? '#FFFFFF' : '#0071A8',
+              }}
+            >
+              {users.length}
+            </span>
           </button>
         </div>
       </div>
 
-      {errorMsg && <div className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl animate-pulse w-full">{errorMsg}</div>}
+      {errorMsg && (
+        <div className="mx-4 mt-2 p-2.5 bg-rose-50 border border-rose-200 text-rose-600 font-medium text-xs rounded-xl flex items-center gap-2 shrink-0">
+          <AlertTriangle size={14} className="shrink-0" /> {errorMsg}
+        </div>
+      )}
 
-      {/* VISTA 1: FORMULARIO NUEVO ACCESO */}
-      {activeTab === 'create' && (
-        <div className="bg-white p-5 md:p-6 rounded-2xl border-2 border-[#e9f4f8] shadow-sm space-y-4 animate-in fade-in duration-300 w-full">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h3 className="font-black text-[#134b60] flex items-center gap-2 text-xs uppercase tracking-wider">
-              <UserPlus size={16} className="text-[#2596be]" /> REGISTRAR NUEVO ACCESO Y PERMISOS
-            </h3>
-          </div>
-          
-          <form className="space-y-4 w-full" onSubmit={handleAdd}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="space-y-1">
-                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ROL DEL SISTEMA</label>
-                <select 
-                  value={newUser.role} 
-                  onChange={(e) => handleRoleChange(e.target.value, false)} 
-                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all"
-                  required
-                >
-                  <option value="">SELECCIONE ROL</option>
-                  <option value="SUPERADMIN">SUPERADMIN (TOTAL)</option>
-                  <option value="ADMIN">ADMINISTRADOR</option>
-                  <option value="OPERADOR">OPERADOR</option>
-                  <option value="CLIENT">CLIENTE</option>
-                </select>
-              </div>
+      {/* 2. ÁREA DE CONTENIDO */}
+      <div className="flex-1 overflow-hidden px-4 pt-3 pb-4">
+        
+        {/* PESTAÑA 1: FORMULARIO NUEVO ACCESO */}
+        {activeTab === 'create' && (
+          <div className="h-full overflow-y-auto pr-1 pb-4 animate-in fade-in duration-300">
+            <div 
+              className="bg-white p-4 rounded-xl border space-y-4 shadow-sm"
+              style={{ borderColor: '#D4DBDB' }}
+            >
+              <h3 
+                className="text-xs font-semibold flex items-center gap-1.5 pb-2"
+                style={{ color: '#0071A8', borderBottom: '1px solid #D4DBDB' }}
+              >
+                <UserPlus size={14} /> Registrar Nuevo Acceso y Asignar Permisos
+              </h3>
+              
+              <form className="space-y-3.5" onSubmit={handleAdd}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Rol del Sistema *
+                    </label>
+                    <select 
+                      value={newUser.role} 
+                      onChange={(e) => handleRoleChange(e.target.value, false)} 
+                      className="w-full px-3 py-2 rounded-lg text-xs font-semibold outline-none cursor-pointer"
+                      style={{ border: '1px solid #0071A8', color: '#0071A8', backgroundColor: '#eff8fc' }}
+                      required
+                    >
+                      <option value="">Seleccione rol...</option>
+                      <option value="SUPERADMIN">SUPERADMIN (TOTAL)</option>
+                      <option value="ADMIN">ADMINISTRADOR</option>
+                      <option value="OPERADOR">OPERADOR</option>
+                      <option value="CLIENT">CLIENTE</option>
+                    </select>
+                  </div>
 
-              <div className="space-y-1">
-                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMBRE COMPLETO</label>
-                <input 
-                  type="text" 
-                  value={newUser.name} 
-                  onChange={(e) => setNewUser({...newUser, name: e.target.value.toUpperCase()})} 
-                  placeholder="NOMBRE Y APELLIDO" 
-                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
-                  required 
-                />
-              </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Nombre Completo *
+                    </label>
+                    <input 
+                      type="text" 
+                      value={newUser.name} 
+                      onChange={(e) => setNewUser({...newUser, name: e.target.value.toUpperCase()})} 
+                      placeholder="Nombre y Apellidos..." 
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none transition-all" 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      required 
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
-                <input 
-                  type="email" 
-                  value={newUser.email} 
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
-                  placeholder="CORREO@DOMINIO.COM" 
-                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs lowercase text-[#134b60] transition-all" 
-                  required 
-                />
-              </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Correo Electrónico *
+                    </label>
+                    <input 
+                      type="email" 
+                      value={newUser.email} 
+                      onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
+                      placeholder="correo@dominio.com" 
+                      className="w-full px-3 py-2 rounded-lg text-xs outline-none lowercase transition-all" 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      required 
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">CONTRASEÑA TEMPORAL</label>
-                <input 
-                  type="password" 
-                  value={newUser.password} 
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})} 
-                  placeholder="••••••••" 
-                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all" 
-                  required 
-                />
-              </div>
-            </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Contraseña Temporal *
+                    </label>
+                    <input 
+                      type="password" 
+                      value={newUser.password} 
+                      onChange={(e) => setNewUser({...newUser, password: e.target.value})} 
+                      placeholder="••••••••" 
+                      className="w-full px-3 py-2 rounded-lg text-xs font-mono outline-none transition-all" 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      required 
+                    />
+                  </div>
+                </div>
 
-            {newUser.role === 'CLIENT' && (
-              <div className="space-y-1 relative max-w-md">
-                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">VINCULAR CLIENTE</label>
-                <input 
-                  type="text" 
-                  value={searchClient} 
-                  onChange={(e) => setSearchClient(e.target.value)} 
-                  placeholder="BUSCAR CLIENTE POR NIT O NOMBRE..." 
-                  className="w-full px-3 py-2.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all" 
-                />
-                {filteredClients.length > 0 && !newUser.relatedId && (
-                  <div className="absolute top-full left-0 right-0 bg-white border-2 border-slate-100 shadow-2xl rounded-xl mt-1 z-50 overflow-hidden uppercase text-xs font-bold">
-                    {filteredClients.map(c => (
+                {newUser.role === 'CLIENT' && (
+                  <div className="space-y-1 relative max-w-md pt-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Vincular Cliente Comercial *
+                    </label>
+                    <input 
+                      type="text" 
+                      value={searchClient} 
+                      onChange={(e) => setSearchClient(e.target.value)} 
+                      placeholder="Buscar por NIT o Nombre de Cliente..." 
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none" 
+                      style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                    />
+                    {filteredClients.length > 0 && !newUser.relatedId && (
                       <div 
-                        key={c.id} 
-                        onClick={() => {
-                          setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email});
-                          setSearchClient(`${c.docNumber} - ${c.name}`);
-                        }}
-                        className="px-3 py-2.5 hover:bg-[#e9f4f8] cursor-pointer text-[#134b60] border-b border-slate-50"
+                        className="absolute top-full left-0 right-0 bg-white shadow-xl rounded-xl mt-1 z-50 overflow-hidden text-xs divide-y"
+                        style={{ border: '1px solid #D4DBDB' }}
                       >
-                        <span className="font-mono text-[#2596be] mr-2">{c.docNumber}</span>
-                        <span>{c.name}</span>
+                        {filteredClients.map(c => (
+                          <div 
+                            key={c.id} 
+                            onClick={() => {
+                              setNewUser({...newUser, relatedId: c.id, name: c.name, email: c.email});
+                              setSearchClient(`${c.docNumber} - ${c.name}`);
+                            }}
+                            className="px-3 py-2 hover:bg-[#eff8fc] cursor-pointer flex justify-between items-center transition-colors"
+                          >
+                            <div>
+                              <span className="font-mono font-semibold mr-2" style={{ color: '#0071A8' }}>{c.docNumber}</span>
+                              <span className="font-medium text-slate-700">{c.name}</span>
+                            </div>
+                            <span className="text-[10px]" style={{ color: '#B7C0C6' }}>{c.docType}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* MÓDULOS CON RESTRICCIÓN PARA CLIENTE */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 w-full">
-              <div className="flex items-center justify-between">
-                <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block">MÓDULOS HABILITADOS</label>
-                {newUser.role === 'CLIENT' && (
-                  <span className="text-[8px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
-                    ⚠️ ROL CLIENTE: RESTRINGIDO EXCLUSIVAMENTE A PORTAL CLIENTE
-                  </span>
-                )}
-              </div>
-              
-              <div className="space-y-1.5">
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">GESTIÓN GENERAL</span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                  {AVAILABLE_MODULES.filter(m => m.group === 'GESTIÓN GENERAL').map(mod => {
-                    const isClientRestricted = newUser.role === 'CLIENT';
-                    return (
-                      <label 
-                        key={mod.id} 
-                        className={`flex items-center gap-2 p-2 rounded-xl transition-colors border ${isClientRestricted ? 'bg-slate-100 opacity-50 cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-[#e9f4f8]/50 cursor-pointer border-slate-100'}`}
-                      >
-                        <input 
-                          type="checkbox"
-                          checked={newUser.permissions?.includes(mod.id) || false}
-                          disabled={isClientRestricted}
-                          onChange={() => handlePermissionToggle(mod.id, newUser.role, false)}
-                          className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer disabled:cursor-not-allowed"
-                        />
-                        <span className="text-[9px] font-black text-[#134b60] truncate">{mod.label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">PORTAL CLIENTE</span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2">
-                  {AVAILABLE_MODULES.filter(m => m.group === 'PORTAL CLIENTE').map(mod => (
-                    <label key={mod.id} className="flex items-center gap-2 p-2 bg-slate-50 hover:bg-[#e9f4f8]/50 rounded-xl cursor-pointer transition-colors border border-slate-100">
-                      <input 
-                        type="checkbox"
-                        checked={newUser.permissions?.includes(mod.id) || false}
-                        onChange={() => handlePermissionToggle(mod.id, newUser.role, false)}
-                        className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer"
-                      />
-                      <span className="text-[9px] font-black text-[#134b60] truncate">{mod.label}</span>
+                {/* MÓDULOS CON RESTRICCIÓN PARA CLIENTE */}
+                <div className="space-y-3 pt-3" style={{ borderTop: '1px solid #D4DBDB' }}>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Módulos Habilitados en Navegación
                     </label>
-                  ))}
-                </div>
-              </div>
-            </div>
+                    {newUser.role === 'CLIENT' && (
+                      <span className="text-[9px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        ⚠️ Rol Cliente: Restringido únicamente a su portal
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Grupo Gestión General */}
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-semibold" style={{ color: '#B7C0C6' }}>GESTIÓN GENERAL</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                      {AVAILABLE_MODULES.filter(m => m.group === 'GESTIÓN GENERAL').map(mod => {
+                        const isClientRestricted = newUser.role === 'CLIENT';
+                        return (
+                          <label 
+                            key={mod.id} 
+                            className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
+                              isClientRestricted 
+                                ? 'bg-slate-50 opacity-40 cursor-not-allowed border-slate-200' 
+                                : 'bg-white hover:bg-[#eff8fc] cursor-pointer border-slate-200'
+                            }`}
+                          >
+                            <input 
+                              type="checkbox"
+                              checked={newUser.permissions?.includes(mod.id) || false}
+                              disabled={isClientRestricted}
+                              onChange={() => handlePermissionToggle(mod.id, newUser.role, false)}
+                              className="w-3.5 h-3.5 cursor-pointer disabled:cursor-not-allowed"
+                              style={{ accentColor: '#0071A8' }}
+                            />
+                            <span className="text-[10px] font-semibold text-slate-700 truncate">{mod.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button 
-                type="button" 
-                onClick={() => { setNewUser(initialForm); setSearchClient(''); setErrorMsg(''); }}
-                className="px-5 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-xl font-black text-[9px] uppercase transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm"
-              >
-                <XCircle size={14} /> LIMPIAR
-              </button>
-              <button 
-                type="submit"
-                className="px-6 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-2.5 rounded-xl font-black uppercase text-[9px] tracking-widest shadow-md shadow-[#2596be]/20 transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-              >
-                <Plus size={14} /> GUARDAR ACCESO
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* VISTA 2: LISTA DE USUARIOS */}
-      {activeTab === 'list' && (
-        <div className="bg-white p-5 md:p-6 rounded-2xl border-2 border-[#e9f4f8] shadow-sm space-y-4 animate-in fade-in duration-300 w-full">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
-            <div className="relative w-full sm:max-w-md">
-              <input
-                type="text"
-                placeholder="Buscador inteligente: ID, nombre, correo o rol..."
-                value={searchUserTerm}
-                onChange={(e) => setSearchUserTerm(e.target.value)}
-                className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-xl px-4 py-2.5 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
-              />
-            </div>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-              Mostrando {filteredUsers.length} de {users.length} registros
-            </span>
-          </div>
-
-          <div className="rounded-xl border-2 border-slate-100 shadow-sm overflow-hidden flex flex-col w-full">
-            <div className="max-h-[550px] overflow-y-auto overflow-x-auto scrollbar-hide w-full">
-              <table className="w-full text-left uppercase min-w-[750px]">
-                <thead className="bg-[#134b60] text-white text-[9px] uppercase font-black tracking-widest sticky top-0 z-10">
-                  <tr>
-                    <th className="px-5 py-3.5">ID / ROL</th>
-                    <th className="px-5 py-3.5">NOMBRE / CORREO</th>
-                    <th className="px-5 py-3.5 text-center">MÓDULOS</th>
-                    <th className="px-5 py-3.5 text-right">GESTIÓN</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-                  {filteredUsers.length === 0 ? (
-                    <tr>
-                      <td colSpan="4" className="px-5 py-16 text-center text-slate-300 font-black">SIN ACCESOS REGISTRADOS</td>
-                    </tr>
-                  ) : (
-                    filteredUsers.map((u) => {
-                      const isNativaCastilla = u.email?.toLowerCase().includes('castilla') || (u.role === 'SUPERADMIN' && u.id === 'US000001');
-                      return (
-                        <tr key={u.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                          <td className="px-5 py-3">
-                            <span className="font-mono text-[#2596be] font-black block">{u.id}</span>
-                            <span className={`inline-block px-2 py-0.5 rounded-md text-[8px] font-black mt-0.5 ${u.role === 'SUPERADMIN' ? 'bg-purple-50 text-purple-600 border border-purple-200' : u.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : u.role === 'OPERADOR' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3">
-                            <p className="font-black text-[#134b60]">{u.name}</p>
-                            <p className="text-[9px] text-slate-400 lowercase">{u.email}</p>
-                          </td>
-                          <td className="px-5 py-3 text-center">
-                            <span className="text-[9px] font-mono font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600">
-                              {u.permissions?.length || 0} módulos
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-right">
-                            <div className="flex justify-end gap-2">
-                              <button 
-                                onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} 
-                                className="p-2 bg-[#e9f4f8] text-[#2596be] rounded-xl transition-all hover:bg-[#2596be] hover:text-white shadow-sm cursor-pointer active:scale-95"
-                                title="Editar Permisos y Rol"
-                              >
-                                <Edit size={13} />
-                              </button>
-                              {!isNativaCastilla ? (
-                                <button 
-                                  onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} 
-                                  className="p-2 bg-rose-50 text-rose-500 rounded-xl transition-all hover:bg-rose-500 hover:text-white shadow-sm cursor-pointer active:scale-95"
-                                  title="Eliminar Acceso"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                              ) : (
-                                <span className="text-[7px] font-black text-slate-300 uppercase px-2 py-1 flex items-center justify-end">NATIVO</span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE EDICIÓN Y PERMISOS CON RESTRICCIÓN CLIENTE */}
-      {modalType && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
-          <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-xl ${modalType === 'deleteSecond' ? 'border-[6px] border-rose-500' : ''}`}>
-            <div className="p-6 text-[#134b60]">
-              <div className="flex flex-col items-center text-center gap-3 mb-4">
-                <div className={`p-3 rounded-full shadow-inner ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                  {modalType === 'edit' ? <Edit size={28} /> : modalType === 'updateConfirm' ? <Info size={28} /> : <AlertTriangle size={28} />}
-                </div>
-                <h3 className="font-black text-base uppercase tracking-tighter">
-                  {modalType === 'edit' ? 'EDITAR ROL Y PERMISOS' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR CAMBIOS' : 'ELIMINAR ACCESO'}
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                {modalType === 'edit' && (
-                  <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ROL DEL SISTEMA</label>
-                        <select 
-                          value={editData.role} 
-                          onChange={(e) => handleRoleChange(e.target.value, true)} 
-                          className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-bold text-xs uppercase outline-none focus:border-[#2596be] text-[#134b60] transition-all"
+                  {/* Grupo Portal Cliente */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[9px] font-semibold" style={{ color: '#B7C0C6' }}>PORTAL CLIENTE</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {AVAILABLE_MODULES.filter(m => m.group === 'PORTAL CLIENTE').map(mod => (
+                        <label 
+                          key={mod.id} 
+                          className="flex items-center gap-2 p-2 bg-white hover:bg-[#eff8fc] rounded-lg cursor-pointer transition-colors border border-slate-200"
                         >
-                          <option value="SUPERADMIN">SUPERADMIN (TOTAL)</option>
-                          <option value="ADMIN">ADMINISTRADOR</option>
-                          <option value="OPERADOR">OPERADOR</option>
-                          <option value="CLIENT">CLIENTE</option>
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">NOMBRE</label>
-                        <input 
-                          type="text" 
-                          value={editData.name} 
-                          onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} 
-                          className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black uppercase text-xs outline-none focus:border-[#2596be] text-[#134b60] transition-all" 
-                        />
-                      </div>
+                          <input 
+                            type="checkbox"
+                            checked={newUser.permissions?.includes(mod.id) || false}
+                            onChange={() => handlePermissionToggle(mod.id, newUser.role, false)}
+                            className="w-3.5 h-3.5 cursor-pointer"
+                            style={{ accentColor: '#0071A8' }}
+                          />
+                          <span className="text-[10px] font-semibold text-slate-700 truncate">{mod.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3" style={{ borderTop: '1px solid #D4DBDB' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => { setNewUser(initialForm); setSearchClient(''); setErrorMsg(''); }}
+                    className="px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all hover:bg-slate-200"
+                    style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+                  >
+                    Limpiar formulario
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-5 py-2 rounded-lg text-[11px] font-semibold shadow-sm cursor-pointer transition-all active:scale-95"
+                    style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
+                  >
+                    Guardar acceso
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* PESTAÑA 2: LISTA DE USUARIOS (VIEWPORT FIT) */}
+        {activeTab === 'list' && (
+          <div className="h-full flex flex-col gap-2.5 animate-in fade-in duration-300">
+            {/* Buscador de usuarios */}
+            <div 
+              className="flex-shrink-0 flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white shadow-sm"
+              style={{ border: '1px solid #D4DBDB' }}
+            >
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Buscar por ID, nombre, correo electrónico o rol..."
+                  value={searchUserTerm}
+                  onChange={(e) => setSearchUserTerm(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg text-xs font-medium outline-none"
+                  style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB', color: '#374151' }}
+                  onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                  onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                />
+              </div>
+              <span className="text-[10px] font-semibold shrink-0" style={{ color: '#0071A8' }}>
+                Mostrando {filteredUsers.length} de {users.length} registros
+              </span>
+            </div>
+
+            {/* Tabla de usuarios con scroll interno */}
+            <div 
+              className="flex-1 overflow-hidden rounded-xl bg-white shadow-sm flex flex-col"
+              style={{ border: '1px solid #D4DBDB' }}
+            >
+              <div className="h-full overflow-y-auto overflow-x-auto">
+                <table className="w-full text-left min-w-[700px]">
+                  <thead 
+                    className="sticky top-0 z-10"
+                    style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+                  >
+                    <tr>
+                      <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>ID / Rol</th>
+                      <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Nombre / Correo</th>
+                      <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Módulos</th>
+                      <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Gestión</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="px-6 py-16 text-center font-medium" style={{ color: '#B7C0C6' }}>
+                          No hay usuarios registrados
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredUsers.map((u) => {
+                        const isNativaCastilla = u.email?.toLowerCase().includes('castilla') || (u.role === 'SUPERADMIN' && u.id === 'US000001');
+                        return (
+                          <tr key={u.id} className="hover:bg-[#eff8fc] transition-colors" style={{ borderBottom: '1px solid #f8fafc' }}>
+                            <td className="px-4 py-2.5">
+                              <span className="font-mono font-semibold text-[11px] block" style={{ color: '#0071A8' }}>{u.id}</span>
+                              <span 
+                                className="inline-block px-2 py-0.5 rounded text-[8px] font-bold mt-0.5"
+                                style={{
+                                  backgroundColor: u.role === 'SUPERADMIN' ? '#f3e8ff' : u.role === 'ADMIN' ? '#e0e7ff' : u.role === 'OPERADOR' ? '#fef3c7' : '#dcfce7',
+                                  color: u.role === 'SUPERADMIN' ? '#7e22ce' : u.role === 'ADMIN' ? '#4338ca' : u.role === 'OPERADOR' ? '#b45309' : '#15803d',
+                                }}
+                              >
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5">
+                              <p className="font-semibold text-slate-800 leading-tight">{u.name}</p>
+                              <p className="text-[10px] lowercase" style={{ color: '#B7C0C6' }}>{u.email}</p>
+                            </td>
+                            <td className="px-4 py-2.5 text-center">
+                              <span className="text-[10px] font-mono font-medium bg-slate-100 px-2 py-0.5 rounded-md text-slate-600">
+                                {u.permissions?.length || 0} módulos
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right">
+                              <div className="flex justify-end gap-1.5 items-center">
+                                <button 
+                                  onClick={() => { setSelectedUser(u); setEditData(u); setModalType('edit'); }} 
+                                  className="p-1.5 rounded-lg cursor-pointer transition-all hover:bg-[#eff8fc]"
+                                  style={{ color: '#0071A8' }}
+                                  title="Editar Permisos y Rol"
+                                >
+                                  <Edit size={13} />
+                                </button>
+                                {!isNativaCastilla ? (
+                                  <button 
+                                    onClick={() => { setSelectedUser(u); setModalType('deleteFirst'); }} 
+                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 cursor-pointer transition-all"
+                                    title="Eliminar Acceso"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                ) : (
+                                  <span className="text-[8px] font-semibold text-slate-300 px-2">NATIVO</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MODAL DE EDICIÓN Y PERMISOS REESTILIZADO
+      ═══════════════════════════════════════════════════════════════ */}
+      {modalType && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div 
+            className={`bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-lg p-5 ${modalType === 'deleteSecond' ? 'border-2 border-rose-400' : ''}`}
+            style={{ border: modalType === 'deleteSecond' ? '2px solid #f87171' : '1px solid #D4DBDB' }}
+          >
+            <div className="flex flex-col items-center text-center gap-2 mb-3">
+              <div className={`p-2.5 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#eff8fc] text-[#0071A8]' : 'bg-rose-50 text-rose-500'}`}>
+                {modalType === 'edit' ? <Edit size={20} /> : modalType === 'updateConfirm' ? <Info size={20} /> : <AlertTriangle size={20} />}
+              </div>
+              <h3 className="font-bold text-base text-slate-800">
+                {modalType === 'edit' ? 'Editar Rol y Permisos' : modalType === 'updateConfirm' ? 'Confirmar Modificación' : 'Eliminar Acceso'}
+              </h3>
+            </div>
+
+            <div className="space-y-3">
+              {modalType === 'edit' && (
+                <div className="space-y-3 max-h-[55vh] overflow-y-auto px-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Rol del Sistema</label>
+                      <select 
+                        value={editData.role} 
+                        onChange={(e) => handleRoleChange(e.target.value, true)} 
+                        className="w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold outline-none cursor-pointer"
+                        style={{ border: '1px solid #D4DBDB', color: '#0071A8' }}
+                      >
+                        <option value="SUPERADMIN">SUPERADMIN (TOTAL)</option>
+                        <option value="ADMIN">ADMINISTRADOR</option>
+                        <option value="OPERADOR">OPERADOR</option>
+                        <option value="CLIENT">CLIENTE</option>
+                      </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
+                      <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Nombre Completo</label>
                       <input 
-                        type="email" 
-                        value={editData.email} 
-                        onChange={(e) => setEditData({...editData, email: e.target.value})} 
-                        className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-xs outline-none focus:border-[#2596be] text-[#134b60] lowercase transition-all" 
+                        type="text" 
+                        value={editData.name} 
+                        onChange={(e) => setEditData({...editData, name: e.target.value.toUpperCase()})} 
+                        className="w-full px-2.5 py-1.5 rounded-lg text-xs font-medium outline-none" 
+                        style={{ border: '1px solid #D4DBDB', color: '#374151' }}
                       />
                     </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Correo Electrónico</label>
+                    <input 
+                      type="email" 
+                      value={editData.email} 
+                      onChange={(e) => setEditData({...editData, email: e.target.value})} 
+                      className="w-full px-2.5 py-1.5 rounded-lg text-xs outline-none lowercase" 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                    />
+                  </div>
 
-                    <div className="space-y-2 pt-2 border-t border-slate-100">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block">PERSONALIZAR MÓDULOS PERMITIDOS</label>
-                        {editData.role === 'CLIENT' && (
-                          <span className="text-[8px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
-                            ⚠️ RESTRINGIDO A PORTAL CLIENTE
-                          </span>
-                        )}
-                      </div>
-                      <div className="space-y-1.5">
-                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">GESTIÓN GENERAL</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          {AVAILABLE_MODULES.filter(m => m.group === 'GESTIÓN GENERAL').map(mod => {
-                            const isClientRestricted = editData.role === 'CLIENT';
-                            return (
-                              <label key={mod.id} className={`flex items-center gap-2 p-2 rounded-xl border ${isClientRestricted ? 'bg-slate-100 opacity-50 cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-[#e9f4f8]/50 cursor-pointer border-slate-100'}`}>
-                                <input 
-                                  type="checkbox"
-                                  checked={editData.permissions?.includes(mod.id) || false}
-                                  disabled={isClientRestricted}
-                                  onChange={() => handlePermissionToggle(mod.id, editData.role, true)}
-                                  className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer disabled:cursor-not-allowed"
-                                />
-                                <span className="text-[9px] font-black text-[#134b60]">{mod.label}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5 pt-1">
-                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">PORTAL CLIENTE</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          {AVAILABLE_MODULES.filter(m => m.group === 'PORTAL CLIENTE').map(mod => (
-                            <label key={mod.id} className="flex items-center gap-2 p-2 bg-slate-50 hover:bg-[#e9f4f8]/50 rounded-xl cursor-pointer transition-colors border border-slate-100">
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Personalizar Módulos</label>
+                      {editData.role === 'CLIENT' && (
+                        <span className="text-[8px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                          ⚠️ Restringido a Portal Cliente
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-semibold" style={{ color: '#B7C0C6' }}>GESTIÓN GENERAL</span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {AVAILABLE_MODULES.filter(m => m.group === 'GESTIÓN GENERAL').map(mod => {
+                          const isClientRestricted = editData.role === 'CLIENT';
+                          return (
+                            <label key={mod.id} className={`flex items-center gap-1.5 p-1.5 rounded-md border text-xs ${isClientRestricted ? 'bg-slate-50 opacity-40 cursor-not-allowed border-slate-200' : 'bg-white hover:bg-slate-50 cursor-pointer border-slate-200'}`}>
                               <input 
                                 type="checkbox"
                                 checked={editData.permissions?.includes(mod.id) || false}
+                                disabled={isClientRestricted}
                                 onChange={() => handlePermissionToggle(mod.id, editData.role, true)}
-                                className="w-3.5 h-3.5 rounded text-[#2596be] focus:ring-[#2596be] cursor-pointer"
+                                className="w-3 h-3 cursor-pointer disabled:cursor-not-allowed"
+                                style={{ accentColor: '#0071A8' }}
                               />
-                              <span className="text-[9px] font-black text-[#134b60]">{mod.label}</span>
+                              <span className="text-[9px] font-medium text-slate-700 truncate">{mod.label}</span>
                             </label>
-                          ))}
-                        </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[8px] font-semibold" style={{ color: '#B7C0C6' }}>PORTAL CLIENTE</span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {AVAILABLE_MODULES.filter(m => m.group === 'PORTAL CLIENTE').map(mod => (
+                          <label key={mod.id} className="flex items-center gap-1.5 p-1.5 bg-white hover:bg-slate-50 rounded-md cursor-pointer border border-slate-200">
+                            <input 
+                              type="checkbox"
+                              checked={editData.permissions?.includes(mod.id) || false}
+                              onChange={() => handlePermissionToggle(mod.id, editData.role, true)}
+                              className="w-3 h-3 cursor-pointer"
+                              style={{ accentColor: '#0071A8' }}
+                            />
+                            <span className="text-[9px] font-medium text-slate-700 truncate">{mod.label}</span>
+                          </label>
+                        ))}
                       </div>
                     </div>
                   </div>
-                )}
-                {modalType === 'updateConfirm' && (
-                  <div className="p-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl shadow-sm">
-                    <p className="text-indigo-700 font-black text-[10px] text-center leading-tight uppercase tracking-wide">⚠️ SE VAN A MODIFICAR LOS PERMISOS Y ACCESOS DE ESTE USUARIO.</p>
-                  </div>
-                )}
-                {modalType === 'deleteSecond' && (
-                  <div className="p-3 bg-rose-50 border-2 border-rose-200 rounded-xl shadow-sm">
-                    <p className="text-rose-700 font-black text-xs text-center leading-relaxed uppercase">SE VA A ELIMINAR EL ACCESO DE <span className="font-mono">{selectedUser?.id}</span>. ESTА ACCIÓN NO SE PUEDE REVERTIR.</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
+              {modalType === 'updateConfirm' && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <p className="text-amber-700 font-medium text-xs text-center">⚠️ Se actualizarán los permisos y roles asignados a este usuario.</p>
+                </div>
+              )}
+              {modalType === 'deleteSecond' && (
+                <p className="text-xs font-medium text-center my-3 text-rose-600">
+                  Acción irreversible. Se eliminará el acceso <span className="font-mono font-bold">{selectedUser?.id}</span>.
+                </p>
+              )}
+            </div>
 
-              <div className="flex gap-2.5 mt-5">
-                <button onClick={() => setModalType(null)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
-                <button onClick={() => {
+            <div className="flex gap-2.5 mt-4">
+              <button 
+                type="button"
+                onClick={() => setModalType(null)} 
+                className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
                    if (modalType === 'edit') setModalType('updateConfirm');
                    else if (modalType === 'updateConfirm') executeUpdate();
                    else if (modalType === 'deleteFirst') setModalType('deleteSecond');
                    else if (modalType === 'deleteSecond') { setUsers(users.filter(u => u.id !== selectedUser.id)); setModalType(null); }
-                }} className={`flex-1 py-2.5 text-white rounded-xl font-black text-xs uppercase transition-all shadow-md cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
-              </div>
+                }} 
+                className={`flex-1 py-2 rounded-xl font-semibold text-xs shadow-sm cursor-pointer transition-all ${modalType === 'edit' || modalType === 'updateConfirm' ? '' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
+                style={modalType === 'edit' || modalType === 'updateConfirm' ? { backgroundColor: '#0071A8', color: '#FFFFFF' } : {}}
+              >
+                Aceptar
+              </button>
             </div>
           </div>
         </div>
       )}
-      <Footer />
+
     </div>
   );
 };
