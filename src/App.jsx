@@ -2051,8 +2051,8 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   );
 };
 
-// --- MÓDULO DE CLIENTES ---
-  const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, setGlobalDiscountEngine }) => {
+// --- MÓDULO DE CLIENTES: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
+const ClientsView = ({ clients, setClients, clientTypes, globalDiscountEngine, setGlobalDiscountEngine }) => {
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [targetDiscountState, setTargetDiscountState] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState('create');
@@ -2079,7 +2079,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
       if (clienteEncontrado) {
         setSelectedClient(clienteEncontrado);
         setEditData(clienteEncontrado);
-        setModalType('edit'); // Abre el modal de edición del cliente
+        setModalType('edit');
       }
     };
     window.addEventListener('abrirClienteGlobal', abrirCliente);
@@ -2091,7 +2091,7 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   const handleAdd = (e) => {
     e.preventDefault();
     const typeObj = clientTypes.find(t => t.id === newClient.typeId);
-    setClients([...clients, { ...newClient, id: getNextID(), typeName: typeObj?.name || 'S.T', name: newClient.name.toUpperCase() }]);
+    setClients([...clients, { ...newClient, id: getNextID(), typeName: typeObj?.name || 'S.T', name: newClient.name.toUpperCase().trim() }]);
     setNewClient(initialForm);
   };
 
@@ -2108,12 +2108,12 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
 
   const InputWarning = ({ val, max }) => {
     if (val && val.toString().length >= max) {
-      return <span className="absolute -bottom-4 right-1 text-[8px] text-rose-500 font-black animate-pulse uppercase">Límite {max} alcanzado</span>;
+      return <span className="absolute -bottom-3.5 right-1 text-[8px] text-rose-500 font-semibold">Límite {max} alcanzado</span>;
     }
     return null;
   };
 
-  const getInputClass = (val, max) => `w-full px-4 py-3 bg-slate-50 border-2 rounded-xl outline-none font-bold text-xs transition-all uppercase text-[#134b60] ${val && val.toString().length >= max ? 'border-rose-400 focus:border-rose-500 bg-rose-50' : 'border-transparent focus:border-[#2596be]'}`;
+  const getInputClass = (val, max) => `w-full px-3 py-2 rounded-lg text-xs font-medium outline-none transition-all uppercase ${val && val.toString().length >= max ? 'border-rose-400 bg-rose-50 text-rose-700' : 'bg-white focus:border-[#0071A8]'}`;
 
   const handleNumChange = (val, field, isEdit) => {
     const numericVal = val.replace(/\D/g, '');
@@ -2121,7 +2121,6 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
     else setNewClient({ ...newClient, [field]: numericVal });
   };
 
-// Lógica del buscador de clientes
   const filteredClients = clients.filter(client => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
@@ -2133,65 +2132,530 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
   });
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE CLIENTES</h2>
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+    >
+      {/* 1. ENCABEZADO COMPACTO */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex flex-col md:flex-row md:items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+            style={{ backgroundColor: '#0071A8' }}
+          >
+            <UserPlus size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight"
+              style={{ color: '#0071A8' }}
+            >
+              Gestión de Clientes
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Directorio, clasificación y políticas comerciales
+            </p>
+          </div>
+        </div>
         
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border-2 border-[#e9f4f8] shadow-sm">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">MOTOR DE DESCUENTOS:</span>
+        {/* Acciones y Sub-pestañas */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Switch Motor de Descuento */}
+          <div 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white shadow-sm"
+            style={{ border: '1px solid #D4DBDB' }}
+          >
+            <span className="text-[9px] font-semibold" style={{ color: '#0071A8' }}>
+              Motor de Descuentos:
+            </span>
             <button 
               type="button"
               onClick={() => {
                 setTargetDiscountState(!globalDiscountEngine);
                 setShowDiscountModal(true);
               }}
-              className={`px-4 py-2 rounded-xl text-[9px] font-black transition-all uppercase shadow-md cursor-pointer active:scale-95 ${globalDiscountEngine ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-rose-500 text-white shadow-rose-500/20'}`}
+              className="px-2.5 py-1 rounded-lg text-[9px] font-semibold transition-all cursor-pointer shadow-sm active:scale-95"
+              style={{
+                backgroundColor: globalDiscountEngine ? '#10b981' : '#f43f5e',
+                color: '#FFFFFF'
+              }}
             >
-              {globalDiscountEngine ? 'ACTIVO (GLOBAL)' : 'APAGADO (GLOBAL)'}
+              {globalDiscountEngine ? 'Activo (Global)' : 'Apagado (Global)'}
             </button>
           </div>
 
-          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+          {/* Sub-pestañas Píldora */}
+          <div 
+            className="flex items-center gap-1 p-1 rounded-xl"
+            style={{ backgroundColor: '#D4DBDB' }}
+          >
             <button 
               type="button"
               onClick={() => setActiveSubTab('create')} 
-              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+              style={{
+                backgroundColor: activeSubTab === 'create' ? '#0071A8' : 'transparent',
+                color: activeSubTab === 'create' ? '#FFFFFF' : '#0071A8',
+              }}
             >
-              ➕ NUEVO REGISTRO
+              <Plus size={13} /> Nuevo registro
             </button>
             <button 
               type="button"
               onClick={() => setActiveSubTab('list')} 
-              className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+              style={{
+                backgroundColor: activeSubTab === 'list' ? '#0071A8' : 'transparent',
+                color: activeSubTab === 'list' ? '#FFFFFF' : '#0071A8',
+              }}
             >
-              📋 LISTADO Y BUSCADOR ({clients.length})
+              <ClipboardList size={13} /> Directorio ({clients.length})
             </button>
           </div>
         </div>
       </div>
 
-      {showDiscountModal && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
-          <div className={`bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center border-t-8 ${targetDiscountState ? 'border-emerald-500' : 'border-rose-500'}`}>
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ${targetDiscountState ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
-              {targetDiscountState ? <CheckCircle2 size={40} /> : <AlertTriangle size={40} />}
+      {/* 2. ÁREA DE CONTENIDO PRINCIPAL */}
+      <div className="flex-1 overflow-hidden px-4 pt-3 pb-4">
+        
+        {/* PESTAÑA 1: NUEVO REGISTRO */}
+        {activeSubTab === 'create' && (
+          <div className="h-full overflow-y-auto pr-1 pb-4 animate-in fade-in duration-300">
+            <div 
+              className="bg-white p-4 rounded-xl border space-y-4 shadow-sm"
+              style={{ borderColor: '#D4DBDB' }}
+            >
+              <h3 
+                className="text-xs font-semibold flex items-center gap-1.5 pb-2"
+                style={{ color: '#0071A8', borderBottom: '1px solid #D4DBDB' }}
+              >
+                <UserPlus size={14} /> Información Comercial y de Contacto
+              </h3>
+
+              <form className="space-y-3" onSubmit={handleAdd}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                  
+                  {/* Fila 1 */}
+                  <div className="md:col-span-2 space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Nombre / Razón Social *
+                    </label>
+                    <input 
+                      type="text" 
+                      maxLength={40} 
+                      value={newClient.name} 
+                      onChange={e => setNewClient({...newClient, name: e.target.value.toUpperCase()})} 
+                      className={getInputClass(newClient.name, 40)} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="Empresa o Persona..."
+                      required 
+                    />
+                    <InputWarning val={newClient.name} max={40} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Tipo Documento
+                    </label>
+                    <select 
+                      value={newClient.docType} 
+                      onChange={e => setNewClient({...newClient, docType: e.target.value})} 
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none cursor-pointer"
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                    >
+                      <option value="NIT">NIT</option>
+                      <option value="CC">CÉDULA CIUDADANÍA</option>
+                      <option value="CE">CÉDULA EXTRANJERÍA</option>
+                      <option value="RUT">RUT</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Número Documento *
+                    </label>
+                    <input 
+                      type="text" 
+                      maxLength={15} 
+                      value={newClient.docNumber} 
+                      onChange={e => handleNumChange(e.target.value, 'docNumber', false)} 
+                      className={getInputClass(newClient.docNumber, 15)} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="Ej: 900123456"
+                      required 
+                    />
+                    <InputWarning val={newClient.docNumber} max={15} />
+                  </div>
+                  
+                  {/* Fila 2 */}
+                  <div className="md:col-span-2 space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Correo Electrónico *
+                    </label>
+                    <input 
+                      type="email" 
+                      maxLength={50} 
+                      pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" 
+                      value={newClient.email} 
+                      onChange={e => setNewClient({...newClient, email: e.target.value})} 
+                      className={getInputClass(newClient.email, 50).replace('uppercase', 'lowercase')} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="correo@ejemplo.com"
+                      required 
+                    />
+                    <InputWarning val={newClient.email} max={50} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Tipo de Cliente *
+                    </label>
+                    <select 
+                      value={newClient.typeId} 
+                      onChange={e => setNewClient({...newClient, typeId: e.target.value})} 
+                      className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none cursor-pointer"
+                      style={{ border: '1px solid #0071A8', color: '#374151' }}
+                      required
+                    >
+                      <option value="">Seleccione...</option>
+                      {clientTypes.map(t => <option key={t.id} value={t.id}>{t.name} ({t.value}%)</option>)}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Celular Principal *
+                    </label>
+                    <input 
+                      type="text" 
+                      maxLength={15} 
+                      value={newClient.mobile} 
+                      onChange={e => handleNumChange(e.target.value, 'mobile', false)} 
+                      className={getInputClass(newClient.mobile, 15)} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="3001234567"
+                      required 
+                    />
+                    <InputWarning val={newClient.mobile} max={15} />
+                  </div>
+
+                  {/* Fila 3 */}
+                  <div className="space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Teléfono Fijo
+                    </label>
+                    <input 
+                      type="text" 
+                      maxLength={15} 
+                      value={newClient.phone} 
+                      onChange={e => handleNumChange(e.target.value, 'phone', false)} 
+                      className={getInputClass(newClient.phone, 15)} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="Opcional"
+                    />
+                    <InputWarning val={newClient.phone} max={15} />
+                  </div>
+
+                  <div className="space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Extensión
+                    </label>
+                    <input 
+                      type="text" 
+                      maxLength={5} 
+                      value={newClient.extension} 
+                      onChange={e => handleNumChange(e.target.value, 'extension', false)} 
+                      className={getInputClass(newClient.extension, 5)} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="Ej: 101"
+                    />
+                    <InputWarning val={newClient.extension} max={5} />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Dirección *
+                    </label>
+                    <input 
+                      type="text" 
+                      maxLength={50} 
+                      value={newClient.address} 
+                      onChange={e => setNewClient({...newClient, address: e.target.value.toUpperCase()})} 
+                      className={getInputClass(newClient.address, 50)} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="Calle / Carrera / Número / Ciudad"
+                      required 
+                    />
+                    <InputWarning val={newClient.address} max={50} />
+                  </div>
+
+                  <div className="md:col-span-4 space-y-1 relative">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Persona de Contacto
+                    </label>
+                    <input 
+                      type="text" 
+                      maxLength={40} 
+                      value={newClient.contact} 
+                      onChange={e => setNewClient({...newClient, contact: e.target.value.toUpperCase()})} 
+                      className={getInputClass(newClient.contact, 40)} 
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                      onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                      onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                      placeholder="Nombre de la persona encargada de compras..."
+                    />
+                    <InputWarning val={newClient.contact} max={40} />
+                  </div>
+
+                </div>
+
+                {/* BLOQUE DE DESCUENTOS PERSONALIZADOS */}
+                <div 
+                  className="rounded-xl p-3 space-y-2 mt-2"
+                  style={{ backgroundColor: '#eff8fc', border: '1px solid #b7e0f0' }}
+                >
+                  <div className="flex items-center justify-between pb-2" style={{ borderBottom: '1px solid #b7e0f0' }}>
+                    <span className="text-[11px] font-semibold" style={{ color: '#0071A8' }}>
+                      Configuración de Descuentos Automáticos
+                    </span>
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm transition-all hover:bg-slate-50">
+                      <input 
+                        type="checkbox" 
+                        checked={newClient.autoDiscountActive} 
+                        onChange={e => setNewClient({...newClient, autoDiscountActive: e.target.checked})}
+                        className="w-3.5 h-3.5 cursor-pointer"
+                        style={{ accentColor: '#0071A8' }}
+                      />
+                      <span className="text-[10px] font-semibold" style={{ color: '#0071A8' }}>Activar Descuentos</span>
+                    </label>
+                  </div>
+
+                  {newClient.autoDiscountActive && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 animate-in fade-in duration-300">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                          Descuento Subtotal (%)
+                        </label>
+                        <input 
+                          type="number" 
+                          placeholder="0%" 
+                          value={newClient.discountPercentage} 
+                          onChange={e => setNewClient({...newClient, discountPercentage: e.target.value})} 
+                          className="w-full px-3 py-1.5 bg-white rounded-lg outline-none text-xs font-semibold"
+                          style={{ border: '1px solid #D4DBDB', color: '#0071A8' }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                          Recurrencia (Órdenes / Mes)
+                        </label>
+                        <input 
+                          type="number" 
+                          placeholder="Ej: 3" 
+                          value={newClient.recurrenceOrdersCount} 
+                          onChange={e => setNewClient({...newClient, recurrenceOrdersCount: e.target.value})} 
+                          className="w-full px-3 py-1.5 bg-white rounded-lg outline-none text-xs font-semibold"
+                          style={{ border: '1px solid #D4DBDB', color: '#0071A8' }}
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm w-full justify-center transition-all hover:bg-slate-50">
+                          <input 
+                            type="checkbox" 
+                            checked={newClient.topItemsActive} 
+                            onChange={e => setNewClient({...newClient, topItemsActive: e.target.checked})}
+                            className="w-3.5 h-3.5 cursor-pointer"
+                            style={{ accentColor: '#0071A8' }}
+                          />
+                          <span className="text-[10px] font-semibold text-slate-700">Aplicar a ítems más pedidos</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Acciones formulario */}
+                <div className="flex items-center justify-end gap-2 pt-3" style={{ borderTop: '1px solid #D4DBDB' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setNewClient(initialForm)}
+                    className="px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all hover:bg-slate-200"
+                    style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+                  >
+                    Limpiar formulario
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="px-5 py-2 rounded-lg text-[11px] font-semibold shadow-sm cursor-pointer transition-all active:scale-95"
+                    style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
+                  >
+                    Registrar cliente
+                  </button>
+                </div>
+              </form>
             </div>
-            <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">
-              {targetDiscountState ? '¿DESEA ACTIVAR LOS DESCUENTOS?' : '¿DESEA DESACTIVAR LOS DESCUENTOS?'}
+          </div>
+        )}
+
+        {/* PESTAÑA 2: LISTADO Y BUSCADOR (VIEWPORT FIT) */}
+        {activeSubTab === 'list' && (
+          <div className="h-full flex flex-col gap-2 animate-in fade-in duration-300">
+            {/* Buscador superior */}
+            <div 
+              className="flex-shrink-0 flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white shadow-sm"
+              style={{ border: '1px solid #D4DBDB' }}
+            >
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Buscar por ID, nombre o número de documento..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg text-xs font-medium outline-none"
+                  style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB', color: '#374151' }}
+                  onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                  onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                />
+              </div>
+              <span className="text-[10px] font-semibold shrink-0" style={{ color: '#0071A8' }}>
+                Mostrando {filteredClients.length} de {clients.length}
+              </span>
+            </div>
+
+            {/* Tabla con scroll interno */}
+            <div 
+              className="flex-1 overflow-hidden rounded-xl bg-white shadow-sm flex flex-col"
+              style={{ border: '1px solid #D4DBDB' }}
+            >
+              <div className="h-full overflow-y-auto overflow-x-auto">
+                <table className="w-full text-left min-w-[900px]">
+                  <thead 
+                    className="sticky top-0 z-10"
+                    style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+                  >
+                    <tr>
+                      <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>ID</th>
+                      <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Cliente / Razón Social</th>
+                      <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Documento</th>
+                      <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Contacto</th>
+                      <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Tipo</th>
+                      <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Gestión</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                    {filteredClients.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-16 text-center font-medium" style={{ color: '#B7C0C6' }}>
+                          No se encontraron clientes
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredClients.map(c => (
+                        <tr 
+                          key={c.id} 
+                          onClick={() => { setSelectedClient(c); setModalType('clientDetail'); }}
+                          className="cursor-pointer group transition-colors hover:bg-[#eff8fc]"
+                          style={{ borderBottom: '1px solid #f8fafc' }}
+                        >
+                          <td className="px-4 py-2.5 font-mono text-[11px] font-semibold" style={{ color: '#0071A8' }}>{c.id}</td>
+                          <td className="px-4 py-2.5">
+                            <p className="font-semibold text-slate-700 leading-tight">{c.name}</p>
+                            <p className="text-[10px] lowercase" style={{ color: '#B7C0C6' }}>{c.email}</p>
+                          </td>
+                          <td className="px-4 py-2.5 font-mono text-[11px] text-slate-600">
+                            {c.docNumber} <span className="text-[9px] font-sans" style={{ color: '#B7C0C6' }}>({c.docType})</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-[11px]">
+                            <p className="text-slate-700 font-mono"><span className="text-[9px] font-sans" style={{ color: '#0071A8' }}>CEL:</span> {c.mobile}</p>
+                            {c.phone && <p className="text-[10px] font-mono text-slate-400">TEL: {c.phone} {c.extension ? `EXT: ${c.extension}` : ''}</p>}
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <span 
+                              className="px-2 py-0.5 rounded-md text-[9px] font-semibold"
+                              style={{ backgroundColor: '#eff8fc', color: '#0071A8', border: '1px solid #b7e0f0' }}
+                            >
+                              {c.typeName}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} 
+                                className="p-1.5 rounded-lg cursor-pointer transition-all hover:bg-[#eff8fc]"
+                                style={{ color: '#0071A8' }}
+                              >
+                                <Edit size={13}/>
+                              </button>
+                              <button 
+                                onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} 
+                                className="p-1.5 rounded-lg cursor-pointer transition-all hover:bg-rose-50 text-rose-500"
+                              >
+                                <Trash2 size={13}/>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MODALES REESTILIZADOS
+      ═══════════════════════════════════════════════════════════════ */}
+
+      {/* MODAL CAMBIO MOTOR DE DESCUENTOS */}
+      {showDiscountModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center space-y-3" style={{ border: '1px solid #D4DBDB' }}>
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto"
+              style={{ backgroundColor: targetDiscountState ? '#f0fdf4' : '#fef2f2', color: targetDiscountState ? '#16a34a' : '#e11d48' }}
+            >
+              {targetDiscountState ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
+            </div>
+            
+            <h3 className="font-bold text-base text-slate-800">
+              {targetDiscountState ? '¿Activar Descuentos Globales?' : '¿Desactivar Descuentos Globales?'}
             </h3>
-            <p className="text-[10px] text-slate-400 font-bold mb-8 uppercase leading-relaxed">
+            
+            <p className="text-xs font-medium text-slate-500 leading-relaxed">
               {targetDiscountState 
-                ? 'EL MOTOR GLOBAL SE ACTIVARÁ Y OPERARÁ EN TODO EL SISTEMA.' 
-                : 'EL MOTOR GLOBAL SE APAGARÁ Y SE MANTENDRÁ EN ROJO (DESACTIVADO) HASTA QUE UN ADMINISTRADOR VUELVA A ACTIVARLO.'}
+                ? 'El motor global operará para todos los clientes autorizados en el sistema.' 
+                : 'Se suspenderán todos los descuentos automáticos hasta que se reactive manualmente.'}
             </p>
-            <div className="flex gap-4">
+
+            <div className="flex gap-2.5 pt-2">
               <button 
                 type="button"
                 onClick={() => setShowDiscountModal(false)} 
-                className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors cursor-pointer"
+                className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
               >
-                CANCELAR
+                Cancelar
               </button>
               <button 
                 type="button"
@@ -2199,430 +2663,175 @@ const InventoryView = ({ inventory, setInventory, products, orders }) => {
                   setGlobalDiscountEngine(targetDiscountState);
                   setShowDiscountModal(false);
                 }} 
-                className={`flex-1 py-4 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase transition-all cursor-pointer active:scale-95 ${targetDiscountState ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20'}`}
+                className="flex-1 py-2 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer transition-all active:scale-95"
+                style={{ backgroundColor: targetDiscountState ? '#10b981' : '#f43f5e' }}
               >
-                ACEPTAR
+                Aceptar
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* PESTAÑA 1: NUEVO REGISTRO */}
-      {activeSubTab === 'create' && (
-        <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full space-y-6 animate-in fade-in duration-300">
-          <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase"><UserPlus size={18} className="text-[#2596be]" /> REGISTRO DE CLIENTE</h3>
-          <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 items-end" onSubmit={handleAdd}>
-            <div className="md:col-span-2 space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE / RAZÓN SOCIAL</label>
-              <input type="text" maxLength={40} value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value.toUpperCase()})} className={getInputClass(newClient.name, 40)} required />
-              <InputWarning val={newClient.name} max={40} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DOC. TIPO</label>
-              <select value={newClient.docType} onChange={e => setNewClient({...newClient, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all">
-                <option value="NIT">NIT</option>
-                <option value="CC">CÉDULA CIUDADANÍA</option>
-                <option value="CE">CÉDULA EXTRANJERÍA</option>
-                <option value="RUT">RUT</option>
-              </select>
-            </div>
-            <div className="space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NÚMERO</label>
-              <input type="text" maxLength={15} value={newClient.docNumber} onChange={e => handleNumChange(e.target.value, 'docNumber', false)} className={getInputClass(newClient.docNumber, 15)} required />
-              <InputWarning val={newClient.docNumber} max={15} />
-            </div>
-            
-            <div className="md:col-span-2 space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EMAIL</label>
-              <input type="email" maxLength={50} pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className={getInputClass(newClient.email, 50).replace('uppercase', 'lowercase')} required placeholder="ejemplo@dominio.com" />
-              <InputWarning val={newClient.email} max={50} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TIPO CLIENTE</label>
-              <select value={newClient.typeId} onChange={e => setNewClient({...newClient, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] text-[#134b60] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer transition-all" required>
-                <option value="">SELECCIONE</option>{clientTypes.map(t => <option key={t.id} value={t.id}>{t.name} ({t.value}%)</option>)}
-              </select>
-            </div>
-            <div className="space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TELÉFONO</label>
-              <input type="text" maxLength={15} value={newClient.phone} onChange={e => handleNumChange(e.target.value, 'phone', false)} className={getInputClass(newClient.phone, 15)} required />
-              <InputWarning val={newClient.phone} max={15} />
-            </div>
-
-            <div className="space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EXTENSIÓN (OPC.)</label>
-              <input type="text" maxLength={5} value={newClient.extension} onChange={e => handleNumChange(e.target.value, 'extension', false)} className={getInputClass(newClient.extension, 5)} />
-              <InputWarning val={newClient.extension} max={5} />
-            </div>
-            <div className="space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CELULAR</label>
-              <input type="text" maxLength={15} value={newClient.mobile} onChange={e => handleNumChange(e.target.value, 'mobile', false)} className={getInputClass(newClient.mobile, 15)} required />
-              <InputWarning val={newClient.mobile} max={15} />
-            </div>
-            <div className="md:col-span-2 space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DIRECCIÓN</label>
-              <input type="text" maxLength={50} value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value.toUpperCase()})} className={getInputClass(newClient.address, 50)} required />
-              <InputWarning val={newClient.address} max={50} />
-            </div>
-
-            <div className="md:col-span-2 space-y-1 relative">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PERSONA DE CONTACTO (OPC.)</label>
-              <input type="text" maxLength={20} value={newClient.contact} onChange={e => setNewClient({...newClient, contact: e.target.value.toUpperCase()})} className={getInputClass(newClient.contact, 20)} />
-              <InputWarning val={newClient.contact} max={20} />
-            </div>
-
-            {/* CONFIGURACIÓN DE DESCUENTOS POR CLIENTE */}
-            <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
-              <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
-                <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
-                <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-50">
-                  <input 
-                    type="checkbox" 
-                    checked={newClient.autoDiscountActive} 
-                    onChange={e => setNewClient({...newClient, autoDiscountActive: e.target.checked})}
-                    className="w-4 h-4 accent-[#2596be] cursor-pointer"
-                  />
-                  <span className="text-[9px] font-black text-[#134b60] uppercase">ACTIVAR DESCUENTOS</span>
-                </label>
-              </div>
-
-              {newClient.autoDiscountActive && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCUENTO SUBTOTAL (%)</label>
-                    <input 
-                      type="number" 
-                      placeholder="0%" 
-                      value={newClient.discountPercentage} 
-                      onChange={e => setNewClient({...newClient, discountPercentage: e.target.value})} 
-                      className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RECURRENCIA (Nº ÓRDENES AL MES)</label>
-                    <input 
-                      type="number" 
-                      placeholder="Ej: 3" 
-                      value={newClient.recurrenceOrdersCount} 
-                      onChange={e => setNewClient({...newClient, recurrenceOrdersCount: e.target.value})} 
-                      className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
-                    />
-                  </div>
-                  <div className="flex items-center pt-5">
-                    <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center transition-all hover:bg-slate-50">
-                      <input 
-                        type="checkbox" 
-                        checked={newClient.topItemsActive} 
-                        onChange={e => setNewClient({...newClient, topItemsActive: e.target.checked})}
-                        className="w-4 h-4 accent-[#2596be] cursor-pointer"
-                      />
-                      <span className="text-[9px] font-black text-[#134b60] uppercase">APLICAR A ÍTEMS MÁS PEDIDOS</span>
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="md:col-span-4 pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
-              <button 
-                type="button" 
-                onClick={() => setNewClient(initialForm)}
-                className="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
-              >
-                <XCircle size={16} /> LIMPIAR FORMULARIO
-              </button>
-              <button 
-                type="submit" 
-                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
-              >
-                <Plus size={16} /> REGISTRAR CLIENTE
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* PESTAÑA 2: LISTADO Y BUSCADOR */}
-      {activeSubTab === 'list' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Buscador inteligente: ID, nombre o número de documento..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400 uppercase"
-              />
-            </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-              Mostrando {filteredClients.length} de {clients.length}
-            </span>
-          </div>
-
-          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col">
-            <div className="max-h-[500px] overflow-y-auto overflow-x-auto scrollbar-hide">
-              <table className="w-full text-left min-w-[1000px] uppercase">
-                <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
-                  <tr>
-                    <th className="px-6 py-5">ID</th>
-                    <th className="px-6 py-5">CLIENTE</th>
-                    <th className="px-6 py-5">DOCUMENTO</th>
-                    <th className="px-6 py-5">CONTACTO</th>
-                    <th className="px-6 py-5 text-center">TIPO</th>
-                    <th className="px-6 py-5 text-right">GESTIÓN</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-                  {filteredClients.length === 0 ? (
-                    <tr><td colSpan="6" className="px-6 py-20 text-center text-slate-300 font-black">SIN CLIENTES ENCONTRADOS</td></tr>
-                  ) : (
-                    filteredClients.map(c => (
-                      <tr 
-                        key={c.id} 
-                        onClick={() => { setSelectedClient(c); setModalType('clientDetail'); }}
-                        className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer"
-                      >
-                        <td className="px-6 py-4 font-mono text-[#2596be] font-black">{c.id}</td>
-                        <td className="px-6 py-4">
-                          <p className="font-black text-[#134b60]">{c.name}</p>
-                          <p className="text-[9px] text-slate-400 lowercase">{c.email}</p>
-                        </td>
-                        <td className="px-6 py-4 font-mono">{c.docNumber} <span className="text-[9px] text-slate-400 font-sans">({c.docType})</span></td>
-                        <td className="px-6 py-4 font-mono">
-                          <p className="text-slate-600"><span className="text-[9px] text-slate-400 font-sans">CEL:</span> {c.mobile}</p>
-                          <p className="text-[10px] text-slate-400"><span className="text-[9px] text-slate-400 font-sans">TEL:</span> {c.phone} {c.extension && `EXT: ${c.extension}`}</p>
-                        </td>
-                        <td className="px-6 py-4 text-center"><span className="bg-[#e9f4f8] text-[#2596be] px-3 py-1.5 rounded-xl text-[9px] border border-[#2596be]/25 inline-block font-black">{c.typeName}</span></td>
-                        <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex justify-end gap-2">
-                            <button onClick={() => { setSelectedClient(c); setEditData(c); setModalType('edit'); }} className="p-2.5 bg-[#e9f4f8] text-[#2596be] rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm cursor-pointer"><Edit size={14}/></button>
-                            <button onClick={() => { setSelectedClient(c); setModalType('deleteFirst'); }} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"><Trash2 size={14}/></button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE VISUALIZACIÓN DE CLIENTE (DETALLE) */}
+      {/* MODAL DETALLE DE CLIENTE */}
       {modalType === 'clientDetail' && selectedClient && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 print:hidden uppercase">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-left border-2 border-[#e9f4f8] animate-in fade-in duration-300 relative space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-lg space-y-4" style={{ border: '1px solid #D4DBDB' }}>
+            <div className="flex items-start justify-between pb-3" style={{ borderBottom: '1px solid #D4DBDB' }}>
               <div>
-                <span className="text-[10px] font-mono font-black text-[#2596be]">DETALLE DE CLIENTE #{selectedClient.id}</span>
-                <h3 className="text-xl font-black text-[#134b60]">{selectedClient.name}</h3>
+                <span className="text-[10px] font-mono font-semibold" style={{ color: '#0071A8' }}>
+                  Cliente #{selectedClient.id}
+                </span>
+                <h3 className="text-base font-bold text-slate-800 leading-tight">
+                  {selectedClient.name}
+                </h3>
               </div>
-              <button onClick={() => setModalType(null)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs font-bold text-[#134b60]">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">DOCUMENTO</span>
-                <span className="font-mono text-[#2596be]">{selectedClient.docType}: {selectedClient.docNumber}</span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">TIPO DE CLIENTE</span>
-                <span className="font-black text-slate-700">{selectedClient.typeName}</span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">CORREO ELECTRÓNICO</span>
-                <span className="lowercase text-[10px]">{selectedClient.email}</span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">CELULAR / TELÉFONO</span>
-                <span className="font-mono text-[10px]">CEL: {selectedClient.mobile} / TEL: {selectedClient.phone}</span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">DIRECCIÓN</span>
-                <span className="text-[10px]">{selectedClient.address}</span>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="text-[9px] text-slate-400 font-black block mb-1">CONTACTO</span>
-                <span className="text-[10px]">{selectedClient.contact || 'N/A'}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
               <button 
                 onClick={() => setModalType(null)} 
-                className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer active:scale-95"
+                className="p-1.5 rounded-lg cursor-pointer"
+                style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
               >
-                CERRAR
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 text-xs">
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Documento</span>
+                <span className="font-mono text-slate-700">{selectedClient.docType}: {selectedClient.docNumber}</span>
+              </div>
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Clasificación</span>
+                <span className="font-semibold text-slate-700">{selectedClient.typeName}</span>
+              </div>
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Email</span>
+                <span className="lowercase text-[11px] text-slate-600 truncate block">{selectedClient.email}</span>
+              </div>
+              <div className="p-3 rounded-xl" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Teléfonos</span>
+                <span className="font-mono text-[11px] text-slate-700 block">{selectedClient.mobile}</span>
+                {selectedClient.phone && <span className="font-mono text-[10px] text-slate-400">Tel: {selectedClient.phone}</span>}
+              </div>
+              <div className="p-3 rounded-xl md:col-span-2" style={{ backgroundColor: '#f8fafc' }}>
+                <span className="text-[10px] font-semibold block mb-0.5" style={{ color: '#0071A8' }}>Dirección</span>
+                <span className="text-[11px] text-slate-700">{selectedClient.address}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button 
+                onClick={() => setModalType(null)} 
+                className="px-4 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
+              >
+                Cerrar
               </button>
               <button 
                 onClick={() => {
                   setEditData(selectedClient);
                   setModalType('edit');
                 }} 
-                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                className="px-4 py-2 rounded-xl font-semibold text-xs shadow-sm cursor-pointer flex items-center gap-1.5"
+                style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
               >
-                <Edit size={14} /> EDITAR CLIENTE
+                <Edit size={13} /> Editar cliente
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* MODAL EDICIÓN Y ELIMINACIÓN */}
       {(modalType === 'edit' || modalType === 'updateConfirm' || modalType === 'deleteFirst' || modalType === 'deleteSecond') && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase overflow-y-auto print:hidden">
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full ${modalType === 'deleteSecond' ? 'max-w-xl border-[6px] border-rose-500' : 'max-w-4xl'}`}>
-            <div className="p-8 text-[#134b60]">
-              <div className="flex flex-col items-center text-center gap-4 mb-6">
-                <div className={`p-4 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#e9f4f8] text-[#2596be]' : 'bg-rose-50 text-rose-500'}`}>
-                   {modalType === 'edit' ? <Edit size={40} /> : modalType === 'updateConfirm' ? <Info size={40} /> : <AlertTriangle size={40} />}
-                </div>
-                <h3 className="font-black text-xl uppercase tracking-tighter">
-                  {modalType === 'edit' ? 'EDITAR CLIENTE' : modalType === 'updateConfirm' ? 'SISTEMA: CONFIRMAR' : 'ELIMINAR CLIENTE'}
-                </h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div 
+            className={`bg-white rounded-2xl shadow-xl w-full ${modalType === 'deleteSecond' ? 'max-w-md border-2 border-rose-400' : 'max-w-2xl'} p-5`}
+            style={{ border: modalType === 'deleteSecond' ? '2px solid #f87171' : '1px solid #D4DBDB' }}
+          >
+            <div className="flex flex-col items-center text-center gap-2 mb-3">
+              <div className={`p-2.5 rounded-full ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#eff8fc] text-[#0071A8]' : 'bg-rose-50 text-rose-500'}`}>
+                {modalType === 'edit' ? <Edit size={20} /> : modalType === 'updateConfirm' ? <Info size={20} /> : <AlertTriangle size={20} />}
               </div>
-              <div className="space-y-4">
-                {modalType === 'edit' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 max-h-[50vh] overflow-y-auto px-2 py-2 scrollbar-hide">
-                    <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE / RAZÓN SOCIAL</label>
-                      <input type="text" maxLength={40} value={editData.name} onChange={e => setEditData({...editData, name: e.target.value.toUpperCase()})} className={getInputClass(editData.name, 40)} required />
-                      <InputWarning val={editData.name} max={40} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DOC. TIPO</label>
-                      <select value={editData.docType} onChange={e => setEditData({...editData, docType: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all">
-                        <option value="NIT">NIT</option>
-                        <option value="CC">CÉDULA CIUDADANÍA</option>
-                        <option value="CE">CÉDULA EXTRANJERÍA</option>
-                        <option value="RUT">RUT</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NÚMERO</label>
-                      <input type="text" maxLength={15} value={editData.docNumber} onChange={e => handleNumChange(e.target.value, 'docNumber', true)} className={getInputClass(editData.docNumber, 15)} required />
-                      <InputWarning val={editData.docNumber} max={15} />
-                    </div>
-                    
-                    <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EMAIL</label>
-                      <input type="email" maxLength={50} pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} className={getInputClass(editData.email, 50).replace('uppercase', 'lowercase')} required />
-                      <InputWarning val={editData.email} max={50} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TIPO CLIENTE</label>
-                      <select value={editData.typeId} onChange={e => setEditData({...editData, typeId: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase cursor-pointer text-[#134b60] transition-all" required>
-                        <option value="">SELECCIONE</option>{clientTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TELÉFONO</label>
-                      <input type="text" maxLength={15} value={editData.phone} onChange={e => handleNumChange(e.target.value, 'phone', true)} className={getInputClass(editData.phone, 15)} required />
-                      <InputWarning val={editData.phone} max={15} />
-                    </div>
+              <h3 className="font-bold text-base text-slate-800">
+                {modalType === 'edit' ? 'Editar Información de Cliente' : modalType === 'updateConfirm' ? 'Confirmar Modificación' : 'Eliminar Cliente'}
+              </h3>
+            </div>
 
-                    <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EXTENSIÓN (OPC.)</label>
-                      <input type="text" maxLength={5} value={editData.extension} onChange={e => handleNumChange(e.target.value, 'extension', true)} className={getInputClass(editData.extension, 5)} />
-                      <InputWarning val={editData.extension} max={5} />
-                    </div>
-                    <div className="space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CELULAR</label>
-                      <input type="text" maxLength={15} value={editData.mobile} onChange={e => handleNumChange(e.target.value, 'mobile', true)} className={getInputClass(editData.mobile, 15)} required />
-                      <InputWarning val={editData.mobile} max={15} />
-                    </div>
-                    <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DIRECCIÓN</label>
-                      <input type="text" maxLength={50} value={editData.address} onChange={e => setEditData({...editData, address: e.target.value.toUpperCase()})} className={getInputClass(editData.address, 50)} required />
-                      <InputWarning val={editData.address} max={50} />
-                    </div>
-
-                    <div className="md:col-span-2 space-y-1 relative">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">PERSONA DE CONTACTO (OPC.)</label>
-                      <input type="text" maxLength={20} value={editData.contact} onChange={e => setEditData({...editData, contact: e.target.value.toUpperCase()})} className={getInputClass(editData.contact, 20)} />
-                      <InputWarning val={editData.contact} max={20} />
-                    </div>
-
-                    {/* CONFIGURACIÓN DE DESCUENTOS EN EDICIÓN */}
-                    <div className="md:col-span-4 bg-[#e9f4f8]/50 p-6 rounded-2xl border-2 border-[#2596be]/20 space-y-4 my-2">
-                      <div className="flex items-center justify-between border-b border-[#2596be]/10 pb-3">
-                        <span className="text-[10px] font-black text-[#134b60] uppercase tracking-wider">CONFIGURACIÓN DE DESCUENTOS AUTOMÁTICOS</span>
-                        <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-50">
-                          <input 
-                            type="checkbox" 
-                            checked={editData.autoDiscountActive || false} 
-                            onChange={e => setEditData({...editData, autoDiscountActive: e.target.checked})}
-                            className="w-4 h-4 accent-[#2596be] cursor-pointer"
-                          />
-                          <span className="text-[9px] font-black text-[#134b60] uppercase">ACTIVAR DESCUENTOS</span>
-                        </label>
-                      </div>
-
-                      {editData.autoDiscountActive && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in fade-in duration-300">
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCUENTO SUBTOTAL (%)</label>
-                            <input 
-                              type="number" 
-                              placeholder="0%" 
-                              value={editData.discountPercentage || ''} 
-                              onChange={e => setEditData({...editData, discountPercentage: e.target.value})} 
-                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RECURRENCIA (Nº ÓRDENES AL MES)</label>
-                            <input 
-                              type="number" 
-                              placeholder="Ej: 3" 
-                              value={editData.recurrenceOrdersCount || ''} 
-                              onChange={e => setEditData({...editData, recurrenceOrdersCount: e.target.value})} 
-                              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60] transition-all"
-                            />
-                          </div>
-                          <div className="flex items-center pt-5">
-                            <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm w-full justify-center transition-all hover:bg-slate-50">
-                              <input 
-                                type="checkbox" 
-                                checked={editData.topItemsActive || false} 
-                                onChange={e => setEditData({...editData, topItemsActive: e.target.checked})}
-                                className="w-4 h-4 accent-[#2596be] cursor-pointer"
-                              />
-                              <span className="text-[9px] font-black text-[#134b60] uppercase">APLICAR A ÍTEMS MÁS PEDIDOS</span>
-                            </label>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
+            <div className="space-y-3">
+              {modalType === 'edit' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto px-1 py-1">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Nombre / Razón Social</label>
+                    <input type="text" maxLength={40} value={editData.name} onChange={e => setEditData({...editData, name: e.target.value.toUpperCase()})} className="w-full px-3 py-2 rounded-lg text-xs font-semibold outline-none" style={{ border: '1px solid #D4DBDB', color: '#374151' }} required />
                   </div>
-                )}
-                {modalType === 'updateConfirm' && <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl"><p className="text-indigo-700 font-black text-[10px] text-center uppercase tracking-tight">⚠️ SE VA A REALIZAR UN CAMBIO Y SE AFECTARÁ A TODO EL SISTEMA.</p></div>}
-                {modalType === 'deleteSecond' && <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-2xl"><p className="text-rose-700 font-black text-xs text-center uppercase">SE VA A REALIZAR UNA ACCIÓN QUE AFECTARÁ EL SISTEMA Y NO SE PODRÁ REVERTIR. ELIMINACIÓN DE {selectedClient?.name}.</p></div>}
-              </div>
-              <div className="flex gap-4 mt-8">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
-                <button onClick={() => {
-                   if (modalType === 'edit') setModalType('updateConfirm');
-                   else if (modalType === 'updateConfirm') executeUpdate();
-                   else if (modalType === 'deleteFirst') setModalType('deleteSecond');
-                   else if (modalType === 'deleteSecond') { setClients(clients.filter(c => c.id !== selectedClient.id)); setModalType(null); }
-                }} className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase transition-all shadow-xl cursor-pointer active:scale-95 ${modalType === 'edit' || modalType === 'updateConfirm' ? 'bg-[#2596be] hover:bg-[#1e7a9b]' : 'bg-rose-600 hover:bg-rose-700'}`}>ACEPTAR</button>
-              </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Documento ({editData.docType})</label>
+                    <input type="text" maxLength={15} value={editData.docNumber} onChange={e => handleNumChange(e.target.value, 'docNumber', true)} className="w-full px-3 py-2 rounded-lg text-xs font-mono font-semibold outline-none" style={{ border: '1px solid #D4DBDB', color: '#374151' }} required />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Email</label>
+                    <input type="email" value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} className="w-full px-3 py-2 rounded-lg text-xs outline-none lowercase" style={{ border: '1px solid #D4DBDB', color: '#374151' }} required />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Tipo de Cliente</label>
+                    <select value={editData.typeId} onChange={e => setEditData({...editData, typeId: e.target.value})} className="w-full px-3 py-2 rounded-lg text-xs outline-none cursor-pointer" style={{ border: '1px solid #D4DBDB', color: '#374151' }} required>
+                      <option value="">Seleccione...</option>
+                      {clientTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Celular</label>
+                    <input type="text" maxLength={15} value={editData.mobile} onChange={e => handleNumChange(e.target.value, 'mobile', true)} className="w-full px-3 py-2 rounded-lg text-xs font-mono outline-none" style={{ border: '1px solid #D4DBDB', color: '#374151' }} required />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Dirección</label>
+                    <input type="text" maxLength={50} value={editData.address} onChange={e => setEditData({...editData, address: e.target.value.toUpperCase()})} className="w-full px-3 py-2 rounded-lg text-xs outline-none" style={{ border: '1px solid #D4DBDB', color: '#374151' }} required />
+                  </div>
+                </div>
+              )}
+              {modalType === 'updateConfirm' && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <p className="text-amber-700 font-medium text-xs text-center">⚠️ Esta modificación actualizará los datos del cliente en todo el sistema.</p>
+                </div>
+              )}
+              {modalType === 'deleteSecond' && (
+                <p className="text-xs font-medium text-center my-3 text-rose-600">
+                  Acción irreversible. Se borrará el cliente <span className="font-bold">{selectedClient?.name}</span>.
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2.5 mt-4">
+              <button 
+                onClick={() => setModalType(null)} 
+                className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  if (modalType === 'edit') setModalType('updateConfirm');
+                  else if (modalType === 'updateConfirm') executeUpdate();
+                  else if (modalType === 'deleteFirst') setModalType('deleteSecond');
+                  else if (modalType === 'deleteSecond') { setClients(clients.filter(c => c.id !== selectedClient.id)); setModalType(null); }
+                }} 
+                className={`flex-1 py-2 rounded-xl font-semibold text-xs shadow-sm cursor-pointer transition-all ${modalType === 'edit' || modalType === 'updateConfirm' ? '' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
+                style={modalType === 'edit' || modalType === 'updateConfirm' ? { backgroundColor: '#0071A8', color: '#FFFFFF' } : {}}
+              >
+                Aceptar
+              </button>
             </div>
           </div>
         </div>
       )}
-      <Footer />
+
     </div>
   );
 };
-  
-// --- MÓDULO DE SOLICITUD DE PEDIDO (CORREGIDO ERROR DE DOBLE CONTEO EN MÓVIL Y NOTIFICACIONES) ---
+
+// --- MÓDULO DE SOLICITUD DE PEDIDO: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients, clientTypes, inventory, globalDiscountEngine, setNotifications }) => {
   const [adminOrderClient, setAdminOrderClient] = useState('');
   const [activeOrderTab, setActiveOrderTab] = useState('catalog'); // 'catalog' o 'cart'
@@ -2641,14 +2850,13 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   });
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [cardQuantities, setCardQuantities] = useState({}); // Cantidad por tarjeta
+  const [cardQuantities, setCardQuantities] = useState({});
   const [modalType, setModalType] = useState(null);
-  const [zoomImageProd, setZoomImageProd] = useState(null); // Producto para el modal de zoom
-  const [zoomImageIndex, setZoomImageIndex] = useState(0); // Índice de la imagen activa en el zoom
+  const [zoomImageProd, setZoomImageProd] = useState(null);
+  const [zoomImageIndex, setZoomImageIndex] = useState(0);
   const [lastSavedOrder, setLastSavedOrder] = useState(null);
   const [generalObservation, setGeneralObservation] = useState('');
 
-  // Contenedor persistente para el intervalo de mantener presionado (sin usar useRef)
   const [holdIntervalRef] = useState(() => ({ current: null }));
 
   const activeClientRecord = currentUser.role === 'ADMIN' ? clients.find(c => c.id === adminOrderClient) : clients.find(c => c.id === currentUser.relatedId);
@@ -2656,7 +2864,6 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   const customUtility = activeClientType ? parseFloat(activeClientType.value) : null;
   const isSearchDisabled = currentUser.role === 'ADMIN' && !adminOrderClient;
 
-  // Cálculo del precio final unitario adaptado por tipo de cliente
   const getProductFinalPrice = (prod) => {
     const utilityToUse = customUtility !== null ? customUtility : parseFloat(prod.utility);
     const base = parseFloat(prod.cost) * (1 + (utilityToUse / 100));
@@ -2664,7 +2871,6 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     return base + iva;
   };
 
-  // Catálogo filtrado en tiempo real
   const catalogProducts = useMemo(() => {
     if (!searchTerm) return products;
     const term = searchTerm.toUpperCase();
@@ -2675,7 +2881,6 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
 
   const cartFinancials = useMemo(() => cart.reduce((acc, item) => acc + (item.totalPricePerUnit * item.quantity), 0), [cart]);
 
-  // Manejador de contador local por tarjeta (+ y -)
   const updateCardQty = (productId, delta) => {
     setCardQuantities(prev => {
       const current = parseInt(prev[productId], 10) || 1;
@@ -2684,7 +2889,6 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     });
   };
 
-  // Funciones para mantener presionado el botón (incremento automático lento a 350ms)
   const startHolding = (productId, delta) => {
     updateCardQty(productId, delta);
     if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
@@ -2700,7 +2904,6 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     }
   };
 
-  // Manejadores para edición manual directa en el input
   const handleQtyInputChange = (productId, value) => {
     const cleanVal = value.replace(/\D/g, '');
     setCardQuantities(prev => ({
@@ -2719,7 +2922,6 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     }
   };
 
-  // Agregar producto desde su tarjeta al carrito y resetear contador a 1
   const handleAddCardToCart = (prod) => {
     const qtyToAdd = parseInt(cardQuantities[prod.id], 10) || 1;
     const unitPrice = getProductFinalPrice(prod);
@@ -2746,12 +2948,10 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     setCardQuantities(prev => ({ ...prev, [prod.id]: 1 }));
   };
 
-  // Actualizar observación específica de un ítem en el carrito
   const updateItemObservation = (tempId, newObs) => {
     setCart(cart.map(item => item.tempId === tempId ? { ...item, observation: newObs.toUpperCase() } : item));
   };
 
-  // Actualizar cantidad desde el carrito
   const updateItemQuantity = (tempId, newQty) => {
     const qty = parseInt(newQty, 10);
     if (isNaN(qty) || qty <= 0) return;
@@ -2832,13 +3032,12 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
     setLastSavedOrder(newOrder);
     setModalType('orderSuccess');
 
-    // --- NUEVO DISPARADOR DE NOTIFICACIÓN ---
     if (setNotifications) {
       setNotifications(prev => [
         {
           id: Date.now(),
           message: `Nuevo pedido registrado: ${nextID} por ${clientNameToSave}`,
-          targetRoles: ['ADMIN', 'SUPERADMIN'], // Solo lo ven los administradores
+          targetRoles: ['ADMIN', 'SUPERADMIN'],
           targetUserId: null,
           readBy: []
         },
@@ -2848,330 +3047,447 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tight">HACER PEDIDO</h2>
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+    >
+      {/* 1. ENCABEZADO COMPACTO */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex flex-col md:flex-row md:items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+            style={{ backgroundColor: '#0071A8' }}
+          >
+            <ShoppingCart size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight"
+              style={{ color: '#0071A8' }}
+            >
+              Hacer Pedido
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Catálogo de compras y gestión del carrito
+            </p>
+          </div>
+        </div>
         
         {/* Pestañas de Navegación Superiores */}
-        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
+        <div 
+          className="flex items-center gap-1 p-1 rounded-xl"
+          style={{ backgroundColor: '#D4DBDB' }}
+        >
           <button 
+            type="button"
             onClick={() => setActiveOrderTab('catalog')} 
-            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeOrderTab === 'catalog' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+            style={{
+              backgroundColor: activeOrderTab === 'catalog' ? '#0071A8' : 'transparent',
+              color: activeOrderTab === 'catalog' ? '#FFFFFF' : '#0071A8',
+            }}
           >
-            🛍️ CATÁLOGO DE PRODUCTOS
+            <Package size={13} /> Catálogo de Productos
           </button>
           <button 
+            type="button"
             onClick={() => setActiveOrderTab('cart')} 
-            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer relative ${activeOrderTab === 'cart' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+            style={{
+              backgroundColor: activeOrderTab === 'cart' ? '#0071A8' : 'transparent',
+              color: activeOrderTab === 'cart' ? '#FFFFFF' : '#0071A8',
+            }}
           >
-            🛒 VER CARRITO ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+            <ShoppingCart size={13} /> Ver Carrito
+            <span 
+              className="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
+              style={{
+                backgroundColor: activeOrderTab === 'cart' ? 'rgba(255,255,255,0.25)' : '#B7C0C6',
+                color: activeOrderTab === 'cart' ? '#FFFFFF' : '#0071A8',
+              }}
+            >
+              {cart.reduce((sum, item) => sum + item.quantity, 0)}
+            </span>
           </button>
         </div>
       </div>
       
-      {currentUser.role === 'ADMIN' && (
-        <div className="bg-[#e9f4f8] p-6 rounded-3xl border-2 border-[#2596be]/20 shadow-sm w-full space-y-3">
-          <h3 className="font-black text-[#134b60] flex items-center gap-2 text-[11px] uppercase">
-            <UserCircle size={18} className="text-[#2596be]" /> SELECCIONAR CLIENTE A FACTURAR (SOLO MODO ADMIN)
-          </h3>
-          <select 
-            value={adminOrderClient} 
-            onChange={e => setAdminOrderClient(e.target.value)} 
-            className="w-full px-4 py-3 bg-white border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all shadow-sm"
+      {/* 2. ÁREA DE CONTENIDO */}
+      <div className="flex-1 overflow-hidden px-4 pt-3 pb-4 flex flex-col gap-3">
+        
+        {/* Selector de Cliente si es modo ADMIN */}
+        {currentUser.role === 'ADMIN' && (
+          <div 
+            className="flex-shrink-0 p-3 rounded-xl shadow-sm space-y-1.5"
+            style={{ backgroundColor: '#eff8fc', border: '1px solid #b7e0f0' }}
           >
-             <option value="">SELECCIONE UN CLIENTE PRIMERO...</option>
-             {clients.map(c => <option key={c.id} value={c.id}>{c.docNumber} - {c.name}</option>)}
-          </select>
-        </div>
-      )}
+            <h3 className="font-semibold flex items-center gap-1.5 text-[11px]" style={{ color: '#0071A8' }}>
+              <UserCircle size={14} /> Seleccionar cliente a facturar (Modo Administrador)
+            </h3>
+            <select 
+              value={adminOrderClient} 
+              onChange={e => setAdminOrderClient(e.target.value)} 
+              className="w-full px-3 py-1.5 bg-white rounded-lg outline-none font-semibold text-xs cursor-pointer shadow-sm"
+              style={{ border: '1px solid #D4DBDB', color: '#0071A8' }}
+            >
+               <option value="">Seleccione un cliente para habilitar el catálogo...</option>
+               {clients.map(c => <option key={c.id} value={c.id}>{c.docNumber} - {c.name}</option>)}
+            </select>
+          </div>
+        )}
 
-      {/* --- BANNER DE ENVÍO GRATIS Y PROGRESO --- */}
-      <div className={`p-6 rounded-3xl border-2 transition-all shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-[#e9f4f8] border-[#2596be]/30 text-[#134b60]'}`}>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3.5 w-full md:w-auto">
-            <div className={`p-3.5 rounded-2xl shadow-sm ${cartFinancials >= 300000 ? 'bg-emerald-500 text-white' : 'bg-[#2596be] text-white'}`}>
-              <Truck size={22} />
+        {/* Banner de Envío Gratis compacto */}
+        <div 
+          className="flex-shrink-0 px-4 py-2.5 rounded-xl border flex flex-col md:flex-row justify-between items-center gap-3 shadow-sm"
+          style={{
+            backgroundColor: cartFinancials >= 300000 ? '#f0fdf4' : '#f8fafc',
+            borderColor: cartFinancials >= 300000 ? '#bbf7d0' : '#D4DBDB'
+          }}
+        >
+          <div className="flex items-center gap-2.5 w-full md:w-auto">
+            <div 
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0"
+              style={{ backgroundColor: cartFinancials >= 300000 ? '#16a34a' : '#0071A8' }}
+            >
+              <Truck size={16} />
             </div>
-           <div>
-              <p className="text-[10px] font-black tracking-wide uppercase text-[#134b60]">
-                {cartFinancials >= 300000 ? '🎉 META ALCANZADA: ENVÍO GRATIS' : `TE FALTAN ${formatCurrency(300000 - cartFinancials)} PARA OBTENER ENVÍO GRATIS`}
+            <div>
+              <p className="text-xs font-bold leading-tight" style={{ color: cartFinancials >= 300000 ? '#16a34a' : '#0071A8' }}>
+                {cartFinancials >= 300000 ? '🎉 ¡Envío gratis conseguido!' : `Te faltan ${formatCurrency(300000 - cartFinancials)} para envío gratis`}
               </p>
               {cartFinancials < 300000 && (
-                <p className="text-[9px] font-bold text-[#134b60]/75 mt-1 tracking-normal uppercase">
-                  Si no supera el tope, el envío es: Por confirmar
+                <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+                  Aplica para pedidos iguales o superiores a $300.000
                 </p>
               )}
             </div>
           </div>
           
-          <div className="w-full md:w-56 space-y-1">
-            <div className="flex justify-between text-[10px] font-black">
-              <span>Progreso Envío Gratis</span>
-              <span>{Math.min(100, Math.round((cartFinancials / 300000) * 100))}%</span>
+          <div className="w-full md:w-48 space-y-1">
+            <div className="flex justify-between text-[10px] font-semibold text-slate-600">
+              <span>Meta de envío</span>
+              <span style={{ color: '#0071A8' }}>{Math.min(100, Math.round((cartFinancials / 300000) * 100))}%</span>
             </div>
-            <div className="w-full bg-white/80 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-200/50 shadow-inner">
+            <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
               <div 
-                className={`h-full rounded-full transition-all duration-500 ${cartFinancials >= 300000 ? 'bg-emerald-500' : 'bg-[#2596be]'}`} 
-                style={{ width: `${Math.min(100, (cartFinancials / 300000) * 100)}%` }}
+                className="h-full rounded-full transition-all duration-500" 
+                style={{ 
+                  width: `${Math.min(100, (cartFinancials / 300000) * 100)}%`,
+                  backgroundColor: cartFinancials >= 300000 ? '#16a34a' : '#0071A8'
+                }}
               ></div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ======================================================== */}
-      {/* PESTAÑA 1: CATÁLOGO DE PRODUCTOS (2 COLUMNAS EN MÓVIL)   */}
-      {/* ======================================================== */}
-      {activeOrderTab === 'catalog' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex items-center justify-between gap-4">
-            <div className="relative flex-1">
-              <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
-                value={searchTerm} 
-                disabled={isSearchDisabled} 
-                onChange={e => setSearchTerm(e.target.value)} 
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-2xl outline-none font-black text-xs uppercase text-[#134b60] disabled:opacity-50 transition-all shadow-sm" 
-                placeholder="BUSCAR RÁPIDO POR CÓDIGO O NOMBRE EN EL CATÁLOGO..." 
-              />
-            </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-              {catalogProducts.length} PRODUCTOS
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4 relative">
-            {isSearchDisabled && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
-                <p className="bg-[#134b60] text-white px-6 py-3 rounded-full font-black text-xs uppercase shadow-xl animate-pulse">
-                  SELECCIONE UN CLIENTE ARRIBA PARA COMENZAR
-                </p>
-              </div>
-            )}
-
-            {catalogProducts.length === 0 ? (
-              <div className="col-span-full py-20 text-center text-slate-400 font-black text-xs bg-white rounded-3xl border-2 border-[#e9f4f8]">
-                NO SE ENCONTRARON PRODUCTOS
-              </div>
-            ) : (
-              catalogProducts.map(p => {
-                const unitPrice = getProductFinalPrice(p);
-                const currentQty = cardQuantities[p.id] !== undefined ? cardQuantities[p.id] : 1;
-                const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
-
-                return (
-                  <div 
-                    key={p.id}
-                    className="bg-white p-2.5 sm:p-3.5 rounded-2xl border-2 border-slate-200 hover:border-[#2596be] transition-all flex flex-col justify-between text-left shadow-sm group hover:shadow-md"
-                  >
-                    <div>
-                      <div 
-                        onClick={() => { setZoomImageProd(p); setZoomImageIndex(0); }}
-                        className="w-full h-24 sm:h-36 rounded-xl overflow-hidden bg-slate-100 mb-2 border border-slate-200 relative cursor-pointer group-hover:scale-[1.02] transition-transform shadow-inner"
-                        title="Hacer clic para ampliar imagen"
-                      >
-                        <img src={displayImg} alt={p.name} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-black text-[8px] sm:text-[9px]">
-                          🔍 AMPLIAR
-                        </div>
-                        <span className="absolute top-1 left-1 bg-[#134b60] text-white font-mono text-[7px] sm:text-[8px] font-black px-1.5 sm:px-2 py-0.5 rounded shadow">#{p.id}</span>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1 mb-1">
-                        <span className="px-1.5 py-0.5 bg-[#e9f4f8] text-[#2596be] rounded text-[7px] sm:text-[8px] font-black uppercase">{p.category || 'VARIOS'}</span>
-                        <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[7px] sm:text-[8px] font-bold uppercase">{p.unitName}</span>
-                      </div>
-
-                      <p className="text-[10px] sm:text-[11px] font-black text-[#134b60] line-clamp-2 leading-tight uppercase mb-1">{p.name}</p>
-
-                      {p.observations && (
-                        <div className="bg-slate-50 px-2 py-1 rounded border border-slate-100 mb-2">
-                          <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase truncate" title={p.observations}>
-                            {p.observations}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-slate-100">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[7px] sm:text-[8px] text-slate-400 font-bold uppercase">VALOR:</span>
-                        <span className="text-[10px] sm:text-xs font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-center gap-1.5">
-                        <div className="flex items-center bg-slate-100 rounded-lg border border-slate-200 overflow-hidden shrink-0 w-full sm:w-auto justify-center">
-                          <button 
-                            type="button" 
-                            onPointerDown={(e) => { e.preventDefault(); startHolding(p.id, -1); }}
-                            onPointerUp={stopHolding}
-                            onPointerLeave={stopHolding}
-                            className="px-2 py-1.5 sm:py-2 text-[10px] font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
-                          >
-                            -
-                          </button>
-                          
-                          <input 
-                            type="text"
-                            inputMode="numeric"
-                            value={currentQty}
-                            onChange={(e) => handleQtyInputChange(p.id, e.target.value)}
-                            onBlur={() => handleQtyInputBlur(p.id)}
-                            className="w-8 sm:w-10 text-center text-[10px] font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
-                          />
-
-                          <button 
-                            type="button" 
-                            onPointerDown={(e) => { e.preventDefault(); startHolding(p.id, 1); }}
-                            onPointerUp={stopHolding}
-                            onPointerLeave={stopHolding}
-                            className="px-2 py-1.5 sm:py-2 text-[10px] font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
-                          >
-                            +
-                          </button>
-                        </div>
-
-                        <button 
-                          type="button" 
-                          onClick={() => handleAddCardToCart(p)}
-                          disabled={isSearchDisabled}
-                          className="w-full sm:flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-1.5 sm:py-2 rounded-lg text-[8px] sm:text-[9px] font-black uppercase shadow-md shadow-[#2596be]/20 transition-all active:scale-95 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
-                        >
-                          <Plus size={10} /> AGREGAR
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* PESTAÑA 2: CARRITO DE COMPRAS                            */}
-      {/* ======================================================== */}
-      {activeOrderTab === 'cart' && (
-        <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden w-full flex flex-col animate-in fade-in duration-300">
-          <div className="p-6 border-b border-[#e9f4f8] flex justify-between items-center bg-[#e9f4f8]/30">
-            <h4 className="text-[11px] font-black text-[#2596be] uppercase tracking-tighter flex items-center gap-2">
-              <ShoppingCart size={16} /> CARRITO DE COMPRAS ({cart.length} ÍTEMS)
-            </h4>
-            <span className="text-sm font-black text-[#134b60] font-mono">
-              TOTAL: {formatCurrency(cartFinancials)}
-            </span>
-          </div>
-
-          <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left min-w-[1000px] uppercase">
-              <thead className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-5">CÓDIGO (ID)</th>
-                  <th className="px-6 py-5">PRODUCTO Y OBSERVACIÓN DEL ÍTEM</th>
-                  <th className="px-6 py-5 text-center">U. MEDIDA</th>
-                  <th className="px-6 py-5 text-center">CANTIDAD</th>
-                  <th className="px-6 py-5 text-right">UNITARIO</th>
-                  <th className="px-6 py-5 text-right">SUBTOTAL</th>
-                  <th className="px-6 py-5 text-right">GESTIÓN</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-                {cart.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-20 text-center text-slate-300 font-black">
-                      TU CARRITO ESTÁ VACÍO. AGREGA PRODUCTOS DESDE LA PESTAÑA DE CATÁLOGO.
-                    </td>
-                  </tr>
-                ) : (
-                  cart.map(item => (
-                    <tr key={item.tempId} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                      <td className="px-6 py-4 font-mono text-[#2596be] font-black">{item.productId}</td>
-                      
-                      <td className="px-6 py-4 space-y-2">
-                        <p className="font-black text-[#134b60]">{item.name}</p>
-                        <input 
-                          type="text" 
-                          maxLength={50}
-                          placeholder="AGREGAR NOTA U OBSERVACIÓN A ESTE PRODUCTO..."
-                          value={item.observation || ''}
-                          onChange={e => updateItemObservation(item.tempId, e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-xl text-[9px] font-bold uppercase text-[#134b60] outline-none transition-all shadow-sm"
-                        />
-                      </td>
-
-                      <td className="px-6 py-4 text-center font-black">{item.unit}</td>
-                      
-                      <td className="px-6 py-4 text-center">
-                        <input 
-                          type="number" 
-                          min="1"
-                          value={item.quantity}
-                          onChange={e => updateItemQuantity(item.tempId, e.target.value)}
-                          className="w-20 px-3 py-2 text-center bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-xl font-mono text-emerald-600 font-black text-xs outline-none"
-                        />
-                      </td>
-
-                      <td className="px-6 py-4 text-right text-slate-500 font-mono">{formatCurrency(item.totalPricePerUnit)}</td>
-                      <td className="px-6 py-4 text-right text-[#134b60] font-black font-mono">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
-                      
-                      <td className="px-6 py-4 text-right">
-                        <button 
-                          onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} 
-                          className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm cursor-pointer"
-                          title="Eliminar producto"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {cart.length > 0 && (
-            <div className="p-8 bg-slate-50 border-t border-slate-100 flex flex-col gap-6">
-              <div className="w-full">
-                <div className="flex justify-between items-end mb-2">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">OBSERVACIÓN GENERAL DEL PEDIDO (OPCIONAL)</label>
-                  <span className={`text-[10px] font-black tracking-widest ${generalObservation.length >= 500 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
-                    {generalObservation.length} / 500
-                  </span>
-                </div>
-                <textarea 
-                  maxLength={500}
-                  value={generalObservation} 
-                  onChange={e => setGeneralObservation(e.target.value.toUpperCase())} 
-                  className="w-full p-4 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all resize-none min-h-[90px]" 
-                  placeholder="ESPECIFICACIONES DE ENTREGA, NOTAS PARA EL ASESOR O PRODUCTOS ADICIONALES..."
+        {/* PESTAÑA 1: CATÁLOGO DE PRODUCTOS (SCROLL INTERNO) */}
+        {activeOrderTab === 'catalog' && (
+          <div className="flex-1 overflow-hidden flex flex-col gap-2.5 animate-in fade-in duration-300">
+            {/* Buscador superior */}
+            <div 
+              className="flex-shrink-0 flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white shadow-sm"
+              style={{ border: '1px solid #D4DBDB' }}
+            >
+              <div className="relative flex-1">
+                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: '#B7C0C6' }} />
+                <input 
+                  type="text" 
+                  value={searchTerm} 
+                  disabled={isSearchDisabled} 
+                  onChange={e => setSearchTerm(e.target.value)} 
+                  className="w-full pl-9 pr-3 py-1.5 rounded-lg outline-none text-xs font-medium disabled:opacity-50" 
+                  style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB', color: '#374151' }}
+                  onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                  onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                  placeholder="Buscar producto por código ID o nombre..." 
                 />
               </div>
-              
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
-                <button 
-                  onClick={() => { setCart([]); setGeneralObservation(''); }} 
-                  className="px-6 py-3.5 border-2 border-rose-200 text-rose-500 rounded-xl font-black text-xs hover:bg-rose-50 transition-all uppercase cursor-pointer"
-                >
-                  REINICIAR CARRITO
-                </button>
-                <button 
-                  onClick={() => setModalType('confirmSaveOrder')} 
-                  className="px-8 py-3.5 bg-[#2596be] text-white rounded-xl font-black text-xs shadow-lg shadow-[#2596be]/20 hover:bg-[#1e7a9b] transition-all uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                >
-                  HACER PEDIDO AHORA
-                </button>
+              <span className="text-[10px] font-semibold shrink-0" style={{ color: '#0071A8' }}>
+                {catalogProducts.length} productos
+              </span>
+            </div>
+
+            {/* Grid de productos con scroll interno */}
+            <div className="flex-1 overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 relative pb-2">
+                {isSearchDisabled && (
+                  <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10 flex items-center justify-center rounded-2xl">
+                    <p 
+                      className="text-white px-5 py-2.5 rounded-xl font-semibold text-xs shadow-md"
+                      style={{ backgroundColor: '#0071A8' }}
+                    >
+                      Seleccione un cliente arriba para comenzar a pedir
+                    </p>
+                  </div>
+                )}
+
+                {catalogProducts.length === 0 ? (
+                  <div 
+                    className="col-span-full py-16 text-center font-medium text-xs bg-white rounded-xl border"
+                    style={{ borderColor: '#D4DBDB', color: '#B7C0C6' }}
+                  >
+                    No se encontraron productos disponibles
+                  </div>
+                ) : (
+                  catalogProducts.map(p => {
+                    const unitPrice = getProductFinalPrice(p);
+                    const currentQty = cardQuantities[p.id] !== undefined ? cardQuantities[p.id] : 1;
+                    const displayImg = (p.images && p.images[0]) || p.image || DEFAULT_CASTILLA_IMAGE;
+
+                    return (
+                      <div 
+                        key={p.id}
+                        className="bg-white p-2.5 rounded-xl border transition-all flex flex-col justify-between text-left shadow-sm group hover:shadow-md"
+                        style={{ borderColor: '#D4DBDB' }}
+                      >
+                        <div>
+                          <div 
+                            onClick={() => { setZoomImageProd(p); setZoomImageIndex(0); }}
+                            className="w-full h-28 sm:h-32 rounded-lg overflow-hidden bg-slate-50 mb-2 relative cursor-pointer"
+                            style={{ border: '1px solid #D4DBDB' }}
+                            title="Clic para ampliar imagen"
+                          >
+                            <img src={displayImg} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                            <span 
+                              className="absolute top-1.5 left-1.5 text-white font-mono text-[9px] font-semibold px-1.5 py-0.5 rounded shadow-sm"
+                              style={{ backgroundColor: '#0071A8' }}
+                            >
+                              #{p.id}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 mb-1">
+                            <span className="px-1.5 py-0.5 rounded text-[8px] font-semibold" style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}>
+                              {p.category || 'VARIOS'}
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[8px] font-medium text-slate-500">
+                              {p.unitName}
+                            </span>
+                          </div>
+
+                          <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight mb-1">
+                            {p.name}
+                          </p>
+
+                          {p.observations && (
+                            <div className="bg-slate-50 px-2 py-0.5 rounded border border-slate-100 mb-2">
+                              <p className="text-[9px] text-slate-400 font-medium truncate" title={p.observations}>
+                                {p.observations}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-slate-100">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[9px] font-semibold" style={{ color: '#0071A8' }}>Precio:</span>
+                            <span className="text-xs font-bold font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <div 
+                              className="flex items-center rounded-lg overflow-hidden shrink-0 bg-slate-50"
+                              style={{ border: '1px solid #D4DBDB' }}
+                            >
+                              <button 
+                                type="button" 
+                                onPointerDown={(e) => { e.preventDefault(); startHolding(p.id, -1); }}
+                                onPointerUp={stopHolding}
+                                onPointerLeave={stopHolding}
+                                className="px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer select-none"
+                              >
+                                -
+                              </button>
+                              
+                              <input 
+                                type="text"
+                                inputMode="numeric"
+                                value={currentQty}
+                                onChange={(e) => handleQtyInputChange(p.id, e.target.value)}
+                                onBlur={() => handleQtyInputBlur(p.id)}
+                                className="w-8 text-center text-xs font-bold font-mono outline-none py-1"
+                                style={{ color: '#0071A8' }}
+                              />
+
+                              <button 
+                                type="button" 
+                                onPointerDown={(e) => { e.preventDefault(); startHolding(p.id, 1); }}
+                                onPointerUp={stopHolding}
+                                onPointerLeave={stopHolding}
+                                className="px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer select-none"
+                              >
+                                +
+                              </button>
+                            </div>
+
+                            <button 
+                              type="button" 
+                              onClick={() => handleAddCardToCart(p)}
+                              disabled={isSearchDisabled}
+                              className="flex-1 text-white py-1.5 rounded-lg text-[10px] font-semibold shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                              style={{ backgroundColor: '#0071A8' }}
+                            >
+                              <Plus size={12} /> Agregar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* ======================================================== */}
-      {/* MODAL DE ZOOM / AMPLIACIÓN DE IMAGEN (RESPONSIVE)        */}
-      {/* ======================================================== */}
+        {/* PESTAÑA 2: CARRITO DE COMPRAS (SCROLL INTERNO) */}
+        {activeOrderTab === 'cart' && (
+          <div 
+            className="flex-1 overflow-hidden rounded-xl bg-white shadow-sm flex flex-col animate-in fade-in duration-300"
+            style={{ border: '1px solid #D4DBDB' }}
+          >
+            {/* Cabecera del Carrito */}
+            <div 
+              className="p-3 flex justify-between items-center shrink-0"
+              style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+            >
+              <h4 className="text-xs font-bold flex items-center gap-1.5" style={{ color: '#0071A8' }}>
+                <ShoppingCart size={14} /> Carrito de Compras ({cart.length} ítems)
+              </h4>
+              <span className="text-xs font-bold font-mono" style={{ color: '#0071A8' }}>
+                Subtotal estimado: {formatCurrency(cartFinancials)}
+              </span>
+            </div>
+
+            {/* Tabla de ítems del Carrito con scroll interno */}
+            <div className="flex-1 overflow-y-auto overflow-x-auto">
+              <table className="w-full text-left min-w-[850px]">
+                <thead 
+                  className="sticky top-0 z-10"
+                  style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+                >
+                  <tr>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Código ID</th>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Producto y Notas</th>
+                    <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>U. Medida</th>
+                    <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Cantidad</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Unitario</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Subtotal</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Gestión</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                  {cart.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-16 text-center font-medium" style={{ color: '#B7C0C6' }}>
+                        El carrito está vacío. Agrega productos desde el catálogo.
+                      </td>
+                    </tr>
+                  ) : (
+                    cart.map(item => (
+                      <tr key={item.tempId} className="hover:bg-[#eff8fc] transition-colors" style={{ borderBottom: '1px solid #f8fafc' }}>
+                        <td className="px-4 py-2.5 font-mono text-[11px] font-semibold" style={{ color: '#0071A8' }}>{item.productId}</td>
+                        
+                        <td className="px-4 py-2.5 space-y-1">
+                          <p className="font-semibold text-slate-800 leading-tight">{item.name}</p>
+                          <input 
+                            type="text" 
+                            maxLength={50}
+                            placeholder="Nota u observación para este ítem..."
+                            value={item.observation || ''}
+                            onChange={e => updateItemObservation(item.tempId, e.target.value)}
+                            className="w-full px-2.5 py-1 rounded-lg text-[10px] font-medium outline-none transition-all uppercase"
+                            style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB', color: '#374151' }}
+                            onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                            onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                          />
+                        </td>
+
+                        <td className="px-4 py-2.5 text-center text-slate-600 font-medium">{item.unit}</td>
+                        
+                        <td className="px-4 py-2.5 text-center">
+                          <input 
+                            type="number" 
+                            min="1"
+                            value={item.quantity}
+                            onChange={e => updateItemQuantity(item.tempId, e.target.value)}
+                            className="w-16 px-2 py-1 text-center rounded-lg font-mono text-emerald-600 font-bold text-xs outline-none"
+                            style={{ border: '1px solid #D4DBDB', backgroundColor: '#f8fafc' }}
+                          />
+                        </td>
+
+                        <td className="px-4 py-2.5 text-right font-mono text-[11px] text-slate-500">{formatCurrency(item.totalPricePerUnit)}</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-[11px] font-bold text-slate-800">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
+                        
+                        <td className="px-4 py-2.5 text-right">
+                          <button 
+                            onClick={() => setCart(cart.filter(c => c.tempId !== item.tempId))} 
+                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 cursor-pointer transition-all"
+                            title="Eliminar producto"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pie del Carrito: Observaciones Generales y Envío */}
+            {cart.length > 0 && (
+              <div 
+                className="p-3.5 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0"
+                style={{ backgroundColor: '#f8fafc', borderTop: '1px solid #D4DBDB' }}
+              >
+                <div className="w-full md:flex-1 relative">
+                  <input 
+                    type="text"
+                    maxLength={500}
+                    value={generalObservation} 
+                    onChange={e => setGeneralObservation(e.target.value.toUpperCase())} 
+                    className="w-full px-3 py-2 bg-white rounded-lg outline-none text-xs font-medium"
+                    style={{ border: '1px solid #D4DBDB', color: '#374151' }}
+                    onFocus={(e) => e.target.style.borderColor = '#0071A8'}
+                    onBlur={(e) => e.target.style.borderColor = '#D4DBDB'}
+                    placeholder="Observaciones generales de entrega o notas adicionales..."
+                  />
+                  <span className="text-[9px] font-medium absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: '#B7C0C6' }}>
+                    {generalObservation.length}/500
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                  <button 
+                    onClick={() => { setCart([]); setGeneralObservation(''); }} 
+                    className="px-3.5 py-2 rounded-lg font-semibold text-xs text-rose-500 hover:bg-rose-50 cursor-pointer transition-all border border-rose-200"
+                  >
+                    Vaciar Carrito
+                  </button>
+                  <button 
+                    onClick={() => setModalType('confirmSaveOrder')} 
+                    className="px-5 py-2 text-white rounded-lg font-semibold text-xs shadow-sm cursor-pointer transition-all active:scale-95"
+                    style={{ backgroundColor: '#0071A8' }}
+                  >
+                    Hacer Pedido Ahora
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MODALES REESTILIZADOS
+      ═══════════════════════════════════════════════════════════════ */}
+
+      {/* MODAL ZOOM DE IMAGEN */}
       {zoomImageProd && (() => {
         const unitPrice = getProductFinalPrice(zoomImageProd);
         const currentQty = cardQuantities[zoomImageProd.id] !== undefined ? cardQuantities[zoomImageProd.id] : 1;
@@ -3179,87 +3495,82 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
         const activeImg = imagesList[zoomImageIndex] || imagesList[0] || DEFAULT_CASTILLA_IMAGE;
 
         return (
-          <div className="fixed inset-0 bg-[#134b60]/85 backdrop-blur-md z-[120] flex items-center justify-center p-3 sm:p-4 print:hidden uppercase">
-            <div className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 w-full max-w-3xl max-h-[92vh] text-center relative border-2 border-[#e9f4f8] animate-in zoom-in-95 duration-300 flex flex-col overflow-y-auto scrollbar-hide gap-3">
-              
-              <div className="flex justify-between items-center border-b border-slate-100 pb-3 shrink-0">
-                <div className="text-left pr-4">
-                  <span className="text-[9px] font-mono font-black text-[#2596be] block">CÓDIGO #{zoomImageProd.id}</span>
-                  <h3 className="text-sm sm:text-base md:text-lg font-black text-[#134b60] leading-tight">{zoomImageProd.name}</h3>
-                  <p className="text-[8px] text-slate-400 font-bold uppercase mt-0.5">UNIDAD: {zoomImageProd.unitName} | CATEGORÍA: {zoomImageProd.category || 'N/A'}</p>
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+            <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-lg space-y-3" style={{ border: '1px solid #D4DBDB' }}>
+              <div className="flex justify-between items-start pb-2" style={{ borderBottom: '1px solid #D4DBDB' }}>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold" style={{ color: '#0071A8' }}>Código #{zoomImageProd.id}</span>
+                  <h3 className="text-sm font-bold text-slate-800 leading-tight">{zoomImageProd.name}</h3>
+                  <p className="text-[9px] font-medium" style={{ color: '#B7C0C6' }}>{zoomImageProd.unitName} · {zoomImageProd.category || 'N/A'}</p>
                 </div>
                 <button 
                   onClick={() => setZoomImageProd(null)}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-500 transition-colors cursor-pointer font-black shrink-0"
+                  className="p-1 rounded-lg cursor-pointer"
+                  style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
                 >
-                  ✕
+                  <X size={15} />
                 </button>
               </div>
               
-              {/* Contenedor de Imagen Ampliada con Carrusel */}
-              <div className="relative w-full h-52 sm:h-60 md:h-68 bg-slate-50 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-inner flex items-center justify-center shrink-0">
+              {/* Imagen central */}
+              <div 
+                className="relative w-full h-52 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center"
+                style={{ border: '1px solid #D4DBDB' }}
+              >
                 <img src={activeImg} alt={zoomImageProd.name} className="max-h-full max-w-full object-contain p-2" />
                 
                 {imagesList.length > 1 && (
                   <>
                     <button 
                       onClick={() => setZoomImageIndex(prev => (prev === 0 ? imagesList.length - 1 : prev - 1))}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-8 h-8 rounded-full flex items-center justify-center font-black transition-colors cursor-pointer shadow-lg text-xs"
-                      title="Imagen anterior"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs"
                     >
                       ❮
                     </button>
                     <button 
                       onClick={() => setZoomImageIndex(prev => (prev === imagesList.length - 1 ? 0 : prev + 1))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-8 h-8 rounded-full flex items-center justify-center font-black transition-colors cursor-pointer shadow-lg text-xs"
-                      title="Siguiente imagen"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs"
                     >
                       ❯
                     </button>
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white px-2.5 py-0.5 rounded-full text-[8px] font-black tracking-wider">
-                      IMAGEN {zoomImageIndex + 1} DE {imagesList.length}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-2 py-0.5 rounded-full text-[8px] font-medium">
+                      {zoomImageIndex + 1} / {imagesList.length}
                     </div>
                   </>
                 )}
               </div>
 
-              {/* Miniaturas de navegación si hay varias */}
+              {/* Miniaturas */}
               {imagesList.length > 1 && (
-                <div className="flex justify-center gap-2 shrink-0 overflow-x-auto py-1">
+                <div className="flex justify-center gap-1.5 py-1">
                   {imagesList.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setZoomImageIndex(idx)}
-                      className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${zoomImageIndex === idx ? 'border-[#2596be] scale-105 shadow-md' : 'border-slate-200 opacity-60 hover:opacity-100'}`}
+                      className="w-10 h-10 rounded-lg overflow-hidden border cursor-pointer"
+                      style={{ borderColor: zoomImageIndex === idx ? '#0071A8' : '#D4DBDB' }}
                     >
-                      <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
               )}
 
-              {/* Descripción / Observaciones del producto */}
-              {zoomImageProd.observations && (
-                <div className="bg-[#e9f4f8]/50 p-3 rounded-xl border border-[#2596be]/30 text-left shrink-0">
-                  <span className="text-[8px] text-[#2596be] font-black block mb-0.5">OBSERVACIONES / DESCRIPCIÓN DEL PRODUCTO:</span>
-                  <p className="text-[10px] font-bold text-[#134b60] leading-snug">{zoomImageProd.observations}</p>
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-100 shrink-0">
-                <div className="text-left w-full sm:w-auto">
-                  <span className="text-[8px] text-slate-400 font-bold uppercase block">VALOR UNITARIO</span>
-                  <span className="text-base font-black font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
+              {/* Acciones */}
+              <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid #D4DBDB' }}>
+                <div>
+                  <span className="text-[9px] font-semibold block" style={{ color: '#0071A8' }}>Precio Unitario</span>
+                  <span className="text-sm font-bold font-mono text-emerald-600">{formatCurrency(unitPrice)}</span>
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                  <div className="flex items-center bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center rounded-lg overflow-hidden bg-slate-50 border" style={{ borderColor: '#D4DBDB' }}>
                     <button 
                       type="button" 
                       onPointerDown={(e) => { e.preventDefault(); startHolding(zoomImageProd.id, -1); }}
                       onPointerUp={stopHolding}
                       onPointerLeave={stopHolding}
-                      className="px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                      className="px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 select-none"
                     >
                       -
                     </button>
@@ -3270,7 +3581,8 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                       value={currentQty}
                       onChange={(e) => handleQtyInputChange(zoomImageProd.id, e.target.value)}
                       onBlur={() => handleQtyInputBlur(zoomImageProd.id)}
-                      className="w-14 text-center text-xs font-black font-mono text-[#134b60] bg-transparent outline-none py-1"
+                      className="w-10 text-center text-xs font-bold font-mono outline-none py-1"
+                      style={{ color: '#0071A8' }}
                     />
 
                     <button 
@@ -3278,7 +3590,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                       onPointerDown={(e) => { e.preventDefault(); startHolding(zoomImageProd.id, 1); }}
                       onPointerUp={stopHolding}
                       onPointerLeave={stopHolding}
-                      className="px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer select-none"
+                      className="px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 select-none"
                     >
                       +
                     </button>
@@ -3290,9 +3602,10 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
                       setZoomImageProd(null);
                     }}
                     disabled={isSearchDisabled}
-                    className="flex-1 sm:flex-initial px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#2596be]/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    className="px-4 py-2 text-white rounded-lg text-xs font-semibold shadow-sm cursor-pointer disabled:opacity-50"
+                    style={{ backgroundColor: '#0071A8' }}
                   >
-                    <Plus size={14} /> AGREGAR AL CARRITO
+                    Agregar al carrito
                   </button>
                 </div>
               </div>
@@ -3302,51 +3615,80 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
         );
       })()}
 
-      {/* --- MODAL DE CONFIRMACIÓN --- */}
+      {/* MODAL CONFIRMAR PEDIDO */}
       {modalType === 'confirmSaveOrder' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm"><CheckCircle2 size={40} /></div>
-            <h3 className="font-black text-xl mb-4 tracking-tighter leading-tight">¿DESEA CREAR LA SOLICITUD?</h3>
-            <p className="text-xs font-black uppercase tracking-wider text-[#2596be] mt-2 mb-4">
-              {cartFinancials >= 300000 ? '🎉 INCLUYE ENVÍO GRATIS' : '📦 ESTADO DE ENVÍO: POR CONFIRMAR'}
-            </p>
-            <p className="text-[10px] text-slate-400 font-black mb-8">TOTAL ESTIMADO: <span className="text-[#2596be] font-mono">{formatCurrency(cartFinancials)}</span></p>
-            <div className="flex gap-4">
-              <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-2xl font-black text-xs uppercase transition-colors cursor-pointer">VOLVER</button>
-              <button onClick={saveOrder} className="flex-1 py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CONFIRMAR PEDIDO</button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 text-center space-y-3" style={{ border: '1px solid #D4DBDB' }}>
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+              <CheckCircle2 size={24} />
+            </div>
+            
+            <h3 className="font-bold text-base text-slate-800">¿Crear la Solicitud de Pedido?</h3>
+            
+            <div className="p-3 rounded-xl space-y-1" style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB' }}>
+              <p className="text-xs font-semibold" style={{ color: cartFinancials >= 300000 ? '#16a34a' : '#0071A8' }}>
+                {cartFinancials >= 300000 ? '🎉 Incluye envío gratis' : '📦 Envío por confirmar'}
+              </p>
+              <p className="text-xs font-medium text-slate-500">
+                Total Estimado: <span className="font-bold font-mono" style={{ color: '#0071A8' }}>{formatCurrency(cartFinancials)}</span>
+              </p>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button 
+                onClick={() => setModalType(null)} 
+                className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
+              >
+                Volver
+              </button>
+              <button 
+                onClick={saveOrder} 
+                className="flex-1 py-2 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer active:scale-95"
+                style={{ backgroundColor: '#0071A8' }}
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* --- MODAL DE ÉXITO --- */}
+      {/* MODAL ÉXITO DE PEDIDO */}
       {modalType === 'orderSuccess' && lastSavedOrder && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:hidden">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md p-10 text-center text-[#134b60]">
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-              <CheckCircle2 size={40} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center space-y-4" style={{ border: '1px solid #D4DBDB' }}>
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+              <CheckCircle2 size={24} />
             </div>
-            <h3 className="font-black text-xl mb-2 tracking-tighter leading-tight">¡SOLICITUD CREADA CON ÉXITO!</h3>
-            <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl mb-8 space-y-2">
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">NÚMERO DE SOLICITUD</p>
-              <p className="text-2xl font-black text-[#2596be] font-mono">{lastSavedOrder.id}</p>
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest pt-2">VALOR TOTAL</p>
-              <p className="text-xl font-black text-emerald-600 font-mono">{formatCurrency(lastSavedOrder.totalValue)}</p>
+            
+            <h3 className="font-bold text-base text-slate-800">¡Pedido Creado con Éxito!</h3>
+            
+            <div className="p-3.5 rounded-xl space-y-2 text-xs" style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB' }}>
+              <div>
+                <span className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>Número de Solicitud</span>
+                <p className="text-xl font-bold font-mono" style={{ color: '#0071A8' }}>{lastSavedOrder.id}</p>
+              </div>
+              <div className="pt-1 border-t border-slate-200">
+                <span className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>Valor Total</span>
+                <p className="text-base font-bold text-emerald-600 font-mono">{formatCurrency(lastSavedOrder.totalValue)}</p>
+              </div>
             </div>
+
             <button 
               onClick={() => { 
                 setModalType(null); 
                 setLastSavedOrder(null); 
               }} 
-              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-xs shadow-xl shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95"
+              className="w-full py-2.5 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer active:scale-95"
+              style={{ backgroundColor: '#0071A8' }}
             >
-              CERRAR Y VOLVER AL CATÁLOGO
+              Cerrar y volver al catálogo
             </button>
           </div>
         </div>
       )}
-      <Footer />
+
     </div>
   );
 };
