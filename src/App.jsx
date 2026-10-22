@@ -7851,7 +7851,8 @@ const LoginView = ({ users, setUsers, onLoginSuccess, globalLogo }) => {
   );
 };
 
-// --- 2. COMPONENTE RAÍZ (APP) CON PERMISOS TOTALES FORZADOS ---
+
+// --- COMPONENTE RAÍZ (APP): CONTROL DE SESIÓN Y PERSISTENCIA GLOBAL ---
 const App = () => {
   const universalAdminUser = {
     id: "US000001",
@@ -7861,9 +7862,9 @@ const App = () => {
     password: "admin",
     isTemporaryPassword: false,
     permissions: [
-      'dashboard', 'orders', 'access', 'crm', 'clients', 
-      'client_type', 'inventory', 'products', 'taxes', 'promotions', 
-      'client_home', 'client_new_order', 'client_orders_history'
+      'dashboard', 'admin_orders', 'access', 'crm', 'clients', 
+      'client_types', 'inventory', 'products', 'taxes', 'promotions', 
+      'client_dashboard', 'client_new_order', 'client_orders_history'
     ]
   };
 
@@ -7872,7 +7873,7 @@ const App = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Aseguramos que el usuario admin siempre exista y tenga TODOS los permisos actualizados
+        // Garantiza que el usuario admin siempre exista con todos los permisos vigentes
         const filtered = parsed.filter(u => u.email !== 'admin');
         return [universalAdminUser, ...filtered];
       } catch (e) {
@@ -7900,26 +7901,29 @@ const App = () => {
     setCurrentUser(null);
   };
 
-  if (!currentUser) {
-    return (
-      <LoginView 
-        users={users} 
-        setUsers={setUsers} 
-        onLoginSuccess={(user) => setCurrentUser(user)} 
-        globalLogo={globalLogo} 
-      />
-    );
-  }
-
   return (
-    <Dashboard 
-      onLogout={handleLogout} 
-      currentUser={currentUser} 
-      users={users} 
-      setUsers={setUsers} 
-      globalLogo={globalLogo} 
-      setGlobalLogo={setGlobalLogo} 
-    />
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="h-screen w-screen overflow-hidden bg-slate-100"
+    >
+      {!currentUser ? (
+        <LoginView 
+          users={users} 
+          setUsers={setUsers} 
+          onLoginSuccess={(user) => setCurrentUser(user)} 
+          globalLogo={globalLogo} 
+        />
+      ) : (
+        <Dashboard 
+          onLogout={handleLogout} 
+          currentUser={currentUser} 
+          users={users} 
+          setUsers={setUsers} 
+          globalLogo={globalLogo} 
+          setGlobalLogo={setGlobalLogo} 
+        />
+      )}
+    </div>
   );
 };
 
