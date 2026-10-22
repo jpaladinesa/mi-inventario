@@ -7591,7 +7591,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   );
 };
 
-// --- 1. COMPONENTE DE LOGIN SINCRONIZADO CON EL LOGO GLOBAL ---
+// --- COMPONENTE DE LOGIN Y ACTUALIZACIÓN DE CONTRASEÑA: DISEÑO UNIFICADO ---
 const LoginView = ({ users, setUsers, onLoginSuccess, globalLogo }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -7609,12 +7609,12 @@ const LoginView = ({ users, setUsers, onLoginSuccess, globalLogo }) => {
     const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
     if (!foundUser) {
-      setErrorMsg('CORREO ELECTRÓNICO NO REGISTRADO EN EL SISTEMA.');
+      setErrorMsg('Correo electrónico no registrado en el sistema.');
       return;
     }
 
     if (foundUser.password !== password) {
-      setErrorMsg('CONTRASEÑA INCORRECTA.');
+      setErrorMsg('Contraseña incorrecta.');
       return;
     }
 
@@ -7636,12 +7636,12 @@ const LoginView = ({ users, setUsers, onLoginSuccess, globalLogo }) => {
     const hasSpecialChar = /[\*\-\+\$\#\_\@\.\!]/.test(newPassword);
 
     if (!minLength || !hasUppercase || !hasLowercase || !hasSpecialChar) {
-      setPasswordError('LA CONTRASEÑA DEBE TENER MÍNIMO 6 CARACTERES, UNA MAYÚSCULA, UNA MINÚSCULA Y UN CARÁCTER ESPECIAL (*, -, +, ETC.).');
+      setPasswordError('La contraseña debe tener mínimo 6 caracteres, una mayúscula, una minúscula y un carácter especial (*, -, +, $, #, @, etc.).');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('LAS CONTRASEÑAS NO COINCIDEN.');
+      setPasswordError('Las contraseñas no coinciden.');
       return;
     }
 
@@ -7663,51 +7663,88 @@ const LoginView = ({ users, setUsers, onLoginSuccess, globalLogo }) => {
     onLoginSuccess(finalUser);
   };
 
-  // Si está pendiente el cambio de contraseña
+  // VISTA: ACTUALIZACIÓN OBLIGATORIA DE CONTRASEÑA TEMPORAL
   if (pendingUser) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f2d3a] p-4 uppercase font-sans">
-        <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 md:p-10 border-4 border-[#2596be]/20 space-y-6">
+      <div 
+        style={{ fontFamily: "'Montserrat', sans-serif", backgroundColor: '#0a2533' }}
+        className="flex items-center justify-center min-h-screen w-screen p-4 text-slate-800"
+      >
+        <div 
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 border space-y-5 animate-in fade-in zoom-in-95 duration-200"
+          style={{ borderColor: '#D4DBDB' }}
+        >
+          {/* Logo y Encabezado */}
           <div className="flex flex-col items-center text-center space-y-2">
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#2596be] overflow-hidden p-1">
-              <img src={globalLogo} alt="Logo" className="w-full h-full object-contain" />
+            <div 
+              className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md border p-1 overflow-hidden"
+              style={{ borderColor: '#D4DBDB' }}
+            >
+              <img src={globalLogo} alt="Logo Institucional" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-xl font-black text-[#134b60] tracking-tight">ACTUALIZAR CONTRASEÑA</h1>
-            <p className="text-[9px] font-bold text-slate-400 tracking-widest">SEGURIDAD OBLIGATORIA</p>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight uppercase" style={{ color: '#0071A8' }}>
+                Actualizar Contraseña
+              </h1>
+              <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+                Seguridad obligatoria para cuentas nuevas o temporales
+              </p>
+            </div>
           </div>
 
+          {/* Mensaje de Error */}
           {passwordError && (
-            <div className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[9px] rounded-xl text-center">
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl text-center leading-relaxed">
               {passwordError}
             </div>
           )}
 
-          <form onSubmit={handleUpdatePassword} className="space-y-4">
+          {/* Formulario */}
+          <form onSubmit={handleUpdatePassword} className="space-y-3.5">
             <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NUEVA CONTRASEÑA</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block" style={{ color: '#0071A8' }}>
+                Nueva Contraseña *
+              </label>
               <input 
                 type="password" 
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs text-[#134b60]"
+                placeholder="••••••••"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl outline-none font-medium text-xs text-slate-800 transition-all"
+                style={{ borderColor: '#D4DBDB' }}
+                onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
                 required 
               />
             </div>
+            
             <div className="space-y-1">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CONFIRMAR CONTRASEÑA</label>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block" style={{ color: '#0071A8' }}>
+                Confirmar Contraseña *
+              </label>
               <input 
                 type="password" 
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs text-[#134b60]"
+                placeholder="••••••••"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl outline-none font-medium text-xs text-slate-800 transition-all"
+                style={{ borderColor: '#D4DBDB' }}
+                onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
                 required 
               />
             </div>
+
+            <p className="text-[9px] text-slate-400 font-medium leading-tight">
+              Mínimo 6 caracteres, una letra mayúscula, una minúscula y un símbolo (*, -, +, $, #, @).
+            </p>
+
             <button 
               type="submit"
-              className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all cursor-pointer"
+              className="w-full py-3 text-white rounded-xl font-semibold uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer hover:opacity-95 active:scale-98"
+              style={{ backgroundColor: '#0071A8' }}
             >
-              GUARDAR Y ACCEDER
+              Guardar y Acceder
             </button>
           </form>
         </div>
@@ -7715,67 +7752,99 @@ const LoginView = ({ users, setUsers, onLoginSuccess, globalLogo }) => {
     );
   }
 
+  // VISTA: LOGIN PRINCIPAL
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0f2d3a] p-4 uppercase font-sans">
-      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 md:p-10 border-4 border-[#2596be]/20 space-y-6">
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif", backgroundColor: '#0a2533' }}
+      className="flex items-center justify-center min-h-screen w-screen p-4 text-slate-800"
+    >
+      <div 
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 border space-y-6 animate-in fade-in zoom-in-95 duration-200"
+        style={{ borderColor: '#D4DBDB' }}
+      >
+        {/* Logo Institucional y Títulos */}
         <div className="flex flex-col items-center text-center space-y-2">
           
-          {/* Logo sincronizado automáticamente con el del Dashboard / Sidebar */}
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-1.5 shadow-lg border-2 border-[#2596be] overflow-hidden">
+          <div 
+            className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-1.5 shadow-md border overflow-hidden"
+            style={{ borderColor: '#D4DBDB' }}
+          >
             <img 
               src={globalLogo} 
               alt="Logo Pide con Castilla" 
               className="w-full h-full object-contain" 
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
             />
-            <span className="text-[#134b60] font-black text-xl hidden">IT</span>
+            <span className="font-bold text-lg hidden" style={{ color: '#0071A8' }}>PC</span>
           </div>
 
-          <h1 className="text-2xl font-black text-[#134b60] tracking-tight">pide con castilla</h1>
-          <p className="text-[10px] font-bold text-slate-400 tracking-widest">SISTEMA DE GESTIÓN</p>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: '#0071A8' }}>
+              Pide con Castilla
+            </h1>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mt-0.5" style={{ color: '#B7C0C6' }}>
+              Sistema de Gestión Comercial e Inventario
+            </p>
+          </div>
         </div>
 
+        {/* Notificación de Error */}
         {errorMsg && (
-          <div className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl text-center animate-pulse">
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 font-medium text-xs rounded-xl text-center animate-shake">
             {errorMsg}
           </div>
         )}
 
+        {/* Formulario de Acceso */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CORREO ELECTRÓNICO</label>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block" style={{ color: '#0071A8' }}>
+              Correo Electrónico *
+            </label>
             <input 
               type="text" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin" 
-              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs lowercase text-[#134b60] transition-all"
+              placeholder="ejemplo@distribucionescastilla.com" 
+              className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl outline-none font-medium text-xs text-slate-800 transition-all lowercase"
+              style={{ borderColor: '#D4DBDB' }}
+              onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+              onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
               required 
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CONTRASEÑA</label>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block" style={{ color: '#0071A8' }}>
+              Contraseña *
+            </label>
             <input 
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="admin" 
-              className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 focus:border-[#2596be] rounded-2xl outline-none font-bold text-xs text-[#134b60] transition-all"
+              placeholder="••••••••" 
+              className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl outline-none font-medium text-xs text-slate-800 transition-all"
+              style={{ borderColor: '#D4DBDB' }}
+              onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+              onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
               required 
             />
           </div>
 
           <button 
             type="submit"
-            className="w-full py-4 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-[#2596be]/25 transition-all cursor-pointer active:scale-95"
+            className="w-full py-3 text-white rounded-xl font-semibold uppercase text-xs tracking-wider shadow-md transition-all cursor-pointer hover:opacity-95 active:scale-98"
+            style={{ backgroundColor: '#0071A8' }}
           >
-            INICIAR SESIÓN
+            Iniciar Sesión
           </button>
         </form>
 
-        <div className="text-center pt-2">
-          <span className="text-[9px] font-bold text-slate-400">DISTRIBUCIONES CASTILLA S.A.S. © 2026</span>
+        {/* Pie de Página Institucional */}
+        <div className="text-center pt-1 border-t" style={{ borderColor: '#f1f5f9' }}>
+          <span className="text-[9px] font-medium" style={{ color: '#B7C0C6' }}>
+            Distribuciones Castilla S.A.S. • © 2026
+          </span>
         </div>
       </div>
     </div>
