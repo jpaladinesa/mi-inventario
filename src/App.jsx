@@ -4474,7 +4474,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
   );
 };
 
-// --- DASHBOARD DE CLIENTE (CON BOTÓN DE MENÚ 100% NATIVO) ---
+// --- DASHBOARD DE CLIENTE: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions, currentUser, clients }) => {
   const [showPromo, setShowPromo] = useState(false);
   const [activePromo, setActivePromo] = useState(null);
@@ -4534,116 +4534,198 @@ const ClientDashboardView = ({ orders, setActiveTab, setFilterStatus, promotions
   }), [orders]);
 
   const statCards = [
-    { id: 'NUEVA', title: "SOLICITUDES NUEVAS", value: stats.new, icon: <FileText className="text-[#2596be]" size={18} />, color: "border-[#e9f4f8]", bg: "bg-[#e9f4f8]" },
-    { id: 'EN ALISTAMIENTO', title: "EN ALISTAMIENTO", value: stats.prep, icon: <Clock className="text-amber-600" size={18} />, color: "border-amber-100", bg: "bg-amber-50" },
-    { id: 'EN CAMINO', title: "PEDIDOS EN CAMINO", value: stats.shipped, icon: <Truck className="text-indigo-600" size={18} />, color: "border-indigo-100", bg: "bg-indigo-50" },
-    { id: 'ENTREGADA', title: "PEDIDOS ENTREGADOS", value: stats.delivered, icon: <CheckCircle2 className="text-emerald-600" size={18} />, color: "border-emerald-100", bg: "bg-emerald-50" },
+    { id: 'NUEVA', title: "SOLICITUDES NUEVAS", value: stats.new, icon: <FileText size={18} style={{ color: '#0071A8' }} />, bg: "#eff8fc", border: "#b7e0f0" },
+    { id: 'EN ALISTAMIENTO', title: "EN ALISTAMIENTO", value: stats.prep, icon: <Clock className="text-amber-600" size={18} />, bg: "#fffbeb", border: "#fde68a" },
+    { id: 'EN CAMINO', title: "PEDIDOS EN CAMINO", value: stats.shipped, icon: <Truck className="text-indigo-600" size={18} />, bg: "#eef2ff", border: "#c7d2fe" },
+    { id: 'ENTREGADA', title: "PEDIDOS ENTREGADOS", value: stats.delivered, icon: <CheckCircle2 className="text-emerald-600" size={18} />, bg: "#f0fdf4", border: "#bbf7d0" },
   ];
 
   return (
-    <div className="flex flex-col min-h-full animate-in fade-in duration-500 uppercase space-y-6 sm:space-y-8 relative">
-      
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in fade-in duration-500"
+    >
+      {/* MODAL DE PROMOCIONES */}
       {showPromo && activePromo && (
-        <div className="fixed inset-0 bg-[#134b60]/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4 print:hidden animate-in zoom-in duration-300">
-          <div className="bg-white rounded-[28px] sm:rounded-[32px] shadow-2xl overflow-hidden w-full max-w-md sm:max-w-lg relative border-4 border-[#2596be]">
-            <button onClick={() => setShowPromo(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/80 backdrop-blur-md text-[#134b60] p-2 rounded-full shadow-lg hover:bg-rose-500 hover:text-white transition-all z-10 cursor-pointer">
-              <X size={18} />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 print:hidden" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-md relative" style={{ border: '2px solid #0071A8' }}>
+            <button 
+              onClick={() => setShowPromo(false)} 
+              className="absolute top-2.5 right-2.5 bg-white/80 backdrop-blur-md text-slate-700 p-1.5 rounded-full shadow hover:bg-rose-500 hover:text-white transition-all z-10 cursor-pointer"
+            >
+              <X size={16} />
             </button>
-            {activePromo.image && <img src={activePromo.image} alt="Promoción" className="w-full h-56 sm:h-80 object-contain bg-slate-50" />}
-            <div className="p-6 sm:p-8 text-center bg-white">
-              <h3 className="font-black text-xl sm:text-2xl text-[#134b60] tracking-tighter mb-2">{activePromo.name}</h3>
-              {activePromo.text && <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase">{activePromo.text}</p>}
+            {activePromo.image && <img src={activePromo.image} alt="Promoción" className="w-full h-56 object-contain bg-slate-50" />}
+            <div className="p-5 text-center bg-white space-y-1">
+              <h3 className="font-bold text-lg leading-tight" style={{ color: '#0071A8' }}>{activePromo.name}</h3>
+              {activePromo.text && <p className="text-xs font-medium text-slate-500">{activePromo.text}</p>}
             </div>
             <div className="w-full bg-slate-100 h-1.5 relative overflow-hidden">
-              <div className="absolute inset-y-0 left-0 bg-[#2596be]" style={{ width: '100%', animation: `shrinkWidth ${activePromo.screenTimeSeconds}s linear forwards` }}></div>
+              <div className="absolute inset-y-0 left-0" style={{ backgroundColor: '#0071A8', width: '100%', animation: `shrinkWidth ${activePromo.screenTimeSeconds}s linear forwards` }}></div>
             </div>
           </div>
           <style>{`@keyframes shrinkWidth { from { width: 100%; } to { width: 0%; } }`}</style>
         </div>
       )}
 
-      {/* CABECERA CON BOTÓN DE MENÚ NATIVO SVG */}
-      <div className="flex items-center gap-4 border-b-4 border-[#2596be] pb-3">
+      {/* 1. ENCABEZADO COMPACTO CON BOTÓN DE MENÚ NATIVO */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <button 
+            type="button"
+            onClick={toggleSidebar}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-sm transition-all cursor-pointer active:scale-95 shrink-0"
+            style={{ backgroundColor: '#0071A8' }}
+            title="Abrir Menú de Navegación"
+          >
+            {/* SVG NATIVO - NO BORRAR */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"></line>
+              <line x1="4" x2="20" y1="6" y2="6"></line>
+              <line x1="4" x2="20" y1="18" y2="18"></line>
+            </svg>
+          </button>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight"
+              style={{ color: '#0071A8' }}
+            >
+              Portal Cliente Castilla
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Panel de control y resumen de pedidos
+            </p>
+          </div>
+        </div>
+
         <button 
-          onClick={toggleSidebar}
-          className="p-3 rounded-2xl bg-[#2596be] text-white shadow-lg shadow-[#2596be]/25 hover:bg-[#1e7a9b] transition-all cursor-pointer flex items-center justify-center active:scale-95 shrink-0"
-          title="Abrir Menú de Navegación"
+          onClick={() => setActiveTab('client_new_order')} 
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition-all cursor-pointer active:scale-95"
+          style={{ backgroundColor: '#0071A8', color: '#FFFFFF' }}
         >
-          {/* SVG NATIVO - NO BORRAR - GARANTIZA QUE NO FALLE */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="4" x2="20" y1="12" y2="12"></line>
-            <line x1="4" x2="20" y1="6" y2="6"></line>
-            <line x1="4" x2="20" y1="18" y2="18"></line>
-          </svg>
+          <Plus size={13} /> Hacer Pedido
         </button>
-        <h2 className="text-lg sm:text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">PORTAL CLIENTE CASTILLA</h2>
       </div>
       
-      <RealTimeClock />
-
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        {statCards.map((card, i) => (
-          <div key={i} onClick={() => { setFilterStatus(card.id); setActiveTab('client_orders_history'); }} className={`p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[32px] border-2 ${card.color} ${card.bg} shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95 group relative overflow-hidden flex flex-col justify-between`}>
-            <div className="flex items-center justify-between relative z-10 gap-2">
-              <div className="min-w-0">
-                <p className="text-[7px] sm:text-[8px] lg:text-[9px] text-[#134b60] opacity-70 font-black mb-1 tracking-wider sm:tracking-widest truncate">{card.title}</p>
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#134b60] tracking-tighter">{card.value}</p>
-              </div>
-              <div className="bg-white/80 p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl group-hover:bg-white transition-colors shadow-sm border border-white shrink-0">{card.icon}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-[32px] sm:rounded-[40px] border-2 border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="p-6 sm:p-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#e9f4f8]/30 gap-4">
-          <h4 className="text-[10px] font-black text-[#134b60] tracking-widest flex items-center gap-2 uppercase"><Activity size={16} className="text-[#2596be]"/> MOVIMIENTOS RECIENTES</h4>
-          <button onClick={() => setActiveTab('client_new_order')} className="w-full sm:w-auto bg-[#2596be] text-white px-6 py-3.5 rounded-2xl font-black text-[10px] flex items-center justify-center gap-2 hover:bg-[#1e7a9b] shadow-lg shadow-[#2596be]/20 uppercase transition-all cursor-pointer active:scale-95">CREAR SOLICITUD <ChevronRight size={14} /></button>
-        </div>
+      {/* 2. CONTENIDO PRINCIPAL: TARJETAS SUPERIORES + TABLA RECIENTES (VIEWPORT FIT) */}
+      <div className="flex-1 overflow-hidden px-4 pt-3 pb-4 flex flex-col gap-3">
         
-        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left uppercase min-w-[850px]">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
-              <tr>
-                <th className="px-4 sm:px-8 py-4 sm:py-5">ID SOLICITUD</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5">FECHA</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5 text-center">ITEMS</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5 text-right">TOTAL ESTIMADO</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5 text-center">ESTADO</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5 text-right">ACCIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {orders.length === 0 ? (
-                <tr><td colSpan="6" className="px-4 sm:px-8 py-20 text-center text-slate-300 font-black tracking-tighter uppercase">SIN SOLICITUDES REGISTRADAS</td></tr>
-              ) : (
-                orders.map(o => (
-                  <tr key={o.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-4 sm:px-8 py-4 sm:py-5 font-mono text-[#2596be] font-black">{o.id}</td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-slate-400 font-mono text-[10px]">{o.date}</td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-center font-black">{o.totalItems}</td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-right font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-center">
-                        <span className={`px-3 sm:px-4 py-1.5 rounded-full text-[8px] font-black uppercase border shadow-sm ${o.status === 'NUEVA' ? 'bg-[#e9f4f8] text-[#2596be] border-[#2596be]/20' : o.status === 'CANCELADA' ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>{o.status}</span>
-                    </td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-5 text-right">
-                      <button onClick={() => { setFilterStatus('TODOS'); setActiveTab('client_orders_history'); }} className="bg-[#e9f4f8] text-[#2596be] px-3 sm:px-4 py-2.5 rounded-xl hover:bg-[#2596be] hover:text-white transition-all shadow-sm flex items-center gap-2 ml-auto text-[10px] uppercase font-black cursor-pointer active:scale-95">
-                        <Eye size={14}/> DETALLE
-                      </button>
+        {/* Reloj en Tiempo Real */}
+        <div className="flex-shrink-0">
+          <RealTimeClock />
+        </div>
+
+        {/* Tarjetas de Estadísticas */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 flex-shrink-0">
+          {statCards.map((card, i) => (
+            <div 
+              key={i} 
+              onClick={() => { setFilterStatus(card.id); setActiveTab('client_orders_history'); }} 
+              className="p-3 rounded-xl border shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-between gap-2"
+              style={{ backgroundColor: card.bg, borderColor: card.border }}
+            >
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold tracking-wider truncate text-slate-500 mb-0.5">
+                  {card.title}
+                </p>
+                <p className="text-xl font-bold font-mono tracking-tight" style={{ color: '#0071A8' }}>
+                  {card.value}
+                </p>
+              </div>
+              <div className="bg-white/80 p-2 rounded-lg shadow-xs border border-white shrink-0">
+                {card.icon}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tabla de Movimientos Recientes con Scroll Interno */}
+        <div 
+          className="flex-1 overflow-hidden rounded-xl bg-white shadow-sm flex flex-col"
+          style={{ border: '1px solid #D4DBDB' }}
+        >
+          {/* Cabecera de la tabla */}
+          <div 
+            className="p-3 flex items-center justify-between shrink-0"
+            style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+          >
+            <h4 className="text-xs font-bold flex items-center gap-1.5" style={{ color: '#0071A8' }}>
+              <Activity size={14} /> Movimientos Recientes
+            </h4>
+            <span className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Mostrando últimos registros
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto overflow-x-auto">
+            <table className="w-full text-left min-w-[750px]">
+              <thead 
+                className="sticky top-0 z-10"
+                style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+              >
+                <tr>
+                  <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>ID Solicitud</th>
+                  <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Fecha</th>
+                  <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Ítems</th>
+                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Total Estimado</th>
+                  <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Estado</th>
+                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                {orders.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-16 text-center font-medium" style={{ color: '#B7C0C6' }}>
+                      Sin solicitudes registradas
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  orders.map(o => (
+                    <tr key={o.id} className="hover:bg-[#eff8fc] transition-colors" style={{ borderBottom: '1px solid #f8fafc' }}>
+                      <td className="px-4 py-2.5 font-mono text-[11px] font-semibold" style={{ color: '#0071A8' }}>{o.id}</td>
+                      <td className="px-4 py-2.5 text-slate-500 font-mono text-[10px]">{o.date}</td>
+                      <td className="px-4 py-2.5 text-center font-semibold text-slate-700">{o.totalItems}</td>
+                      <td className="px-4 py-2.5 text-right font-mono font-bold text-emerald-600">{formatCurrency(o.totalValue)}</td>
+                      <td className="px-4 py-2.5 text-center">
+                        <span 
+                          className={`px-2.5 py-0.5 rounded-full text-[9px] font-semibold border ${
+                            o.status === 'NUEVA' 
+                              ? 'bg-[#eff8fc] text-[#0071A8] border-[#b7e0f0]' 
+                              : o.status === 'CANCELADA' || o.status === 'ANULADA'
+                              ? 'bg-rose-50 text-rose-500 border-rose-200' 
+                              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                          }`}
+                        >
+                          {o.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <button 
+                          onClick={() => { setFilterStatus('TODOS'); setActiveTab('client_orders_history'); }} 
+                          className="px-3 py-1 rounded-lg text-white font-semibold text-[10px] cursor-pointer shadow-sm active:scale-95 inline-flex items-center gap-1"
+                          style={{ backgroundColor: '#0071A8' }}
+                        >
+                          <Eye size={12}/> Detalle
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </div>
-      <Footer />
+
     </div>
   );
 };
 
-/// --- PANEL DE CONTROL (ADMIN) OPTIMIZADO ---
+// --- PANEL DE CONTROL (ADMIN): DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, setFilterStatus }) => {
   const stats = useMemo(() => {
     const totalInventoryValue = inventory.reduce((acc, item) => {
@@ -4656,7 +4738,7 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
         prep: orders.filter(o => o.status === 'EN ALISTAMIENTO').length,
         shipped: orders.filter(o => o.status === 'EN CAMINO').length,
         delivered: orders.filter(o => o.status === 'ENTREGADA').length,
-        cancelled: orders.filter(o => o.status === 'CANCELADA').length
+        cancelled: orders.filter(o => o.status === 'CANCELADA' || o.status === 'ANULADA').length
     };
 
     return {
@@ -4668,116 +4750,179 @@ const DashboardHome = ({ products, clients, inventory, orders, setActiveTab, set
   }, [products, clients, inventory, orders]);
 
   const orderCards = [
-    { id: 'NUEVA', label: 'SOLICITUDES NUEVAS', val: stats.orders.new, color: 'text-[#2596be]', bg: 'bg-[#e9f4f8]', border: 'border-[#2596be]/20', icon: <FileText size={18}/>, liveTag: 'Foto en vivo' },
-    { id: 'EN ALISTAMIENTO', label: 'EN ALISTAMIENTO', val: stats.orders.prep, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: <Clock size={18}/>, liveTag: 'En proceso' },
-    { id: 'EN CAMINO', label: 'PEDIDOS EN CAMINO', val: stats.orders.shipped, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: <Truck size={18}/>, liveTag: 'Logística' },
-    { id: 'ENTREGADA', label: 'PEDIDOS ENTREGADOS', val: stats.orders.delivered, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: <CheckCircle2 size={18}/>, liveTag: 'Completados' },
+    { id: 'NUEVA', label: 'SOLICITUDES NUEVAS', val: stats.orders.new, color: '#0071A8', bg: '#eff8fc', border: '#b7e0f0', icon: <FileText size={18} style={{ color: '#0071A8' }} />, liveTag: 'Foto en vivo' },
+    { id: 'EN ALISTAMIENTO', label: 'EN ALISTAMIENTO', val: stats.orders.prep, color: '#d97706', bg: '#fffbeb', border: '#fde68a', icon: <Clock size={18} className="text-amber-600" />, liveTag: 'En proceso' },
+    { id: 'EN CAMINO', label: 'PEDIDOS EN CAMINO', val: stats.orders.shipped, color: '#4f46e5', bg: '#eef2ff', border: '#c7d2fe', icon: <Truck size={18} className="text-indigo-600" />, liveTag: 'Logística' },
+    { id: 'ENTREGADA', label: 'PEDIDOS ENTREGADOS', val: stats.orders.delivered, color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', icon: <CheckCircle2 size={18} className="text-emerald-600" />, liveTag: 'Completados' },
   ];
 
   return (
-    <div className="flex flex-col min-h-full space-y-8 animate-in fade-in duration-500 uppercase">
-      
-     {/* Cabecera / Barra de Estado Superior */}
-<div className="bg-white p-6 md:p-8 rounded-[32px] border-2 border-[#e9f4f8] shadow-sm flex flex-col xl:flex-row items-center justify-between gap-6">
-  
-  {/* 1. Lado Izquierdo: Títulos alineados a la izquierda */}
-  <div className="flex flex-col items-start text-left">
-    <h2 className="text-xl md:text-2xl font-black text-[#134b60] tracking-tight uppercase leading-none mb-1.5">
-      Dashboard General
-    </h2>
-    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
-      Resumen general de operaciones y stock
-    </p>
-  </div>
-
-  {/* 2. Centro: El indicador OPERATIVO */}
-  <div className="flex justify-center">
-    <span className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full text-[10px] font-black flex items-center gap-2 shadow-sm">
-      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OPERATIVO
-    </span>
-  </div>
-  
-</div>
-      {/* Tarjetas de Métricas Principales (KPIs) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">PRODUCTOS ACTIVOS</p>
-                <p className="text-3xl font-black text-[#134b60] tracking-tighter mt-1">{stats.products}</p>
-              </div>
-              <div className="p-3 bg-[#e9f4f8] text-[#2596be] rounded-2xl"><Package size={20}/></div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
-              <span>Catálogo general</span>
-              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Activo</span>
-            </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">VALOR INVENTARIO</p>
-                <p className="text-xl font-black text-emerald-600 tracking-tighter font-mono mt-1">{formatCurrency(stats.inventoryCost)}</p>
-              </div>
-              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><DollarSign size={20}/></div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
-              <span>Costo en stock</span>
-              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">Al día</span>
-            </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">CLIENTES</p>
-                <p className="text-3xl font-black text-[#134b60] tracking-tighter mt-1">{stats.clients}</p>
-              </div>
-              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><Users size={20}/></div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
-              <span>Cartera activa</span>
-              <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Registrados</span>
-            </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border-2 border-[#e9f4f8] shadow-sm flex flex-col justify-between relative overflow-hidden group">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">ANULADAS</p>
-                <p className="text-3xl font-black text-rose-500 tracking-tighter mt-1">{stats.orders.cancelled}</p>
-              </div>
-              <div className="p-3 bg-rose-50 text-rose-500 rounded-2xl"><XCircle size={20}/></div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-bold text-slate-400">
-              <span>Histórico</span>
-              <span className="text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md">Control</span>
-            </div>
-        </div>
-      </div>
-
-      {/* Tarjetas de Estados de Pedidos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {orderCards.map(oc => (
-            <button 
-                key={oc.id}
-                onClick={() => { setFilterStatus(oc.id); setActiveTab('admin_orders'); }}
-                className={`bg-white p-6 rounded-3xl border-2 ${oc.border} shadow-sm flex items-center justify-between hover:border-[#2596be] transition-all group active:scale-95 text-left`}
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in fade-in duration-500"
+    >
+      {/* 1. ENCABEZADO COMPACTO */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex flex-col md:flex-row md:items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+            style={{ backgroundColor: '#0071A8' }}
+          >
+            <Activity size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight"
+              style={{ color: '#0071A8' }}
             >
-                <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{oc.label}</p>
-                    <p className="text-3xl font-black text-[#134b60] tracking-tighter mt-1">{oc.val}</p>
-                    <span className="inline-block mt-2 text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      ● {oc.liveTag}
-                    </span>
-                </div>
-                <div className={`p-4 rounded-2xl ${oc.bg} ${oc.color} shadow-sm`}>{oc.icon}</div>
-            </button>
-        ))}
+              Dashboard General
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Resumen general de operaciones, ventas y stock
+            </p>
+          </div>
+        </div>
+
+        {/* Indicador OPERATIVO */}
+        <div className="flex items-center">
+          <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-semibold flex items-center gap-1.5 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema Operativo
+          </span>
+        </div>
       </div>
 
-      <Footer />
+      {/* 2. ÁREA DE CONTENIDO (SCROLL INTERNO SUAVE) */}
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4 space-y-4">
+        
+        {/* FILA 1: Tarjetas de Métricas Principales (KPIs) */}
+        <div>
+          <span className="text-[10px] font-semibold block mb-2" style={{ color: '#0071A8' }}>
+            Métricas de Catálogo y Cartera
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            
+            {/* Productos Activos */}
+            <div 
+              className="bg-white p-3.5 rounded-xl border shadow-sm flex flex-col justify-between transition-all hover:shadow-md"
+              style={{ borderColor: '#D4DBDB' }}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>PRODUCTOS ACTIVOS</p>
+                  <p className="text-2xl font-bold font-mono tracking-tight mt-0.5" style={{ color: '#0071A8' }}>{stats.products}</p>
+                </div>
+                <div className="p-2 rounded-lg" style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}>
+                  <Package size={18} />
+                </div>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                <span style={{ color: '#B7C0C6' }}>Catálogo general</span>
+                <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-semibold text-[9px]">Activo</span>
+              </div>
+            </div>
+
+            {/* Valor Inventario */}
+            <div 
+              className="bg-white p-3.5 rounded-xl border shadow-sm flex flex-col justify-between transition-all hover:shadow-md"
+              style={{ borderColor: '#D4DBDB' }}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>VALOR INVENTARIO</p>
+                  <p className="text-xl font-bold text-emerald-600 font-mono tracking-tight mt-0.5">{formatCurrency(stats.inventoryCost)}</p>
+                </div>
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <DollarSign size={18} />
+                </div>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                <span style={{ color: '#B7C0C6' }}>Costo en stock</span>
+                <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-semibold text-[9px]">Valorizado</span>
+              </div>
+            </div>
+
+            {/* Clientes */}
+            <div 
+              className="bg-white p-3.5 rounded-xl border shadow-sm flex flex-col justify-between transition-all hover:shadow-md"
+              style={{ borderColor: '#D4DBDB' }}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>CLIENTES ACTIVOS</p>
+                  <p className="text-2xl font-bold font-mono tracking-tight mt-0.5" style={{ color: '#0071A8' }}>{stats.clients}</p>
+                </div>
+                <div className="p-2 rounded-lg" style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}>
+                  <Users size={18} />
+                </div>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                <span style={{ color: '#B7C0C6' }}>Cartera comercial</span>
+                <span className="px-2 py-0.5 rounded font-semibold text-[9px]" style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}>Registrados</span>
+              </div>
+            </div>
+
+            {/* Órdenes Anuladas / Canceladas */}
+            <div 
+              className="bg-white p-3.5 rounded-xl border shadow-sm flex flex-col justify-between transition-all hover:shadow-md"
+              style={{ borderColor: '#D4DBDB' }}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>ÓRDENES ANULADAS</p>
+                  <p className="text-2xl font-bold text-rose-500 font-mono tracking-tight mt-0.5">{stats.orders.cancelled}</p>
+                </div>
+                <div className="p-2 bg-rose-50 text-rose-500 rounded-lg">
+                  <XCircle size={18} />
+                </div>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                <span style={{ color: '#B7C0C6' }}>Histórico canceladas</span>
+                <span className="text-rose-500 bg-rose-50 px-2 py-0.5 rounded font-semibold text-[9px]">Control</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* FILA 2: Tarjetas de Flujo y Estados de Pedidos */}
+        <div>
+          <span className="text-[10px] font-semibold block mb-2" style={{ color: '#0071A8' }}>
+            Flujo de Órdenes y Entregas (Acceso Rápido)
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {orderCards.map(oc => (
+              <button 
+                key={oc.id}
+                type="button"
+                onClick={() => { setFilterStatus(oc.id); setActiveTab('admin_orders'); }}
+                className="bg-white p-3.5 rounded-xl border shadow-sm flex items-center justify-between transition-all cursor-pointer hover:shadow-md active:scale-95 text-left"
+                style={{ borderColor: '#D4DBDB' }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0071A8'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D4DBDB'}
+              >
+                <div>
+                  <p className="text-[10px] font-semibold text-slate-500">{oc.label}</p>
+                  <p className="text-2xl font-bold font-mono tracking-tight mt-0.5" style={{ color: oc.color }}>{oc.val}</p>
+                  <span 
+                    className="inline-block mt-2 text-[9px] font-semibold px-2 py-0.5 rounded-md"
+                    style={{ backgroundColor: oc.bg, color: oc.color, border: `1px solid ${oc.border}` }}
+                  >
+                    ● {oc.liveTag}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl shadow-xs" style={{ backgroundColor: oc.bg }}>
+                  {oc.icon}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
     </div>
   );
 };
