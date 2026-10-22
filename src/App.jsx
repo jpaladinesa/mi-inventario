@@ -3693,7 +3693,7 @@ const ClientNewOrderView = ({ products, orders, setOrders, currentUser, clients,
   );
 };
 
-// --- MÓDULO DE GESTIÓN DE PEDIDOS ---
+// --- MÓDULO DE GESTIÓN DE PEDIDOS: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilterStatus, setActiveTab, setNotifications }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewMode, setViewMode] = useState('list');
@@ -3704,7 +3704,6 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
   const [discountData, setDiscountData] = useState({ global: 0, items: [] });
   const [modalType, setModalType] = useState(null); 
 
-  // ESCUCHADOR DEL BUSCADOR GLOBAL PARA PEDIDOS
   useEffect(() => {
     const abrirPedido = (e) => {
       const pedidoEncontrado = orders.find(o => o.id === e.detail);
@@ -3717,7 +3716,6 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
     return () => window.removeEventListener('abrirPedidoGlobal', abrirPedido);
   }, [orders]);
   
-  // Función para manejar cambios en la cantidad entregada o la observación de un ítem
   const handleItemDeliveryChange = (index, field, value) => {
     const item = selectedOrder.items[index];
     const qtyRequested = item.quantity;
@@ -3749,7 +3747,6 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
     });
   };
 
-  // Función maestra para calcular totales con descuentos aplicados
   const getCalculatedTotals = (order) => {
     if (!order || !order.items) return { rawSubtotal: 0, totalItemDiscounts: 0, globalDiscountAmount: 0, taxesAmount: 0, total: 0 };
     
@@ -3833,7 +3830,6 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
       finalCancelReason = cancelReason === 'OTROS' ? cancelOtherText : cancelReason;
     }
 
-    // Buscamos el pedido original para obtener el ID del cliente (necesario para notificarlo)
     const orderToUpdate = orders.find(o => o.id === id);
 
     setOrders(orders.map(o => o.id === id ? { 
@@ -3850,9 +3846,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
       });
     }
 
-    // --- NUEVO DISPARADOR DE NOTIFICACIÓN DE ESTADO AL CLIENTE ---
     if (setNotifications && orderToUpdate && role === 'ADMIN') {
-      // Intentamos recuperar el ID del cliente de nuestra lista global en localStorage (suponiendo que existe)
       const allClients = JSON.parse(localStorage.getItem('inventrack_clients') || '[]');
       const clientRecord = allClients.find(c => c.name === orderToUpdate.clientName);
       
@@ -3861,7 +3855,7 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
           {
             id: Date.now(),
             message: `El estado de tu pedido ${orderToUpdate.id} ha cambiado a: ${newStatus}`,
-            targetRoles: ['CLIENTE'], // Solo lo ve el cliente específico
+            targetRoles: ['CLIENTE'],
             targetUserId: clientRecord.id,
             readBy: []
           },
@@ -3887,116 +3881,203 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
 
   const StatusBadge = ({ status }) => {
     const colors = {
-      'NUEVA': 'bg-[#e9f4f8] text-[#2596be] border-[#2596be]/20',
-      'EN ALISTAMIENTO': 'bg-amber-50 text-amber-600 border-amber-100',
-      'EN CAMINO': 'bg-indigo-50 text-indigo-600 border-indigo-100',
-      'ENTREGADA': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-      'ANULADA': 'bg-rose-50 text-rose-500 border-rose-100',
-      'CANCELADA': 'bg-rose-50 text-rose-500 border-rose-100'
+      'NUEVA': 'bg-[#eff8fc] text-[#0071A8] border-[#b7e0f0]',
+      'EN ALISTAMIENTO': 'bg-amber-50 text-amber-600 border-amber-200',
+      'EN CAMINO': 'bg-indigo-50 text-indigo-600 border-indigo-200',
+      'ENTREGADA': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+      'ANULADA': 'bg-rose-50 text-rose-500 border-rose-200',
+      'CANCELADA': 'bg-rose-50 text-rose-500 border-rose-200'
     };
-    return <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border shadow-sm ${colors[status] || 'bg-slate-50 text-slate-400'}`}>{status}</span>;
+    return (
+      <span className={`px-3 py-1 rounded-full text-[9px] font-semibold border ${colors[status] || 'bg-slate-50 text-slate-400'}`}>
+        {status}
+      </span>
+    );
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      <div className="border-b-4 border-[#2596be] w-fit pb-2">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">
-            {role === 'ADMIN' ? 'GESTIÓN TOTAL DE PEDIDOS' : 'MIS PEDIDOS Y SOLICITUDES'}
-        </h2>
-      </div>
-
-      <div className="flex flex-wrap gap-2 md:gap-3">
-        {['TODOS', 'NUEVA', 'EN ALISTAMIENTO', 'EN CAMINO', 'ENTREGADA', 'ANULADA'].map(s => (
-          <button 
-            key={s} 
-            onClick={() => setFilterStatus(s)}
-            className={`px-5 md:px-6 py-2.5 rounded-2xl font-black text-[9px] transition-all uppercase border-2 shadow-sm cursor-pointer active:scale-95 ${filterStatus === s ? 'bg-[#134b60] text-white border-[#134b60] shadow-[#134b60]/20' : 'bg-white text-slate-400 border-slate-100 hover:border-[#2596be]/30 hover:text-[#2596be]'}`}
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+    >
+      {/* 1. ENCABEZADO COMPACTO */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+            style={{ backgroundColor: '#0071A8' }}
           >
-            {s} ({s === 'TODOS' ? stats.total : s === 'NUEVA' ? stats.new : s === 'EN ALISTAMIENTO' ? stats.prep : s === 'EN CAMINO' ? stats.shipped : s === 'ENTREGADA' ? stats.delivered : stats.cancelled})
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col max-h-[75vh]">
-        <div className="flex-1 overflow-y-auto overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left min-w-[1100px]">
-            <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest uppercase sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-5">ID SOLICITUD</th>
-                {role === 'ADMIN' && <th className="px-6 py-5">CLIENTE</th>}
-                <th className="px-6 py-5">FECHA REGISTRO</th>
-                <th className="px-6 py-5 text-center">ITEMS</th>
-                <th className="px-6 py-5 text-right">TOTAL</th>
-                <th className="px-6 py-5 text-center">ESTADO</th>
-                <th className="px-6 py-5 text-right">ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-              {filteredOrders.length === 0 ? (
-                <tr><td colSpan={role === 'ADMIN' ? '7' : '6'} className="px-6 py-20 text-center text-slate-300 font-black tracking-tighter">SIN REGISTROS EN ESTA CATEGORÍA</td></tr>
-              ) : (
-                filteredOrders.map(o => (
-                  <tr key={o.id} className="hover:bg-[#e9f4f8]/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[#2596be] font-black">{o.id}</td>
-                    {role === 'ADMIN' && <td className="px-6 py-4 text-[#134b60] font-black">{o.clientName}</td>}
-                    <td className="px-6 py-4 text-slate-400 font-mono text-[10px]">{o.date}</td>
-                    <td className="px-6 py-4 text-center font-black">{o.totalItems}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="font-black font-mono text-emerald-600">{formatCurrency(o.totalValue)}</div>
-                      <div className={`text-[9px] font-bold uppercase mt-0.5 ${(o.shippingStatus === 'ENVÍO GRATIS' || o.totalValue >= 300000) ? 'text-emerald-600' : 'text-slate-500'}`}>
-                        {o.shippingStatus || (o.totalValue >= 300000 ? 'ENVÍO GRATIS' : 'ENVÍO: POR CONFIRMAR')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center"><StatusBadge status={o.status} /></td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2 items-center">
-                        <button 
-                          onClick={() => {
-                            localStorage.setItem('repeatOrderItems', JSON.stringify(o.items));
-                            setActiveTab('client_new_order');
-                          }}
-                          className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-4 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 transition-all shadow-sm cursor-pointer"
-                        >
-                          <History size={14} /> REPETIR
-                        </button>
-                        <button 
-                          onClick={() => { setSelectedOrder(o); setViewMode('list'); }} 
-                          className="bg-[#e9f4f8] text-[#2596be] hover:text-white px-5 py-2.5 rounded-xl font-black text-[9px] flex items-center gap-2 hover:bg-[#2596be] active:scale-95 transition-all cursor-pointer"
-                        >
-                          <Eye size={14} /> VER DETALLE
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+            <ClipboardList size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight"
+              style={{ color: '#0071A8' }}
+            >
+              {role === 'ADMIN' ? 'Gestión Total de Pedidos' : 'Mis Pedidos y Solicitudes'}
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Seguimiento, estados y trazabilidad comercial
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* 2. ÁREA PRINCIPAL */}
+      <div className="flex-1 overflow-hidden px-4 pt-3 pb-4 flex flex-col gap-3">
+        
+        {/* Filtros por Estado (Píldoras) */}
+        <div className="flex-shrink-0 flex items-center gap-1.5 p-1 rounded-xl overflow-x-auto" style={{ backgroundColor: '#D4DBDB' }}>
+          {[
+            { key: 'TODOS', count: stats.total },
+            { key: 'NUEVA', count: stats.new },
+            { key: 'EN ALISTAMIENTO', count: stats.prep },
+            { key: 'EN CAMINO', count: stats.shipped },
+            { key: 'ENTREGADA', count: stats.delivered },
+            { key: 'ANULADA', count: stats.cancelled }
+          ].map(({ key, count }) => (
+            <button 
+              key={key} 
+              type="button"
+              onClick={() => setFilterStatus(key)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all cursor-pointer whitespace-nowrap"
+              style={{
+                backgroundColor: filterStatus === key ? '#0071A8' : 'transparent',
+                color: filterStatus === key ? '#FFFFFF' : '#0071A8',
+              }}
+            >
+              {key}
+              <span 
+                className="px-1.5 py-0.5 rounded-md text-[9px] font-bold"
+                style={{
+                  backgroundColor: filterStatus === key ? 'rgba(255,255,255,0.25)' : '#B7C0C6',
+                  color: filterStatus === key ? '#FFFFFF' : '#0071A8',
+                }}
+              >
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tabla de Pedidos con Scroll Interno (Viewport Fit) */}
+        <div 
+          className="flex-1 overflow-hidden rounded-xl bg-white shadow-sm flex flex-col"
+          style={{ border: '1px solid #D4DBDB' }}
+        >
+          <div className="h-full overflow-y-auto overflow-x-auto">
+            <table className="w-full text-left min-w-[950px]">
+              <thead 
+                className="sticky top-0 z-10"
+                style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+              >
+                <tr>
+                  <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>ID Solicitud</th>
+                  {role === 'ADMIN' && <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Cliente</th>}
+                  <th className="px-4 py-2.5 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Fecha Registro</th>
+                  <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Ítems</th>
+                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Total</th>
+                  <th className="px-4 py-2.5 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Estado</th>
+                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={role === 'ADMIN' ? '7' : '6'} className="px-6 py-16 text-center font-medium" style={{ color: '#B7C0C6' }}>
+                      No hay pedidos en esta categoría
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map(o => (
+                    <tr key={o.id} className="hover:bg-[#eff8fc] transition-colors" style={{ borderBottom: '1px solid #f8fafc' }}>
+                      <td className="px-4 py-2.5 font-mono text-[11px] font-semibold" style={{ color: '#0071A8' }}>{o.id}</td>
+                      {role === 'ADMIN' && (
+                        <td className="px-4 py-2.5 font-semibold text-slate-800">{o.clientName}</td>
+                      )}
+                      <td className="px-4 py-2.5 text-slate-500 font-mono text-[10px]">{o.date}</td>
+                      <td className="px-4 py-2.5 text-center font-semibold text-slate-700">{o.totalItems}</td>
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="font-bold font-mono text-emerald-600 text-xs">{formatCurrency(o.totalValue)}</div>
+                        <div className={`text-[8px] font-semibold uppercase mt-0.5 ${(o.shippingStatus === 'ENVÍO GRATIS' || o.totalValue >= 300000) ? 'text-emerald-600' : 'text-slate-400'}`}>
+                          {o.shippingStatus || (o.totalValue >= 300000 ? 'Envío gratis' : 'Envío: Por confirmar')}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-center"><StatusBadge status={o.status} /></td>
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="flex justify-end gap-1.5 items-center">
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              localStorage.setItem('repeatOrderItems', JSON.stringify(o.items));
+                              setActiveTab('client_new_order');
+                            }}
+                            className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-2.5 py-1.5 rounded-lg font-semibold text-[10px] flex items-center gap-1 transition-all cursor-pointer border border-emerald-200"
+                            title="Repetir pedido en el carrito"
+                          >
+                            <History size={12} /> Repetir
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => { setSelectedOrder(o); setViewMode('list'); }} 
+                            className="text-white px-3 py-1.5 rounded-lg font-semibold text-[10px] flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95"
+                            style={{ backgroundColor: '#0071A8' }}
+                          >
+                            <Eye size={12} /> Detalle
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MODALES REESTILIZADOS
+      ═══════════════════════════════════════════════════════════════ */}
+
+      {/* MODAL CAMBIO DE ESTADO */}
       {pendingChange && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center border-t-8 border-indigo-500">
-                <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                    <ShieldCheck size={32} />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 text-center space-y-3" style={{ border: '1px solid #D4DBDB' }}>
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center mx-auto"
+                  style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}
+                >
+                    <ShieldCheck size={24} />
                 </div>
-                <h3 className="font-black text-lg mb-1 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO?</h3>
-                <p className="text-[10px] text-slate-400 font-bold mb-4">EL ESTADO PASARÁ A: <br/><span className="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-1.5 rounded-xl inline-block mt-2 border border-indigo-100">{pendingChange.newStatus}</span></p>
+                <h3 className="font-bold text-base text-slate-800">¿Confirmar Cambio de Estado?</h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  El estado de la orden pasará a: <br/>
+                  <span className="font-bold text-xs px-2.5 py-1 rounded-md inline-block mt-1.5" style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}>
+                    {pendingChange.newStatus}
+                  </span>
+                </p>
                 
                 {pendingChange.newStatus === 'ANULADA' && (
-                  <div className="mb-6 text-left space-y-3 bg-slate-50 p-5 rounded-2xl border-2 border-slate-100">
-                    <label className="text-[9px] font-black text-[#134b60] uppercase block tracking-widest">MOTIVO DE ANULACIÓN <span className="text-rose-500">*</span></label>
+                  <div className="text-left space-y-2 p-3 rounded-xl" style={{ backgroundColor: '#f8fafc', border: '1px solid #D4DBDB' }}>
+                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>
+                      Motivo de Anulación *
+                    </label>
                     <select 
                       value={cancelReason} 
                       onChange={(e) => {
                         setCancelReason(e.target.value);
                         if (e.target.value !== 'OTROS') setCancelOtherText('');
                       }} 
-                      className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer transition-all"
+                      className="w-full px-2.5 py-1.5 bg-white rounded-lg outline-none text-xs font-semibold cursor-pointer"
+                      style={{ border: '1px solid #D4DBDB', color: '#374151' }}
                       required
                     >
-                      <option value="">SELECCIONE UN MOTIVO...</option>
+                      <option value="">Seleccione un motivo...</option>
                       <option value="ERROR DE CREACION">ERROR DE CREACIÓN</option>
                       <option value="DUPLICADA">DUPLICADA</option>
                       <option value="CLIENTE DESISTE">CLIENTE DESISTE</option>
@@ -4007,69 +4088,76 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
 
                     {cancelReason === 'OTROS' && (
                       <div className="space-y-1 pt-1 animate-in fade-in duration-300">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ESPECIFIQUE EL MOTIVO</label>
-                          <span className={`text-[8px] font-black ${cancelOtherText.length >= 80 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
-                            {cancelOtherText.length} / 80
-                          </span>
+                        <div className="flex justify-between items-center text-[9px] font-medium" style={{ color: '#B7C0C6' }}>
+                          <span>Especifique el motivo</span>
+                          <span>{cancelOtherText.length}/80</span>
                         </div>
                         <input 
                           type="text" 
                           maxLength={80}
-                          placeholder="ESCRIBA EL MOTIVO (MÁX. 80 CARACTERES)..."
+                          placeholder="Escriba el motivo..."
                           value={cancelOtherText}
                           onChange={(e) => setCancelOtherText(e.target.value.toUpperCase())}
-                          className="w-full px-4 py-3 bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] transition-all"
+                          className="w-full px-2.5 py-1 bg-white rounded-lg outline-none text-xs"
+                          style={{ border: '1px solid #D4DBDB', color: '#374151' }}
                         />
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="flex gap-4">
+                <div className="flex gap-2.5 pt-1">
                     <button 
+                      type="button"
                       onClick={() => { 
                         setPendingChange(null); 
                         setCancelReason(''); 
                         setCancelOtherText(''); 
                       }} 
-                      className="flex-1 py-4 border-2 border-slate-200 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors cursor-pointer"
+                      className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                      style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
                     >
-                      VOLVER
+                      Volver
                     </button>
                     <button 
+                      type="button"
                       onClick={confirmUpdateStatus} 
                       disabled={pendingChange.newStatus === 'ANULADA' && (!cancelReason || (cancelReason === 'OTROS' && !cancelOtherText.trim()))}
-                      className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
+                      className="flex-1 py-2 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer disabled:opacity-40 transition-all active:scale-95"
+                      style={{ backgroundColor: '#0071A8' }}
                     >
-                      CONFIRMAR
+                      Confirmar
                     </button>
                 </div>
             </div>
         </div>
       )}
 
+      {/* MODAL DESCUENTOS */}
       {modalType === 'editDiscounts' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[150] flex items-center justify-center p-4 uppercase print:hidden">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-3xl flex flex-col max-h-[90vh]">
-            <div className="p-8 border-b-2 border-slate-100 flex justify-between items-center bg-[#e9f4f8]/30">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-amber-100 text-amber-600 rounded-xl shadow-sm"><Tag size={24}/></div>
-                    <div><h3 className="font-black text-xl text-[#134b60] tracking-tighter">APLICAR DESCUENTOS</h3><p className="text-[10px] text-slate-400 font-bold tracking-widest">SOLICITUD: <span className="font-mono text-[#2596be]">{selectedOrder?.id}</span></p></div>
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-2xl flex flex-col max-h-[85vh]" style={{ border: '1px solid #D4DBDB' }}>
+            <div className="p-4 flex justify-between items-center" style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+                <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><Tag size={20}/></div>
+                    <div>
+                      <h3 className="font-bold text-base text-slate-800">Aplicar Descuentos</h3>
+                      <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>Solicitud: <span className="font-mono font-semibold" style={{ color: '#0071A8' }}>{selectedOrder?.id}</span></p>
+                    </div>
                 </div>
             </div>
             
-            <div className="p-8 overflow-y-auto flex-1 scrollbar-hide">
+            <div className="p-4 overflow-y-auto flex-1 space-y-4">
                 {(() => {
                     const hasItemDiscounts = discountData.items.some(i => (i.discount || 0) > 0);
                     const hasGlobalDiscount = (discountData.global || 0) > 0;
 
                     return (
                         <>
-                            <div className="mb-8 p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center gap-6">
-                                <div className="flex-1">
-                                    <label className="text-[10px] font-black text-[#134b60] tracking-widest uppercase">DESCUENTO GLOBAL (%) SOBRE SUBTOTAL</label>
-                                    <p className="text-[9px] text-slate-400 font-bold mt-1 leading-relaxed">Se aplica a toda la factura antes de impuestos. {hasItemDiscounts && <span className="text-rose-500 block mt-1">Bloqueado por tener descuentos en ítems.</span>}</p>
+                            <div className="p-3.5 bg-slate-50 rounded-xl flex items-center justify-between gap-4" style={{ border: '1px solid #D4DBDB' }}>
+                                <div>
+                                    <label className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Descuento Global (%) sobre Subtotal</label>
+                                    <p className="text-[9px] text-slate-400">Aplica a toda la orden. {hasItemDiscounts && <span className="text-rose-500 block">Bloqueado por descuentos por ítem.</span>}</p>
                                 </div>
                                 <input 
                                     type="number" 
@@ -4081,20 +4169,27 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                                         global: parseFloat(e.target.value) || 0,
                                         items: discountData.items.map(item => ({ ...item, discount: 0 }))
                                     })} 
-                                    className="w-32 px-4 py-3 border-2 border-amber-200 focus:border-amber-500 rounded-xl font-black text-xl text-center outline-none text-amber-700 bg-amber-50 disabled:opacity-40 transition-all" 
+                                    className="w-24 px-2 py-1.5 border rounded-lg font-bold text-sm text-center outline-none disabled:opacity-40"
+                                    style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
                                 />
                             </div>
 
-                            <p className="text-[10px] font-black text-[#134b60] tracking-widest uppercase mb-4">DESCUENTO ESPECÍFICO POR ÍTEM (%) {hasGlobalDiscount && <span className="text-rose-500 font-normal tracking-normal">(Bloqueado por Descuento Global activo)</span>}</p>
-                            <div className="border-2 border-slate-100 rounded-2xl overflow-hidden">
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest"><tr><th className="px-5 py-4">PRODUCTO</th><th className="px-5 py-4 text-center">CANT.</th><th className="px-5 py-4 text-right">DESCUENTO %</th></tr></thead>
+                            <p className="text-[10px] font-semibold" style={{ color: '#0071A8' }}>Descuentos por Ítem Individual (%)</p>
+                            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #D4DBDB' }}>
+                                <table className="w-full text-left text-xs">
+                                    <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+                                      <tr>
+                                        <th className="px-3 py-2 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Producto</th>
+                                        <th className="px-3 py-2 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Cantidad</th>
+                                        <th className="px-3 py-2 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Descuento %</th>
+                                      </tr>
+                                    </thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {discountData.items.map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                <td className="px-5 py-4 text-[10px] font-black text-[#134b60]">{item.name}</td>
-                                                <td className="px-5 py-4 text-center font-mono text-sm">{item.quantity}</td>
-                                                <td className="px-5 py-4 text-right">
+                                            <tr key={idx} className="hover:bg-slate-50">
+                                                <td className="px-3 py-2 font-medium text-slate-700">{item.name}</td>
+                                                <td className="px-3 py-2 text-center font-mono font-semibold">{item.quantity}</td>
+                                                <td className="px-3 py-2 text-right">
                                                     <input 
                                                         type="number" 
                                                         min="0" 
@@ -4109,7 +4204,8 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                                                                 items: newItems
                                                             });
                                                         }} 
-                                                        className="w-24 px-3 py-2 bg-white border-2 border-slate-200 rounded-xl text-center font-black outline-none focus:border-[#2596be] text-[#134b60] disabled:opacity-40 transition-all" 
+                                                        className="w-16 px-2 py-1 border rounded-lg text-center font-bold text-xs outline-none disabled:opacity-40"
+                                                        style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
                                                     />
                                                 </td>
                                             </tr>
@@ -4122,189 +4218,173 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                 })()}
             </div>
 
-            <div className="p-8 border-t-2 border-slate-100 bg-white flex gap-4">
-                <button onClick={() => setModalType(null)} className="flex-1 py-4 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-50 transition-colors cursor-pointer">CANCELAR</button>
+            <div className="p-3 border-t bg-white flex gap-2.5" style={{ borderColor: '#D4DBDB' }}>
                 <button 
-                  onClick={() => setModalType('confirmSaveDiscounts')}
-                  className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase shadow-xl hover:bg-amber-600 flex justify-center items-center gap-2 transition-all cursor-pointer active:scale-95"
+                  type="button"
+                  onClick={() => setModalType(null)} 
+                  className="flex-1 py-2 rounded-xl font-semibold text-xs cursor-pointer hover:bg-slate-50"
+                  style={{ border: '1px solid #D4DBDB', color: '#64748b' }}
                 >
-                  <CheckCircle2 size={18}/> GUARDAR CAMBIOS FINANCIEROS
+                  Cancelar
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setModalType('confirmSaveDiscounts')}
+                  className="flex-1 py-2 text-white rounded-xl font-semibold text-xs shadow-sm cursor-pointer active:scale-95"
+                  style={{ backgroundColor: '#0071A8' }}
+                >
+                  Guardar cambios
                 </button>
             </div>
           </div>
         </div>
       )}
 
-      {modalType === 'confirmSaveDiscounts' && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 uppercase print:hidden">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-10 text-center border-t-8 border-amber-500">
-                <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                    <AlertTriangle size={40} />
-                </div>
-                <h3 className="font-black text-lg mb-2 tracking-tighter leading-tight text-[#134b60]">¿ESTÁ SEGURO DE APLICAR ESTE DESCUENTO?</h3>
-                <p className="text-[10px] text-slate-400 font-bold mb-8 leading-relaxed">ESTA ACCIÓN MODIFICARÁ LOS VALORES FINANCIEROS DE LA SOLICITUD Y RE-CALCULARÁ IMPUESTOS.</p>
-                <div className="flex gap-4">
-                    <button onClick={() => setModalType('editDiscounts')} className="flex-1 py-4 border-2 border-slate-200 rounded-2xl font-black text-[10px] hover:bg-slate-50 uppercase text-slate-500 transition-colors cursor-pointer">VOLVER</button>
-                    <button onClick={executeDiscountUpdate} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black text-[10px] shadow-xl uppercase hover:bg-amber-600 transition-all cursor-pointer active:scale-95">CONFIRMAR</button>
-                </div>
-            </div>
-        </div>
-      )}
-
+      {/* MODAL DETALLE DE PEDIDO (LISTA / PDF) */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 uppercase print:bg-white print:backdrop-blur-none print:p-0">
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden w-full flex flex-col max-h-[90vh] ${viewMode === 'pdf' ? 'max-w-full md:max-w-[816px] overflow-x-auto print:shadow-none print:rounded-none print:max-h-none' : 'max-w-sm md:max-w-4xl lg:max-w-6xl animate-in zoom-in-95 duration-300'}`}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 print:bg-white print:p-0" style={{ backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-4xl flex flex-col max-h-[90vh]" style={{ border: '1px solid #D4DBDB' }}>
             
-            {viewMode === 'list' && (
-              <div className="p-5 md:p-6 border-b-2 border-[#e9f4f8] flex flex-col md:flex-row justify-between items-start md:items-center bg-white shrink-0 print:hidden gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="bg-[#e9f4f8] p-3.5 rounded-2xl text-[#2596be] shadow-sm border border-[#2596be]/20 flex items-center justify-center shrink-0">
-                    <FileText size={28}/>
-                  </div>
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <span className="text-xs md:text-sm font-black text-[#134b60] uppercase tracking-wider">RESUMEN DE SOLICITUD</span>
-                    <div className="flex flex-col">
-                      <span className="text-lg md:text-xl font-black px-3 py-1 bg-[#134b60] text-white rounded-xl font-mono tracking-tight shadow-md w-fit">{selectedOrder.id}</span>
-                      <p className="text-[10px] text-slate-400 font-semibold mt-1">{selectedOrder.date}</p>
-                    </div>
-                  </div>
+            {/* Cabecera del modal */}
+            <div className="p-4 flex items-center justify-between shrink-0" style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: '#0071A8' }}>
+                  <FileText size={18}/>
                 </div>
-
-                <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
-                  <div className="text-left md:text-right">
-                    <p className="text-sm font-black text-[#134b60] tracking-tight">{selectedOrder.clientName || 'CLIENTE GENERAL'}</p>
-                    <div className="flex flex-wrap md:justify-end gap-x-2 text-[10px] text-slate-500 font-semibold mt-0.5 tracking-widest">
-                      <span>{selectedOrder.clientDocType || 'NIT'}: {selectedOrder.clientDocNumber || 'N/A'}</span>
-                      <span className="hidden md:inline">•</span>
-                      <span>{selectedOrder.clientAddress || 'SIN DIRECCIÓN'}</span>
-                    </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-sm" style={{ color: '#0071A8' }}>{selectedOrder.id}</span>
+                    <StatusBadge status={selectedOrder.status} />
                   </div>
-                  <button 
-                    onClick={() => setSelectedOrder(null)} 
-                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0 cursor-pointer"
-                  >
-                    <X size={24}/>
-                  </button>
+                  <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>{selectedOrder.clientName} · {selectedOrder.date}</p>
                 </div>
               </div>
-            )}
 
-            <div className={`flex-1 overflow-y-auto scrollbar-hide ${viewMode === 'pdf' ? "overflow-x-auto" : "p-8"}`}>
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setViewMode(viewMode === 'list' ? 'pdf' : 'list')}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border"
+                  style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
+                >
+                  {viewMode === 'list' ? 'Vista PDF' : 'Vista Lista'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setSelectedOrder(null)} 
+                  className="p-1.5 rounded-lg cursor-pointer"
+                  style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}
+                >
+                  <X size={15}/>
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido Modal */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {viewMode === 'list' ? (
-                <div className="space-y-6">
-                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-50 p-4 rounded-3xl border-2 border-slate-200 shadow-sm gap-4 mb-4">
-                    <div className="flex items-center gap-6 divide-x-2 divide-slate-200 w-full lg:w-auto">
-                      <div className="pr-2">
-                        <p className="text-[8px] text-emerald-600 font-black mb-0.5 uppercase tracking-widest">VALOR TOTAL DE LA ORDEN</p>
-                        <p className="text-2xl font-black text-emerald-800 font-mono tracking-tighter leading-none">{formatCurrency(selectedOrder.totalValue)}</p>
-                      </div>
-                      <div className="pl-6 flex items-center gap-3">
-                        <p className="text-[8px] text-slate-400 font-black uppercase mb-0 tracking-widest">ESTADO:</p>
-                        <StatusBadge status={selectedOrder.status} />
-                      </div>
+                <>
+                  {/* Total y Acciones de Estado */}
+                  <div className="p-3.5 bg-slate-50 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3" style={{ border: '1px solid #D4DBDB' }}>
+                    <div>
+                      <span className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Total de la Orden</span>
+                      <p className="text-xl font-bold font-mono text-emerald-600 leading-tight">{formatCurrency(selectedOrder.totalValue)}</p>
                     </div>
 
                     {role === 'ADMIN' && (
-                      <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
-                        {getNextStatusOptions(selectedOrder.status).map(statusOption => {
-                          const isAnulada = statusOption === 'ANULADA' || statusOption === 'CANCELADA';
-                          return (
-                            <button
-                              key={statusOption}
-                              onClick={() => setPendingChange({ id: selectedOrder.id, newStatus: statusOption })}
-                              className={`px-4 py-2.5 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 cursor-pointer ${
-                                isAnulada 
-                                  ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
-                                  : 'bg-[#2596be] hover:bg-[#134b60]'
-                              }`}
-                            >
-                              {isAnulada ? <XCircle size={14}/> : <ArrowUpRight size={14}/>}
-                              MARCAR: {statusOption}
-                            </button>
-                          );
-                        })}
-                        
-                        {getNextStatusOptions(selectedOrder.status).length === 0 && (
-                           <p className="text-[9px] font-black text-slate-400 uppercase mr-2 tracking-widest">SIN CAMBIOS PENDIENTES</p>
-                        )}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {getNextStatusOptions(selectedOrder.status).map(statusOption => (
+                          <button
+                            key={statusOption}
+                            type="button"
+                            onClick={() => setPendingChange({ id: selectedOrder.id, newStatus: statusOption })}
+                            className="px-3 py-1.5 text-white rounded-lg text-[10px] font-semibold cursor-pointer shadow-sm active:scale-95"
+                            style={{ backgroundColor: statusOption === 'ANULADA' ? '#f43f5e' : '#0071A8' }}
+                          >
+                            Marcar: {statusOption}
+                          </button>
+                        ))}
 
                         {['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
                           <button
-                            disabled={selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA'}
+                            type="button"
                             onClick={() => {
                               setDiscountData({ global: selectedOrder.globalDiscount || 0, items: [...selectedOrder.items] });
                               setModalType('editDiscounts');
                             }}
-                            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[9px] font-black shadow-sm transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
+                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-semibold cursor-pointer shadow-sm active:scale-95"
                           >
-                            <Tag size={14} /> DESCUENTOS
+                            <Tag size={12} className="inline mr-1" /> Descuentos
                           </button>
                         )}
                       </div>
                     )}
                   </div>
 
-                  <div className="border-2 border-slate-100 rounded-3xl overflow-x-auto bg-white shadow-sm">
-                    <table className="w-full text-left min-w-[850px]">
-                      <thead className="bg-slate-50 text-[9px] font-black text-slate-400 border-b border-slate-100 uppercase tracking-widest sticky top-0 z-10">
+                  {/* Tabla de ítems con entrega editable */}
+                  <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #D4DBDB' }}>
+                    <table className="w-full text-left text-xs min-w-[700px]">
+                      <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
                         <tr>
-                          <th className="px-5 py-4">PRODUCTO</th>
-                          <th className="px-5 py-4 text-center">SOLICITADA</th>
-                          <th className="px-5 py-4 text-center">ENTREGADOS (OK)</th>
-                          <th className="px-5 py-4 text-center">PENDIENTE</th>
-                          <th className="px-5 py-4">OBSERVACIÓN</th>
-                          <th className="px-5 py-4 text-right">TOTAL</th>
+                          <th className="px-3 py-2 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Producto</th>
+                          <th className="px-3 py-2 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Solicitada</th>
+                          <th className="px-3 py-2 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Entregada</th>
+                          <th className="px-3 py-2 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Pendiente</th>
+                          <th className="px-3 py-2 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Observación</th>
+                          <th className="px-3 py-2 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Total</th>
                         </tr>
                       </thead>
-                      <tbody className="text-[10px] font-bold text-[#134b60] divide-y divide-slate-50">
+                      <tbody className="divide-y divide-slate-100">
                         {selectedOrder.items.map((item, idx) => {
-                           const currentEdits = editingItems[selectedOrder.id]?.[idx] || {
+                          const currentEdits = editingItems[selectedOrder.id]?.[idx] || {
                             deliveredQuantity: item.deliveredQuantity ?? item.quantity,
                             pendingQuantity: item.pendingQuantity ?? 0,
                             deliveryObservation: item.deliveryObservation || ''
-                           };
-                           const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
-                           const finalTotal = (baseUnit * (1 - ((item.discount || 0) / 100))) * (1 + (item.taxValue / 100)) * item.quantity;
-                           return (
-                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-5 py-4">
-                                <p className="text-[#134b60] font-black">{item.name}</p>
-                                <p className="text-[8px] text-slate-400 uppercase tracking-widest">{item.unit}</p>
-                                {item.observation && <p className="text-[8px] text-amber-600 font-bold mt-1 uppercase">NOTA: {item.observation}</p>}
+                          };
+                          const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
+                          const finalTotal = (baseUnit * (1 - ((item.discount || 0) / 100))) * (1 + (item.taxValue / 100)) * item.quantity;
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50">
+                              <td className="px-3 py-2">
+                                <p className="font-semibold text-slate-800 leading-tight">{item.name}</p>
+                                <span className="text-[9px] text-slate-400">{item.unit}</span>
                               </td>
-                              <td className="px-5 py-4 text-center font-mono text-sm">{item.quantity}</td>
-                              <td className="px-5 py-4 text-center font-mono">
+                              <td className="px-3 py-2 text-center font-mono font-semibold">{item.quantity}</td>
+                              <td className="px-3 py-2 text-center">
                                 <input 
                                   type="number" 
                                   min="0" 
                                   max={item.quantity} 
-                                  step="1"
                                   value={currentEdits.deliveredQuantity}
                                   onChange={(e) => handleItemDeliveryChange(idx, 'deliveredQuantity', parseInt(e.target.value) || 0)}
-                                  className="w-20 px-2 py-2 bg-white border-2 border-slate-200 rounded-xl text-center font-black text-emerald-600 outline-none focus:border-emerald-50 transition-all"
+                                  className="w-14 px-1.5 py-0.5 text-center font-mono font-bold text-emerald-600 rounded border outline-none"
+                                  style={{ borderColor: '#D4DBDB' }}
                                 />
                               </td>
-                              <td className="px-5 py-4 text-center font-mono text-rose-500 font-black text-sm">{currentEdits.pendingQuantity}</td>
-                              <td className="px-5 py-4">
+                              <td className="px-3 py-2 text-center font-mono font-bold text-rose-500">{currentEdits.pendingQuantity}</td>
+                              <td className="px-3 py-2">
                                 <input 
                                   type="text" 
                                   maxLength={50}
-                                  placeholder="OBSERVACIÓN..."
+                                  placeholder="Nota de entrega..."
                                   value={currentEdits.deliveryObservation}
                                   onChange={(e) => handleItemDeliveryChange(idx, 'deliveryObservation', e.target.value)}
-                                  className="w-full px-4 py-2 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-600 outline-none focus:border-[#2596be] uppercase text-[10px] transition-all"
+                                  className="w-full px-2 py-0.5 rounded text-[10px] outline-none uppercase"
+                                  style={{ border: '1px solid #D4DBDB', color: '#374151' }}
                                 />
                               </td>
-                              <td className="px-5 py-4 text-right font-mono text-emerald-600 font-black text-sm">{formatCurrency(finalTotal)}</td>
+                              <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600">{formatCurrency(finalTotal)}</td>
                             </tr>
-                          )})}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
 
                   {role === 'ADMIN' && ['NUEVA', 'EN ALISTAMIENTO'].includes(selectedOrder.status) && (
-                    <div className="flex justify-end pt-2 mb-4">
+                    <div className="flex justify-end pt-1">
                       <button
+                        type="button"
                         onClick={() => {
                           const currentEdits = editingItems[selectedOrder.id] || selectedOrder.items.map(item => ({
                             deliveredQuantity: item.deliveredQuantity ?? item.quantity,
@@ -4324,175 +4404,72 @@ const OrdersManagementView = ({ orders, setOrders, role, filterStatus, setFilter
                           setEditingItems({ ...editingItems, [selectedOrder.id]: null });
                           setSelectedOrder(null);
                         }}
-                        className="px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-emerald-600/20 transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm cursor-pointer transition-all active:scale-95"
                       >
-                        <CheckCircle2 size={16} /> GUARDAR CAMBIOS DE ENTREGA Y PENDIENTES
+                        Guardar cambios de entrega
                       </button>
                     </div>
                   )}
-
-                  {selectedOrder.generalObservation && (
-                    <div className="mt-4 p-5 bg-amber-50 border-2 border-amber-200 rounded-2xl">
-                      <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1">OBSERVACIÓN DEL CLIENTE:</p>
-                      <p className="text-xs font-bold text-amber-900 break-all">{selectedOrder.generalObservation}</p>
-                    </div>
-                  )}
-                </div>
+                </>
               ) : (
-                <div className="bg-white p-6 md:p-14 w-[816px] mx-auto min-h-[1056px] flex flex-col font-sans uppercase print:p-0 print:m-0 print:w-full print:max-w-full print:min-h-0 print:shadow-none text-[#134b60] overflow-x-auto relative">
-                  
-                  {(selectedOrder.status === 'ANULADA' || selectedOrder.status === 'CANCELADA') && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 overflow-hidden">
-                      <div className="border-8 border-rose-500/30 text-rose-500/30 font-black text-6xl md:text-8xl tracking-widest px-12 py-6 rounded-3xl transform -rotate-12 select-none uppercase text-center backdrop-blur-sm">
-                        {selectedOrder.status}
-                        {selectedOrder.cancelReason && (
-                          <span className="block text-xl md:text-2xl mt-4 tracking-normal font-bold">
-                            MOTIVO: {selectedOrder.cancelReason}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-start border-b-4 border-[#134b60] pb-6 mb-8">
+                <div className="p-4 bg-white rounded-xl border text-xs space-y-4" style={{ borderColor: '#D4DBDB' }}>
+                  <div className="flex justify-between items-start pb-3 border-b" style={{ borderColor: '#D4DBDB' }}>
                     <div>
-                      <h2 className="text-3xl font-black text-[#134b60] tracking-tighter leading-none">DISTRIBUCIONES<br/>CASTILLA S.A.S.</h2>
-                      <div className="space-y-1.5 mt-3">
-                        <p className="text-[10px] text-slate-500 font-bold flex items-center gap-2"><ShieldCheck size={14} className="text-[#2596be]" /> NIT: 123.456.789-0 • RÉGIMEN COMÚN</p>
-                        <p className="text-[10px] text-slate-500 font-bold flex items-center gap-2"><MapPin size={14} className="text-[#2596be]" /> SEDE CENTRAL • COLOMBIA</p>
-                      </div>
+                      <h2 className="text-xl font-bold leading-none" style={{ color: '#0071A8' }}>DISTRIBUCIONES CASTILLA S.A.S.</h2>
+                      <p className="text-[10px] text-slate-500 mt-1">NIT: 123.456.789-0 • Régimen Común</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-black text-[#134b60] bg-[#e9f4f8] border border-[#2596be]/30 px-4 py-1.5 rounded-full inline-block mb-3 tracking-widest">DOCUMENTO TÉCNICO</p>
-                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">SOLICITUD Nº</p>
-                      <p className="text-4xl font-black text-[#134b60] leading-none tracking-tighter">{selectedOrder.id}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 mb-8">
-                    <p className="font-black text-slate-400 mb-4 border-b border-slate-200 pb-2 text-[9px] tracking-[0.2em] uppercase">DATOS DEL CLIENTE</p>
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-xs">
-                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">NOMBRE</p><p className="font-black text-[#134b60]">{selectedOrder.clientName}</p></div>
-                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">DOCUMENTO</p><p className="font-black text-[#134b60]">{selectedOrder.clientDocType || 'NIT'} {selectedOrder.clientDocNumber || 'N/A'}</p></div>
-                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">DIRECCIÓN</p><p className="font-black text-[#134b60]">{selectedOrder.clientAddress || 'NO REGISTRADA'}</p></div>
-                      <div><p className="text-[9px] text-slate-400 font-bold tracking-widest">TELÉFONO</p><p className="font-black text-[#134b60]">{selectedOrder.clientPhone || 'NO REGISTRADO'}</p></div>
+                      <span className="text-[10px] font-semibold" style={{ color: '#B7C0C6' }}>SOLICITUD Nº</span>
+                      <p className="text-xl font-bold font-mono" style={{ color: '#0071A8' }}>{selectedOrder.id}</p>
                     </div>
                   </div>
 
-                  <div className="mb-8">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-[#134b60] text-white text-[9px] font-black uppercase tracking-widest">
-                          <th className="px-5 py-4 rounded-tl-2xl">PRODUCTO</th>
-                          <th className="px-5 py-4 text-center">CANTIDAD</th>
-                          <th className="px-5 py-4 text-right">VALOR UNIT.</th>
-                          <th className="px-5 py-4 text-right">IVA (%)</th>
-                          <th className="px-5 py-4 text-right rounded-tr-2xl">SUBTOTAL</th>
+                  <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-lg">
+                    <div><span className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Cliente</span><span className="font-semibold">{selectedOrder.clientName}</span></div>
+                    <div><span className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Documento</span><span>{selectedOrder.clientDocType} {selectedOrder.clientDocNumber}</span></div>
+                    <div><span className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Dirección</span><span>{selectedOrder.clientAddress || 'N/A'}</span></div>
+                    <div><span className="text-[10px] font-semibold block" style={{ color: '#0071A8' }}>Fecha</span><span>{selectedOrder.date}</span></div>
+                  </div>
+
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}>
+                        <th className="p-2 text-[10px] font-semibold" style={{ color: '#0071A8' }}>Producto</th>
+                        <th className="p-2 text-center text-[10px] font-semibold" style={{ color: '#0071A8' }}>Cantidad</th>
+                        <th className="p-2 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Valor Unit.</th>
+                        <th className="p-2 text-right text-[10px] font-semibold" style={{ color: '#0071A8' }}>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {selectedOrder.items.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="p-2 font-medium">{item.name}</td>
+                          <td className="p-2 text-center font-mono">{item.quantity}</td>
+                          <td className="p-2 text-right font-mono">{formatCurrency(item.totalPricePerUnit)}</td>
+                          <td className="p-2 text-right font-mono font-bold">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
                         </tr>
-                      </thead>
-                      <tbody className="text-[11px] font-bold text-[#134b60] divide-y divide-slate-100 border-b-2 border-slate-200">
-                        {selectedOrder.items.map((item, idx) => {
-                          const baseUnit = item.totalPricePerUnit / (1 + (item.taxValue / 100));
-                          return (
-                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-5 py-5">
-                                <p className="text-[#134b60] font-black text-sm">{item.name}</p>
-                                <p className="text-slate-500 text-[10px] font-bold tracking-widest mt-0.5">{item.unit}</p>
-                                {item.observation && <p className="text-[9px] text-amber-600 font-bold mt-1.5 uppercase">NOTA: {item.observation}</p>}
-                              </td>
-                              <td className="px-5 py-5 text-center font-mono text-[#134b60] text-sm">{item.quantity}</td>
-                              <td className="px-5 py-5 text-right font-mono text-slate-500">{formatCurrency(baseUnit)}</td>
-                              <td className="px-5 py-5 text-right font-mono text-[#2596be]">{item.taxValue}%</td>
-                              <td className="px-5 py-5 text-right font-black text-[#134b60] text-sm">{formatCurrency(item.totalPricePerUnit * item.quantity)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
 
-                  {selectedOrder.generalObservation && (
-                    <div className="mb-8 p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">OBSERVACIONES GENERALES DEL PEDIDO:</p>
-                      <p className="text-xs font-bold text-[#134b60]">{selectedOrder.generalObservation}</p>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end mb-12">
-                    <div className="w-80 space-y-3 bg-[#e9f4f8] border-2 border-[#2596be]/20 p-6 rounded-3xl">
-                      {(() => {
-                          const calc = getCalculatedTotals(selectedOrder);
-                          return (
-                              <>
-                                <div className="flex justify-between font-black text-[#134b60] text-[10px] uppercase tracking-widest"><span>SUBTOTAL BASE</span><span className="font-mono">{formatCurrency(calc?.rawSubtotal || 0)}</span></div>
-                                {calc.totalItemDiscounts > 0 && (
-                                    <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESCUENTOS ITEMS</span><span className="font-mono">-{formatCurrency(calc.totalItemDiscounts)}</span></div>
-                                )}
-                                {calc.globalDiscountAmount > 0 && (
-                                    <div className="flex justify-between font-black text-amber-600 text-[10px] uppercase tracking-widest"><span>DESC. GLOBAL ({selectedOrder?.globalDiscount || 0}%)</span><span className="font-mono">-{formatCurrency(calc.globalDiscountAmount)}</span></div>
-                                )}
-                                <div className="flex justify-between font-black text-[#2596be] text-[10px] uppercase tracking-widest"><span>IMPUESTOS</span><span className="font-mono">{formatCurrency(calc?.taxesAmount || 0)}</span></div>
-                                <div className="flex justify-between font-black text-[#134b60] text-xl border-t border-[#134b60]/20 pt-3 uppercase tracking-tighter"><span>TOTAL NETO</span><span className="font-mono">{formatCurrency(calc?.total || 0)}</span></div>
-                              </>
-                          )
-                      })()}
-                    </div>
-                  </div>
-
-                  <div className="mt-auto pt-6 border-t-4 border-[#134b60] flex flex-col gap-6">
-                    <div className="bg-amber-50 p-4 border-l-4 border-amber-400 rounded-r-2xl">
-                        <p className="text-[9px] font-black text-amber-700 uppercase tracking-[0.3em] mb-1 flex items-center gap-2"><AlertTriangle size={14}/> NOTA LEGAL IMPORTANTE</p>
-                        <p className="text-[9px] text-amber-900 font-bold leading-relaxed">ESTE DOCUMENTO CONSTITUYE UNA SOLICITUD DE PEDIDO INTERNA OPERATIVA. NO TIENE VALIDEZ COMO FACTURA ELECTRÓNICA DE VENTA NI COMO TÍTULO VALOR SEGÚN LA NORMATIVA VIGENTE. SUJETO A REVISIÓN DE BODEGA.</p>
-                    </div>
-                    <div className="flex flex-col gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        <span className="flex items-center gap-2"><Activity size={14} className="text-[#2596be]"/> WWW.DISTRIBUCIONESCASTILLA.COM</span>
-                        <span className="flex items-center gap-2 text-emerald-600"><Smartphone size={14}/> WHATSAPP SOPORTE: 315000123123</span>
-                    </div>
-                    <div className="text-center mt-4">
-                        <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.4em]">Creado con Pide con Castilla. Derechos reservados © 2026.</p>
-                    </div>
+                  <div className="flex justify-end pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => window.print()} 
+                      className="px-4 py-2 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
+                      style={{ backgroundColor: '#0071A8' }}
+                    >
+                      <Download size={13} className="inline mr-1" /> Imprimir Documento
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-white flex gap-4 shrink-0 print:hidden">
-              {viewMode === 'list' ? (
-                <>
-                  <button 
-                    onClick={() => setViewMode('pdf')} 
-                    className="flex-1 bg-[#134b60] hover:bg-[#0f3c4c] text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
-                  >
-                    <FileText size={16}/> GENERAR PDF
-                  </button>
-                  <button 
-                    onClick={() => setSelectedOrder(null)} 
-                    className="flex-1 border-2 border-slate-200 text-slate-600 hover:bg-slate-50 py-4 rounded-2xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
-                  >
-                    SALIR
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button 
-                    onClick={() => window.print()} 
-                    className="flex-1 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-md shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
-                  >
-                    <Download size={16}/> DESCARGAR / IMPRIMIR PDF
-                  </button>
-                  <button 
-                    onClick={() => setViewMode('list')} 
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-[#134b60] py-4 rounded-2xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
-                  >
-                    <ChevronDown size={16} className="rotate-90"/> VOLVER AL RESUMEN
-                  </button>
-                </>
-              )}
-            </div>
           </div>
         </div>
       )}
-      <Footer />
+
     </div>
   );
 };
