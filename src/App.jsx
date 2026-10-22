@@ -5604,9 +5604,20 @@ const AccessManagementView = ({ users, setUsers, clients }) => {
   );
 };
 
-// --- MÓDULO DE PROMOCIONES ---
+// --- MÓDULO DE GESTIÓN DE PROMOCIONES: DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) => {
-  const initialForm = { name: '', targetClients: [], startDateOnly: '', startTimeOnly: '', startDate: '', durationHours: '', screenTimeSeconds: '', text: '', image: '' };
+  const initialForm = { 
+    name: '', 
+    targetClients: [], 
+    startDateOnly: '', 
+    startTimeOnly: '', 
+    startDate: '', 
+    durationHours: '', 
+    screenTimeSeconds: '', 
+    text: '', 
+    image: '' 
+  };
+  
   const [newPromo, setNewPromo] = useState(initialForm);
   const [errorMsg, setErrorMsg] = useState('');
   const [promoToFinalize, setPromoToFinalize] = useState(null);
@@ -5615,7 +5626,6 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('create'); // 'create' o 'list'
 
-  
   const filteredPromotions = promotions.filter(promo => 
     promo.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (promo.name && promo.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -5627,13 +5637,13 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
     if (!file) return;
 
     if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-      setErrorMsg("FORMATO NO VÁLIDO. SOLO SE PERMITEN IMÁGENES JPG O PNG.");
+      setErrorMsg("Formato no válido. Solo se permiten imágenes JPG o PNG.");
       e.target.value = '';
       return;
     }
 
     if (file.size > 1 * 1024 * 1024) {
-      setErrorMsg("LA IMAGEN ES DEMASIADO PESADA. EL TAMAÑO MÁXIMO PERMITIDO ES 1 MB.");
+      setErrorMsg("La imagen es demasiado pesada. El tamaño máximo permitido es 1 MB.");
       e.target.value = '';
       return;
     }
@@ -5667,17 +5677,17 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
     e.preventDefault();
 
     if (!newPromo.image) {
-      setErrorMsg("DEBES CARGAR UNA IMAGEN PARA LA CAMPAÑA.");
+      setErrorMsg("Debes cargar una imagen para la campaña.");
       return;
     }
 
     if (newPromo.targetClients.length === 0) {
-      setErrorMsg("DEBES SELECCIONAR AL MENOS UN PÚBLICO OBJETIVO (TIPO DE CLIENTE).");
+      setErrorMsg("Debes seleccionar al menos un público objetivo (tipo de cliente).");
       return;
     }
 
     if (!newPromo.startDate) {
-      setErrorMsg("DEBES SELECCIONAR LA FECHA Y HORA DE INICIO.");
+      setErrorMsg("Debes seleccionar la fecha y hora de inicio.");
       return;
     }
 
@@ -5688,341 +5698,552 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
       setNewPromo(initialForm);
       setActiveSubTab('list'); // Al guardar, nos lleva automáticamente al historial
     } catch (error) {
-      setErrorMsg("ERROR: EL ALMACENAMIENTO LOCAL SE HA LLENADO. INTENTA CON UNA IMAGEN MÁS LIGERA.");
+      setErrorMsg("Error: El almacenamiento local se ha llenado. Intenta con una imagen más ligera.");
     }
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in slide-in-from-bottom-4 duration-500 uppercase gap-8">
-      
-      {/* Cabecera y Pestañas Internas */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-[#2596be] pb-6 gap-4">
-        <h2 className="text-xl md:text-2xl font-black text-[#134b60] uppercase tracking-tighter">GESTIÓN DE PROMOCIONES</h2>
-        
-        <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-[#e9f4f8]">
-          <button 
-            onClick={() => setActiveSubTab('create')} 
-            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'create' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex flex-col h-full w-full text-slate-700 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+    >
+      {/* 1. ENCABEZADO COMPACTO Y PESTAÑAS TIPO PÍLDORA */}
+      <div 
+        className="flex-shrink-0 px-4 pt-3 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+        style={{ borderBottom: '2px solid #D4DBDB' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+            style={{ backgroundColor: '#0071A8' }}
           >
-            ➕ CREAR CAMPAÑA
+            <Megaphone size={18} className="text-white" />
+          </div>
+          <div>
+            <h2 
+              className="text-base font-bold leading-tight tracking-tight uppercase"
+              style={{ color: '#0071A8' }}
+            >
+              Gestión de Promociones
+            </h2>
+            <p className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+              Campaña de banners emergentes y avisos para portal cliente
+            </p>
+          </div>
+        </div>
+        
+        {/* Sub-pestañas */}
+        <div className="flex items-center gap-2">
+          <button 
+            type="button"
+            onClick={() => setActiveSubTab('create')} 
+            className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer shadow-sm"
+            style={
+              activeSubTab === 'create'
+                ? { backgroundColor: '#0071A8', color: '#FFFFFF' }
+                : { backgroundColor: '#FFFFFF', color: '#0071A8', border: '1px solid #D4DBDB' }
+            }
+          >
+            ➕ Crear Campaña
           </button>
           <button 
+            type="button"
             onClick={() => setActiveSubTab('list')} 
-            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer ${activeSubTab === 'list' ? 'bg-[#2596be] text-white shadow-md' : 'text-slate-400 hover:text-[#2596be]'}`}
+            className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer shadow-sm"
+            style={
+              activeSubTab === 'list'
+                ? { backgroundColor: '#0071A8', color: '#FFFFFF' }
+                : { backgroundColor: '#FFFFFF', color: '#0071A8', border: '1px solid #D4DBDB' }
+            }
           >
-            📋 HISTORIAL Y LISTADO ({promotions.length})
+            📋 Historial ({promotions.length})
           </button>
         </div>
       </div>
 
-      {/* PESTAÑA 1: CREAR CAMPAÑA Y VISTA PREVIA */}
-      {activeSubTab === 'create' && (
-        <div className="bg-white p-6 md:p-8 rounded-3xl border-2 border-[#e9f4f8] shadow-sm w-full animate-in fade-in duration-300">
-          <h3 className="font-black text-[#134b60] mb-6 flex items-center gap-2 text-[11px] uppercase">
-            <Megaphone size={18} className="text-[#2596be]" /> CREAR NUEVA CAMPAÑA
-          </h3>
-          
-          {errorMsg && (
-            <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-200 text-rose-600 font-black text-[10px] rounded-xl flex items-center gap-3 animate-pulse">
-              <AlertTriangle size={18} className="shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            
-            <div className="space-y-6 lg:col-span-2">
-              <div className="space-y-1 relative">
-                <div className="flex justify-between items-center">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NOMBRE DE LA CAMPAÑA</label>
-                  <span className={`text-[8px] font-black ${newPromo.name.length >= 80 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
-                    {newPromo.name.length} / 80
-                  </span>
-                </div>
-                <input 
-                  type="text" 
-                  maxLength={80} 
-                  value={newPromo.name} 
-                  onChange={e => setNewPromo({...newPromo, name: e.target.value.toUpperCase()})} 
-                  className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60]" 
-                  required 
-                  placeholder="EJ: OFERTA RELÁMPAGO (MÁX. 80 CARACTERES)" 
-                />
+      {/* 2. ÁREA DE CONTENIDO */}
+      <div className="flex-1 overflow-hidden p-3 bg-slate-50">
+        
+        {/* PESTAÑA 1: CREAR CAMPAÑA */}
+        {activeSubTab === 'create' && (
+          <div className="h-full bg-white rounded-2xl border shadow-sm p-4 overflow-y-auto" style={{ borderColor: '#D4DBDB' }}>
+            <div className="max-w-6xl mx-auto">
+              
+              <div className="flex items-center justify-between pb-3 mb-3 border-b" style={{ borderColor: '#D4DBDB' }}>
+                <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: '#0071A8' }}>
+                  <Megaphone size={15} /> Configuración de la Nueva Campaña
+                </h3>
+                <span className="text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+                  Los campos marcados son obligatorios
+                </span>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">FECHA DE INICIO</label>
-                  <input 
-                    type="date" 
-                    value={newPromo.startDateOnly} 
-                    onChange={e => handleDateChange(e.target.value, null)} 
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
-                    required 
-                  />
+              {errorMsg && (
+                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-center gap-2.5">
+                  <AlertTriangle size={16} className="shrink-0 text-rose-500" />
+                  <span>{errorMsg}</span>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HORA DE INICIO</label>
-                  <input 
-                    type="time" 
-                    value={newPromo.startTimeOnly} 
-                    onChange={e => handleDateChange(null, e.target.value)} 
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase text-[#134b60] cursor-pointer" 
-                    required 
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VIGENCIA (HORAS)</label>
-                  <input type="number" min="1" value={newPromo.durationHours} onChange={e => setNewPromo({...newPromo, durationHours: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
-                </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">EN PANTALLA (SEGUNDOS)</label>
-                  <input type="number" min="1" max="60" value={newPromo.screenTimeSeconds} onChange={e => setNewPromo({...newPromo, screenTimeSeconds: e.target.value})} onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-[#2596be] rounded-xl outline-none font-bold text-xs text-[#134b60]" required placeholder="" />
-                </div>
-              </div>
-
-              <div className="space-y-3 p-5 bg-[#e9f4f8]/30 rounded-2xl border-2 border-[#2596be]/10">
-                <label className="text-[9px] font-black text-[#134b60] uppercase tracking-widest block border-b border-[#2596be]/10 pb-2">PÚBLICO OBJETIVO (TIPO DE CLIENTE)</label>
-                <div className="flex flex-wrap gap-3 pt-2">
-                  {clientTypes.map(ct => (
-                    <label key={ct.id} className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:border-[#2596be] transition-colors select-none">
-                      <input type="checkbox" checked={newPromo.targetClients.includes(ct.id)} onChange={() => handleToggleClient(ct.id)} className="w-4 h-4 accent-[#2596be] cursor-pointer" />
-                      <span className="text-[9px] font-black text-[#134b60] uppercase">{ct.name}</span>
-                    </label>
-                  ))}
-                  {clientTypes.length === 0 && <span className="text-[9px] text-rose-500 font-bold bg-rose-50 px-4 py-2 rounded-xl">NO HAY TIPOS DE CLIENTE CREADOS</span>}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">TEXTO / OBSERVACIONES (OPCIONAL)</label>
-                <textarea maxLength={150} value={newPromo.text} onChange={e => setNewPromo({...newPromo, text: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 focus:border-[#2596be] rounded-xl outline-none font-bold text-xs uppercase resize-none h-24 text-[#134b60]" placeholder="TÉRMINOS Y CONDICIONES..." />
-              </div>
-            </div>
-
-            {/* Columna Derecha: Imagen y Vista Previa en Vivo */}
-            <div className="space-y-6 lg:col-span-1 flex flex-col">
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">IMAGEN DE LA PROMOCIÓN</label>
-                <label className="w-full h-[200px] border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden group">
-                  <input type="file" accept=".jpg, .jpeg, .png" className="hidden" onChange={handleImageUpload} />
-                  {newPromo.image ? (
-                    <>
-                      <img src={newPromo.image} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
-                      <div className="absolute inset-0 bg-[#134b60]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                        <span className="bg-white text-[#134b60] px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-2xl flex items-center gap-1.5">
-                          <UploadCloud size={14}/> CAMBIAR
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-12 h-12 bg-[#e9f4f8] text-[#2596be] rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                        <UploadCloud size={20} />
-                      </div>
-                      <span className="text-[9px] font-black text-slate-500 uppercase text-center px-4 leading-relaxed">
-                        CLIC PARA CARGAR IMAGEN<br/>
-                        <span className="text-[7px] font-bold text-amber-600">JPG, PNG (MÁX. 1 MB)</span>
+              <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+                
+                {/* Columna Izquierda / Central: Parámetros */}
+                <div className="space-y-4 lg:col-span-2">
+                  
+                  {/* Nombre de la campaña */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                        Nombre de la Campaña *
+                      </label>
+                      <span className={`text-[10px] font-medium ${newPromo.name.length >= 80 ? 'text-rose-500 font-bold' : ''}`} style={newPromo.name.length < 80 ? { color: '#B7C0C6' } : {}}>
+                        {newPromo.name.length} / 80
                       </span>
-                    </>
-                  )}
-                </label>
-              </div>
-
-              {/* Tarjeta de Vista Previa en Vivo */}
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VISTA PREVIA EN VIVO</label>
-                <div 
-                  onClick={() => newPromo.image && setShowFullPreview(true)}
-                  className={`bg-[#134b60]/95 border-2 border-[#2596be] rounded-2xl p-4 text-center text-white shadow-md relative overflow-hidden flex flex-col items-center justify-center min-h-[160px] transition-all ${newPromo.image ? 'cursor-pointer hover:scale-[1.02] hover:border-white' : ''}`}
-                  title={newPromo.image ? "Clic para ver en tamaño real" : "Sube una imagen para previsualizar"}
-                >
-                  <div className="absolute top-2 right-2 bg-white/20 text-white p-1 rounded-full text-[8px] font-bold">
-                    <X size={10} />
-                  </div>
-                  {newPromo.image ? (
-                    <img src={newPromo.image} alt="Popup Preview" className="w-16 h-16 object-contain mb-2 rounded-lg bg-white/10 p-1" />
-                  ) : (
-                    <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-2 text-slate-300 text-[8px] font-bold">
-                      SIN IMAGEN
                     </div>
-                  )}
-                  <h4 className="font-black text-xs uppercase tracking-tight text-white mb-1 line-clamp-1">
-                    {newPromo.name || "TÍTULO DE LA CAMPAÑA"}
-                  </h4>
-                  <p className="text-[9px] font-bold text-slate-200 uppercase line-clamp-2">
-                    {newPromo.text || "Términos y condiciones o descripción..."}
-                  </p>
-                  {newPromo.image && (
-                    <span className="text-[7px] bg-white/20 text-white px-2 py-0.5 rounded-full mt-2 font-black">
-                      🔍 CLIC PARA AMPLIAR
-                    </span>
-                  )}
+                    <input 
+                      type="text" 
+                      maxLength={80} 
+                      value={newPromo.name} 
+                      onChange={e => setNewPromo({ ...newPromo, name: e.target.value.toUpperCase() })} 
+                      className="w-full px-3 py-2 bg-white border rounded-xl outline-none text-xs text-slate-700 transition-all font-medium uppercase" 
+                      style={{ borderColor: '#D4DBDB' }}
+                      onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                      onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
+                      required 
+                      placeholder="Ej: OFERTA RELÁMPAGO DE FIN DE SEMANA" 
+                    />
+                  </div>
+                  
+                  {/* Fechas y Vigencia */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                        Fecha de Inicio *
+                      </label>
+                      <input 
+                        type="date" 
+                        value={newPromo.startDateOnly} 
+                        onChange={e => handleDateChange(e.target.value, null)} 
+                        className="w-full px-3 py-2 bg-white border rounded-xl outline-none text-xs text-slate-700 cursor-pointer font-medium" 
+                        style={{ borderColor: '#D4DBDB' }}
+                        onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                        onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
+                        required 
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                        Hora de Inicio *
+                      </label>
+                      <input 
+                        type="time" 
+                        value={newPromo.startTimeOnly} 
+                        onChange={e => handleDateChange(null, e.target.value)} 
+                        className="w-full px-3 py-2 bg-white border rounded-xl outline-none text-xs text-slate-700 cursor-pointer font-medium" 
+                        style={{ borderColor: '#D4DBDB' }}
+                        onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                        onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
+                        required 
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                        Vigencia (Horas) *
+                      </label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        value={newPromo.durationHours} 
+                        onChange={e => setNewPromo({ ...newPromo, durationHours: e.target.value })} 
+                        onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} 
+                        className="w-full px-3 py-2 bg-white border rounded-xl outline-none text-xs text-slate-700 font-medium" 
+                        style={{ borderColor: '#D4DBDB' }}
+                        onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                        onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
+                        required 
+                        placeholder="Ej: 48" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tiempo en pantalla */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                        En Pantalla (Segundos) *
+                      </label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="60" 
+                        value={newPromo.screenTimeSeconds} 
+                        onChange={e => setNewPromo({ ...newPromo, screenTimeSeconds: e.target.value })} 
+                        onKeyDown={e => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} 
+                        className="w-full px-3 py-2 bg-white border rounded-xl outline-none text-xs text-slate-700 font-medium" 
+                        style={{ borderColor: '#D4DBDB' }}
+                        onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                        onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
+                        required 
+                        placeholder="Ej: 10" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Público Objetivo */}
+                  <div className="space-y-2 p-3 bg-slate-50 rounded-xl border" style={{ borderColor: '#D4DBDB' }}>
+                    <div className="flex items-center justify-between border-b pb-1.5" style={{ borderColor: '#D4DBDB' }}>
+                      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                        Público Objetivo (Tipos de Cliente) *
+                      </label>
+                      <span className="text-[9px] font-medium" style={{ color: '#B7C0C6' }}>
+                        {newPromo.targetClients.length} seleccionados
+                      </span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {clientTypes.map(ct => {
+                        const isSelected = newPromo.targetClients.includes(ct.id);
+                        return (
+                          <label 
+                            key={ct.id} 
+                            className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg border transition-all text-xs font-medium select-none shadow-sm"
+                            style={
+                              isSelected 
+                                ? { backgroundColor: '#eff8fc', borderColor: '#0071A8', color: '#0071A8' }
+                                : { backgroundColor: '#FFFFFF', borderColor: '#D4DBDB', color: '#475569' }
+                            }
+                          >
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected} 
+                              onChange={() => handleToggleClient(ct.id)} 
+                              className="w-3.5 h-3.5 cursor-pointer rounded" 
+                              style={{ accentColor: '#0071A8' }}
+                            />
+                            <span>{ct.name}</span>
+                          </label>
+                        );
+                      })}
+                      {clientTypes.length === 0 && (
+                        <span className="text-[10px] text-rose-500 font-medium bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">
+                          No hay tipos de cliente creados
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Texto / Observaciones */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                      Términos / Observaciones (Opcional)
+                    </label>
+                    <textarea 
+                      maxLength={150} 
+                      value={newPromo.text} 
+                      onChange={e => setNewPromo({ ...newPromo, text: e.target.value.toUpperCase() })} 
+                      className="w-full px-3 py-2 bg-white border rounded-xl outline-none text-xs text-slate-700 resize-none h-20 font-medium uppercase" 
+                      style={{ borderColor: '#D4DBDB' }}
+                      onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                      onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
+                      placeholder="Términos y condiciones, restricciones o información para el cliente..." 
+                    />
+                  </div>
                 </div>
-              </div>
+
+                {/* Columna Derecha: Imagen y Previsualización */}
+                <div className="space-y-4 lg:col-span-1 flex flex-col">
+                  
+                  {/* Selector de Imagen */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                      Imagen de la Promoción *
+                    </label>
+                    <label 
+                      className="w-full h-44 border-2 border-dashed rounded-2xl cursor-pointer hover:bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden group transition-all"
+                      style={{ borderColor: newPromo.image ? '#0071A8' : '#D4DBDB' }}
+                    >
+                      <input type="file" accept=".jpg, .jpeg, .png" className="hidden" onChange={handleImageUpload} />
+                      {newPromo.image ? (
+                        <>
+                          <img src={newPromo.image} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                          <div 
+                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs"
+                            style={{ backgroundColor: 'rgba(0, 113, 168, 0.65)' }}
+                          >
+                            <span className="bg-white px-3 py-1.5 rounded-lg text-xs font-semibold uppercase shadow-md flex items-center gap-1.5" style={{ color: '#0071A8' }}>
+                              <UploadCloud size={14}/> Cambiar Imagen
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center mb-2 group-hover:scale-105 transition-transform"
+                            style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}
+                          >
+                            <UploadCloud size={20} />
+                          </div>
+                          <span className="text-xs font-semibold text-slate-600 uppercase text-center px-4 leading-snug">
+                            Clic para cargar imagen
+                          </span>
+                          <span className="text-[10px] font-medium mt-1" style={{ color: '#B7C0C6' }}>
+                            JPG, PNG (Máx. 1 MB)
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Tarjeta de Previsualización en Vivo */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                      Previsualización Popup Cliente
+                    </label>
+                    <div 
+                      onClick={() => newPromo.image && setShowFullPreview(true)}
+                      className={`rounded-2xl p-4 text-center text-white shadow-md relative overflow-hidden flex flex-col items-center justify-center min-h-[160px] transition-all border ${newPromo.image ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
+                      style={{ 
+                        backgroundColor: '#0071A8',
+                        borderColor: '#005b87'
+                      }}
+                      title={newPromo.image ? "Clic para ver en tamaño real" : "Carga una imagen para previsualizar"}
+                    >
+                      <div className="absolute top-2.5 right-2.5 bg-white/20 text-white p-1 rounded-full text-[8px] font-bold">
+                        <X size={10} />
+                      </div>
+                      {newPromo.image ? (
+                        <img src={newPromo.image} alt="Popup Preview" className="w-16 h-16 object-contain mb-2 rounded-lg bg-white/10 p-1" />
+                      ) : (
+                        <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-2 text-white/70 text-[9px] font-semibold">
+                          Sin Imagen
+                        </div>
+                      )}
+                      <h4 className="font-bold text-xs uppercase tracking-tight text-white mb-1 line-clamp-1">
+                        {newPromo.name || "Título de la Campaña"}
+                      </h4>
+                      <p className="text-[10px] font-medium text-white/80 line-clamp-2">
+                        {newPromo.text || "Descripción o términos y condiciones..."}
+                      </p>
+                      {newPromo.image && (
+                        <span className="text-[8px] bg-white/20 text-white px-2 py-0.5 rounded-full mt-2 font-semibold">
+                          🔍 Clic para ampliar
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de Botones Inferior */}
+                <div className="lg:col-span-3 pt-3 border-t flex flex-col sm:flex-row justify-end gap-2.5" style={{ borderColor: '#D4DBDB' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => { setNewPromo(initialForm); setErrorMsg(''); }}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-semibold text-xs uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <XCircle size={15} /> Limpiar Formulario
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="px-6 py-2 text-white rounded-xl font-semibold text-xs uppercase shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                    style={{ backgroundColor: '#0071A8' }}
+                  >
+                    <Plus size={15} /> Guardar Campaña
+                  </button>
+                </div>
+              </form>
             </div>
-            {/* MODAL DE VISTA PREVIA A TAMAÑO REAL (POP-UP CLIENTE) */}
-      {showFullPreview && (
-        <div className="fixed inset-0 bg-[#134b60]/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 uppercase">
-          <div className="bg-[#134b60] border-4 border-[#2596be] rounded-3xl shadow-2xl p-6 md:p-10 max-w-lg w-full text-white flex flex-col items-center text-center relative animate-in zoom-in-95 duration-200">
+          </div>
+        )}
+
+        {/* PESTAÑA 2: HISTORIAL Y LISTADO */}
+        {activeSubTab === 'list' && (
+          <div className="h-full bg-white rounded-2xl border shadow-sm flex flex-col overflow-hidden" style={{ borderColor: '#D4DBDB' }}>
             
+            {/* Barra de Filtro Compacta */}
+            <div 
+              className="flex-shrink-0 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white"
+              style={{ borderBottom: '1px solid #D4DBDB' }}
+            >
+              <div className="relative flex-1 max-w-sm">
+                <input
+                  type="text"
+                  placeholder="Buscar por ID, campaña o descripción..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-1.5 text-xs text-slate-700 outline-none transition-all placeholder:text-slate-400 font-medium"
+                  style={{ borderColor: '#D4DBDB' }}
+                  onFocus={e => e.currentTarget.style.borderColor = '#0071A8'}
+                  onBlur={e => e.currentTarget.style.borderColor = '#D4DBDB'}
+                />
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                Mostrando {filteredPromotions.length} de {promotions.length} campañas
+              </span>
+            </div>
+
+            {/* Tabla con Scroll Interno */}
+            <div className="flex-1 overflow-x-auto overflow-y-auto">
+              <table className="w-full text-left border-collapse min-w-[850px]">
+                <thead 
+                  className="sticky top-0 z-10"
+                  style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #D4DBDB' }}
+                >
+                  <tr>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>ID</th>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#0071A8' }}>Campaña</th>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-center" style={{ color: '#0071A8' }}>Inicio y Vigencia</th>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-center" style={{ color: '#0071A8' }}>Público</th>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-center" style={{ color: '#0071A8' }}>Estado</th>
+                    <th className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-right" style={{ color: '#0071A8' }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-xs" style={{ borderColor: '#f1f5f9' }}>
+                  {filteredPromotions.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-16 text-center font-medium" style={{ color: '#B7C0C6' }}>
+                        No se encontraron campañas registradas
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredPromotions.map((p) => (
+                      <tr 
+                        key={p.id} 
+                        className="hover:bg-slate-50 transition-colors cursor-pointer" 
+                        onClick={() => setSelectedPromo(p)}
+                      >
+                        <td className="px-4 py-2.5 font-semibold font-mono" style={{ color: '#0071A8' }}>
+                          {p.id}
+                        </td>
+                        <td className="px-4 py-2.5 font-medium text-slate-800 max-w-[260px] truncate">
+                          {p.name}
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <p className="text-[11px] font-medium text-slate-700">
+                            {new Date(p.startDate).toLocaleString()}
+                          </p>
+                          <span 
+                            className="text-[9px] font-semibold inline-block px-2 py-0.5 rounded-full mt-0.5"
+                            style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}
+                          >
+                            Duración: {p.durationHours} h
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <span 
+                            className="px-2.5 py-1 rounded-md text-[10px] font-semibold border"
+                            style={{ backgroundColor: '#eff8fc', borderColor: '#D4DBDB', color: '#0071A8' }}
+                          >
+                            {p.targetClients?.length || 0} tipos sel.
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                            p.status === 'ACTIVA' 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                            {p.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setPromoToFinalize(p); }} 
+                            disabled={p.status === 'FINALIZADA'}
+                            className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all shadow-xs inline-flex items-center gap-1.5 text-[10px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" 
+                            title="Finalizar Campaña"
+                          >
+                            <XCircle size={13}/> Finalizar
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        )}
+      </div>
+
+      {/* 3. MODAL: VISTA PREVIA CLIENTE A TAMAÑO REAL */}
+      {showFullPreview && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div 
+            className="rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full text-white flex flex-col items-center text-center relative animate-in zoom-in-95 duration-200 border-2"
+            style={{ backgroundColor: '#0071A8', borderColor: '#FFFFFF' }}
+          >
             {/* Botón X para cerrar */}
             <button
               type="button"
               onClick={() => setShowFullPreview(false)}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-rose-500 text-white p-2.5 rounded-full transition-all cursor-pointer shadow-lg"
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-all cursor-pointer shadow-sm"
               title="Cerrar vista previa"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
 
-            <span className="text-[9px] font-black text-[#2596be] bg-white px-3 py-1 rounded-full mb-6 tracking-widest">
-              📱 VISTA REAL DEL CLIENTE
+            <span className="text-[9px] font-bold text-white bg-white/20 px-3 py-1 rounded-full mb-4 tracking-wider uppercase">
+              📱 Vista Real del Popup Cliente
             </span>
 
             {/* Imagen en tamaño real */}
             {newPromo.image && (
-              <div className="w-full h-64 bg-white/5 rounded-2xl p-4 mb-6 border border-white/10 flex items-center justify-center overflow-hidden">
+              <div className="w-full h-56 bg-white/10 rounded-2xl p-2 mb-4 border border-white/20 flex items-center justify-center overflow-hidden">
                 <img src={newPromo.image} alt="Full Preview" className="w-full h-full object-contain" />
               </div>
             )}
 
             {/* Título de la campaña */}
-            <h3 className="font-black text-lg md:text-xl uppercase tracking-tight text-white mb-3">
-              {newPromo.name || "TÍTULO DE LA CAMPAÑA"}
+            <h3 className="font-bold text-base md:text-lg uppercase tracking-tight text-white mb-2">
+              {newPromo.name || "Título de la Campaña"}
             </h3>
 
             {/* Texto / Términos */}
-            <p className="text-xs font-bold text-slate-300 uppercase leading-relaxed max-w-md mb-8">
-              {newPromo.text || "Términos y condiciones o descripción de la campaña..."}
+            <p className="text-xs font-medium text-white/90 leading-relaxed max-w-sm mb-6">
+              {newPromo.text || "Descripción o términos de la campaña promocional..."}
             </p>
 
             <button
               type="button"
               onClick={() => setShowFullPreview(false)}
-              className="w-full bg-[#2596be] hover:bg-[#1e7a9b] text-white py-4 rounded-xl font-black text-[11px] uppercase transition-all shadow-xl cursor-pointer tracking-widest"
+              className="w-full bg-white hover:bg-slate-100 py-2.5 rounded-xl font-bold text-xs uppercase transition-all shadow-md cursor-pointer"
+              style={{ color: '#0071A8' }}
             >
-              CERRAR VISTA PREVIA
+              Cerrar Vista Previa
             </button>
           </div>
         </div>
       )}
-            {/* Botones de acción */}
-            <div className="md:col-span-2 lg:col-span-3 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-4">
-              <button 
-                type="button" 
-                onClick={() => setNewPromo(initialForm)}
-                className="w-full sm:w-auto px-8 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
-              >
-                <XCircle size={16} /> LIMPIAR FORMULARIO
-              </button>
-              <button 
-                type="submit" 
-                className="w-full sm:w-auto px-8 bg-[#2596be] hover:bg-[#1e7a9b] text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 tracking-widest"
-              >
-                <Plus size={16} /> GUARDAR CAMPAÑA
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
-      {/* PESTAÑA 2: HISTORIAL Y LISTADO */}
-      {activeSubTab === 'list' && (
-        <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-sm overflow-hidden flex flex-col animate-in fade-in duration-300 max-h-[75vh]">
-          {/* BARRA DE BÚSQUEDA */}
-      <div className="px-6 pt-6 mb-2 flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <input
-            type="text"
-            placeholder="Buscador inteligente: ID, Campaña o palabra clave..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border-2 border-slate-200 focus:border-[#2596be] rounded-2xl px-4 py-3 text-xs font-bold text-[#134b60] outline-none transition-all shadow-sm placeholder:text-slate-400"
-          />
-        </div>
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          Mostrando {filteredPromotions.length} de {promotions.length}
-        </span>
-      </div>
-          <div className="overflow-x-auto overflow-y-auto scrollbar-hide">
-            <table className="w-full text-left min-w-[1000px] uppercase">
-              <thead className="bg-[#134b60] text-white text-[9px] font-black tracking-widest sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-6">ID</th>
-                  <th className="px-6 py-6">CAMPAÑA</th>
-                  <th className="px-6 py-6 text-center">INICIO Y VIGENCIA</th>
-                  <th className="px-6 py-6 text-center">PÚBLICO</th>
-                  <th className="px-6 py-6 text-center">ESTADO</th>
-                  <th className="px-6 py-6 text-right">ACCIÓN</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-[11px] font-bold text-[#134b60]">
-                {filteredPromotions.length === 0 ? (
-                  <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-300 font-black tracking-tighter">SIN PROMOCIONES REGISTRADAS</td></tr>
-                ) : (
-                  filteredPromotions.map((p) => (
-                    <tr key={p.id} className="hover:bg-[#e9f4f8]/50 transition-colors cursor-pointer" onClick={() => setSelectedPromo(p)}>
-                      <td className="px-6 py-5 font-mono text-[#2596be] font-black">{p.id}</td>
-                      <td className="px-6 py-5 truncate max-w-[250px]">{p.name}</td>
-                      <td className="px-6 py-5 text-center">
-                        <p className="text-[10px] font-black">{new Date(p.startDate).toLocaleString()}</p>
-                        <p className="text-[9px] text-[#2596be] font-black mt-1 bg-[#e9f4f8] inline-block px-3 py-1 rounded-full">DURACIÓN: {p.durationHours} H</p>
-                      </td>
-                      <td className="px-6 py-5 text-center">
-                        <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-lg text-[9px] border border-indigo-100 font-black">{p.targetClients.length} TIPOS SEL.</span>
-                      </td>
-                      <td className="px-6 py-5 text-center">
-                        <span className={`px-4 py-1.5 rounded-lg text-[9px] border font-black ${p.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'}`}>
-                          {p.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-right flex justify-end">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setPromoToFinalize(p); }} 
-                          disabled={p.status === 'FINALIZADA'}
-                          className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm flex items-center gap-2 text-[9px] font-black disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" 
-                          title="Finalizar Campaña"
-                        >
-                          <XCircle size={14}/> FINALIZAR
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-      {/* MODAL DE CONFIRMACIÓN PERSONALIZADO */}
+      {/* 4. MODAL: CONFIRMAR FINALIZACIÓN */}
       {promoToFinalize && (
-        <div className="fixed inset-0 bg-[#134b60]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 uppercase">
-          <div className="bg-white rounded-3xl border-2 border-[#e9f4f8] shadow-2xl p-6 md:p-8 max-w-md w-full text-[#134b60] flex flex-col gap-6 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 text-rose-600 border-b border-slate-100 pb-4">
-              <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center shrink-0">
-                <AlertTriangle size={20} />
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl border shadow-xl p-6 max-w-md w-full text-slate-700 flex flex-col gap-4 animate-in zoom-in-95 duration-200" style={{ borderColor: '#D4DBDB' }}>
+            <div className="flex items-center gap-3 border-b pb-3" style={{ borderColor: '#D4DBDB' }}>
+              <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <AlertTriangle size={18} />
               </div>
               <div>
-                <h4 className="font-black text-xs">CONFIRMAR ACCIÓN</h4>
-                <p className="text-[9px] text-slate-400 font-bold">FINALIZAR CAMPAÑA</p>
+                <h4 className="font-bold text-xs uppercase" style={{ color: '#0071A8' }}>Confirmar Acción</h4>
+                <p className="text-[10px] text-slate-500 font-medium">Finalizar vigencia de campaña</p>
               </div>
             </div>
 
-            <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
-              ¿ESTÁS SEGURO DE QUE DESEAS FINALIZAR LA CAMPAÑA <span className="text-[#2596be] font-black">"{promoToFinalize.name}"</span> ({promoToFinalize.id})? ESTA ACCIÓN NO SE PUEDE DESHACER.
+            <p className="text-xs font-medium text-slate-600 leading-relaxed">
+              ¿Estás seguro de que deseas finalizar la campaña <span className="font-bold" style={{ color: '#0071A8' }}>"{promoToFinalize.name}"</span> ({promoToFinalize.id})? Esta acción detendrá su visualización inmediata en los portales de clientes.
             </p>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setPromoToFinalize(null)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3.5 rounded-xl font-black text-[10px] uppercase transition-all cursor-pointer"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl font-semibold text-xs uppercase transition-all cursor-pointer"
               >
-                CANCELAR
+                Cancelar
               </button>
               <button
                 type="button"
@@ -6030,87 +6251,94 @@ const PromotionsManagementView = ({ promotions, setPromotions, clientTypes }) =>
                   setPromotions(promotions.map(promo => promo.id === promoToFinalize.id ? { ...promo, status: 'FINALIZADA' } : promo));
                   setPromoToFinalize(null);
                 }}
-                className="flex-1 bg-rose-500 hover:bg-rose-600 text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-rose-500/20 transition-all cursor-pointer"
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-2.5 rounded-xl font-semibold text-xs uppercase shadow-sm transition-all cursor-pointer"
               >
-                SÍ, FINALIZAR
+                Sí, Finalizar
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL DE DETALLE EN PANTALLA GRANDE */}
+      {/* 5. MODAL: DETALLE COMPLETO DE CAMPAÑA */}
       {selectedPromo && (
-        <div className="fixed inset-0 bg-[#134b60]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 uppercase font-sans">
-          <div className="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl border-2 border-[#e9f4f8] p-8 relative animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border p-6 relative animate-in zoom-in-95 duration-200" style={{ borderColor: '#D4DBDB' }}>
             
             {/* Botón de cerrar */}
             <button 
+              type="button"
               onClick={() => setSelectedPromo(null)}
-              className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-rose-50 hover:text-rose-500 text-slate-500 rounded-2xl flex items-center justify-center transition-all cursor-pointer font-black"
+              className="absolute top-4 right-4 w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl flex items-center justify-center transition-all cursor-pointer font-bold text-sm"
             >
               ✕
             </button>
 
             {/* Cabecera del Detalle */}
-            <div className="mb-6">
-              <span className="px-3 py-1 bg-sky-50 text-[#2596be] border border-sky-100 rounded-full text-[9px] font-black">
-                DETALLE DE CAMPAÑA
+            <div className="mb-4 pr-8">
+              <span 
+                className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                style={{ backgroundColor: '#eff8fc', color: '#0071A8' }}
+              >
+                Detalle de Campaña
               </span>
-              <h3 className="text-2xl font-black text-[#134b60] tracking-tight mt-2">
-                {selectedPromo.id} - {selectedPromo.name}
+              <h3 className="text-base font-bold tracking-tight mt-1" style={{ color: '#0071A8' }}>
+                {selectedPromo.id} — {selectedPromo.name}
               </h3>
-              <p className="text-[10px] text-slate-400 font-bold tracking-widest mt-0.5">
-                Información general y configuración de la promoción
+              <p className="text-[10px] font-medium mt-0.5" style={{ color: '#B7C0C6' }}>
+                Configuración y estado actual de la promoción
               </p>
             </div>
 
-            {/* Imagen de la campaña en grande */}
+            {/* Imagen de la campaña */}
             {selectedPromo.image && (
-              <div className="w-full h-48 bg-slate-50 rounded-2xl p-2 mb-6 border border-slate-100 flex items-center justify-center overflow-hidden">
+              <div className="w-full h-44 bg-slate-50 rounded-xl p-2 mb-4 border flex items-center justify-center overflow-hidden" style={{ borderColor: '#D4DBDB' }}>
                 <img src={selectedPromo.image} alt="Promo" className="w-full h-full object-contain" />
               </div>
             )}
 
-            {/* Cuerpo con la información desplegada */}
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-6 text-xs font-bold text-slate-700">
+            {/* Ficha de datos */}
+            <div className="grid grid-cols-2 gap-3 p-4 rounded-xl border mb-4 text-xs bg-slate-50" style={{ borderColor: '#D4DBDB' }}>
               <div>
-                <span className="text-[9px] text-slate-400 block mb-1">Campaña:</span>
-                <span className="text-sm font-black text-[#134b60]">{selectedPromo.name}</span>
+                <span className="text-[10px] font-semibold uppercase block mb-0.5" style={{ color: '#0071A8' }}>Campaña:</span>
+                <span className="font-semibold text-slate-800">{selectedPromo.name}</span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 block mb-1">Estado:</span>
-                <span className={`px-3 py-1 rounded-full text-[9px] font-black inline-block ${selectedPromo.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                <span className="text-[10px] font-semibold uppercase block mb-0.5" style={{ color: '#0071A8' }}>Estado:</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold inline-block ${selectedPromo.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                   {selectedPromo.status}
                 </span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 block mb-1">Inicio y Vigencia:</span>
-                <span>{new Date(selectedPromo.startDate).toLocaleString()} ({selectedPromo.durationHours} H)</span>
+                <span className="text-[10px] font-semibold uppercase block mb-0.5" style={{ color: '#0071A8' }}>Inicio y Vigencia:</span>
+                <span className="font-medium text-slate-700">{new Date(selectedPromo.startDate).toLocaleString()} ({selectedPromo.durationHours} h)</span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 block mb-1">En Pantalla:</span>
-                <span>{selectedPromo.screenTimeSeconds} Segundos</span>
+                <span className="text-[10px] font-semibold uppercase block mb-0.5" style={{ color: '#0071A8' }}>En Pantalla:</span>
+                <span className="font-medium text-slate-700">{selectedPromo.screenTimeSeconds} segundos</span>
               </div>
               <div className="col-span-2">
-                <span className="text-[9px] text-slate-400 block mb-1">Términos / Observaciones:</span>
-                <span className="text-slate-600">{selectedPromo.text || "SIN DESCRIPCIÓN"}</span>
+                <span className="text-[10px] font-semibold uppercase block mb-0.5" style={{ color: '#0071A8' }}>Términos / Observaciones:</span>
+                <span className="font-medium text-slate-600">{selectedPromo.text || "Sin descripción adicional"}</span>
               </div>
             </div>
 
-            {/* Botón de acción inferior */}
-            <div className="flex justify-end gap-3">
+            {/* Botón de cierre */}
+            <div className="flex justify-end">
               <button 
+                type="button"
                 onClick={() => setSelectedPromo(null)}
-                className="px-6 py-3 bg-[#2596be] hover:bg-[#1e7a9b] text-white rounded-2xl font-black text-[10px] transition-all cursor-pointer shadow-md"
+                className="px-5 py-2 text-white rounded-xl font-semibold text-xs uppercase transition-all cursor-pointer shadow-sm"
+                style={{ backgroundColor: '#0071A8' }}
               >
-                Cerrar ventana
+                Cerrar Ventana
               </button>
             </div>
 
           </div>
         </div>
       )}
+
     </div>
   );
 };
