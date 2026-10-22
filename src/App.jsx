@@ -7055,7 +7055,7 @@ const CRMView = ({ products, clients, inventory, orders }) => {
   );
 };
 
-// --- COMPONENTE PRINCIPAL (DASHBOARD WRAPPER) COMPLETO Y CORREGIDO ---
+// --- COMPONENTE PRINCIPAL (DASHBOARD WRAPPER): DISEÑO UNIFICADO Y AJUSTE AL VIEWPORT ---
 const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlobalLogo }) => {
   // 1. Validación de roles
   const isAdmin = currentUser.role === 'ADMIN' || currentUser.role === 'SUPERADMIN'; 
@@ -7123,7 +7123,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   }, []);
 
   const timeString = currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateString = currentTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
+  const dateString = currentTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
 
   const getColombiaHolidays = (year) => {
     const holidays = [
@@ -7173,22 +7173,22 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   useEffect(() => { localStorage.setItem('inventrack_promotions', JSON.stringify(promotions)); }, [promotions]);
   
   const adminMenu = [
-    { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={20} /> },
-    { id: 'admin_orders', label: 'PEDIDOS', icon: <Activity size={20} /> },
-    { id: 'access', label: 'ACCESOS', icon: <Fingerprint size={20} /> },
-    { id: 'crm', label: 'CRM', icon: <TrendingUp size={20} /> },
-    { id: 'clients', label: 'CLIENTES', icon: <Users size={20} /> },
-    { id: 'client_types', label: 'TIPO CLIENTE', icon: <UserCheck size={20} /> },
-    { id: 'inventory', label: 'INVENTARIO', icon: <Boxes size={20} /> },
-    { id: 'products', label: 'PRODUCTOS', icon: <ClipboardList size={20} /> },
-    { id: 'taxes', label: 'IMPUESTOS', icon: <Percent size={20} /> },
-    { id: 'promotions', label: 'PROMOCIONES', icon: <Megaphone size={20} /> },
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { id: 'admin_orders', label: 'Pedidos', icon: <Activity size={18} /> },
+    { id: 'access', label: 'Accesos', icon: <Fingerprint size={18} /> },
+    { id: 'crm', label: 'CRM', icon: <TrendingUp size={18} /> },
+    { id: 'clients', label: 'Clientes', icon: <Users size={18} /> },
+    { id: 'client_types', label: 'Tipo Cliente', icon: <UserCheck size={18} /> },
+    { id: 'inventory', label: 'Inventario', icon: <Boxes size={18} /> },
+    { id: 'products', label: 'Productos', icon: <ClipboardList size={18} /> },
+    { id: 'taxes', label: 'Impuestos', icon: <Percent size={18} /> },
+    { id: 'promotions', label: 'Promociones', icon: <Megaphone size={18} /> },
   ];
   
   const clientMenu = [
-    { id: 'client_dashboard', label: 'INICIO', icon: <LayoutDashboard size={20} /> },
-    { id: 'client_new_order', label: 'HACER PEDIDO', icon: <Plus size={20} /> },
-    { id: 'client_orders_history', label: 'MIS PEDIDOS', icon: <History size={20} /> },
+    { id: 'client_dashboard', label: 'Inicio', icon: <LayoutDashboard size={18} /> },
+    { id: 'client_new_order', label: 'Hacer Pedido', icon: <Plus size={18} /> },
+    { id: 'client_orders_history', label: 'Mis Pedidos', icon: <History size={18} /> },
   ];
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -7203,132 +7203,291 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 uppercase font-sans text-slate-900 print:bg-white">
+    <div 
+      style={{ fontFamily: "'Montserrat', sans-serif" }} 
+      className="flex h-screen w-screen overflow-hidden bg-slate-100 text-slate-800 print:bg-white"
+    >
+      {/* Backdrop para móviles */}
       {isSidebarOpen && (
-        <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-[#0071A8]/50 backdrop-blur-sm z-[60] lg:hidden cursor-pointer" />
+        <div 
+          onClick={() => setIsSidebarOpen(false)} 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[60] lg:hidden cursor-pointer" 
+        />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64 bg-[#0f2d3a] text-[#e9f4f8] flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden absolute top-4 right-4 p-2 bg-white/10 hover:bg-rose-500 hover:text-white text-slate-300 rounded-xl transition-all cursor-pointer z-50">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      {/* --- BARRA LATERAL (SIDEBAR) CORPORATIVA --- */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-[70] ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-60'} w-60 flex flex-col transition-all duration-300 shadow-xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+        style={{ backgroundColor: '#0a2533', borderRight: '1px solid #194052' }}
+      >
+        {/* Botón cerrar en móvil */}
+        <button 
+          type="button"
+          onClick={() => setIsSidebarOpen(false)} 
+          className="lg:hidden absolute top-3.5 right-3.5 p-1.5 bg-white/10 hover:bg-rose-500 hover:text-white text-slate-300 rounded-xl transition-all cursor-pointer z-50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
-        <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="absolute -right-3.5 top-6 bg-white text-[#134b60] p-1.5 rounded-full shadow-lg border border-slate-200 hover:bg-[#2596be] hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer" title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}>
-          {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        {/* Botón colapsar / expandir desktop */}
+        <button 
+          type="button"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
+          className="absolute -right-3.5 top-6 bg-white p-1 rounded-full shadow-md border hover:text-white transition-all z-50 hidden lg:flex items-center justify-center cursor-pointer"
+          style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#0071A8'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+          title={sidebarCollapsed ? "Expandir menú" : "Minimizar menú"}
+        >
+          {sidebarCollapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
         </button>
 
-        <div className={`p-3.5 border-b border-[#194052] text-center uppercase tracking-widest flex flex-col items-center justify-center transition-all shrink-0`}>
-          <label htmlFor="logo-upload" className={`w-9 h-9 bg-white rounded-xl flex items-center justify-center p-1 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-2'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}>
+        {/* Header del Sidebar: Logo y Marca */}
+        <div className="p-3.5 border-b text-center flex flex-col items-center justify-center transition-all shrink-0" style={{ borderColor: '#194052' }}>
+          <label 
+            htmlFor="logo-upload" 
+            className={`w-9 h-9 bg-white rounded-xl flex items-center justify-center p-1 mx-auto ${sidebarCollapsed ? 'mb-0' : 'mb-1.5'} shadow-md hover:scale-105 transition-all cursor-pointer group relative`}
+          >
             {isAdmin && <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />}
-            <img src={globalLogo} alt="Logo DC" className={`w-full h-full object-contain transition-opacity ${isAdmin ? 'group-hover:opacity-40' : ''}`} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-            <Package size={18} className="text-[#2596be] hidden" />
-            {isAdmin && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={14} className="text-[#134b60]" /></div>}
+            <img 
+              src={globalLogo} 
+              alt="Logo DC" 
+              className={`w-full h-full object-contain transition-opacity ${isAdmin ? 'group-hover:opacity-40' : ''}`} 
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} 
+            />
+            <Package size={18} className="hidden" style={{ color: '#0071A8' }} />
+            {isAdmin && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Edit size={13} style={{ color: '#0071A8' }} />
+              </div>
+            )}
           </label>
           
           {!sidebarCollapsed && (
             <>
-              <span className="font-black text-[11px] text-white tracking-tight mt-1 block">Pide con Castilla</span>
-              <span className="text-[6px] text-[#e9f4f8] font-bold opacity-50 uppercase tracking-[0.1em]">DISTRIBUCIONES CASTILLA</span>
+              <span className="font-bold text-xs text-white tracking-tight mt-0.5 block">
+                Pide con Castilla
+              </span>
+              <span className="text-[7px] font-semibold text-slate-400 uppercase tracking-widest">
+                Distribuciones Castilla
+              </span>
             </>
           )}
         </div>
 
+        {/* Badge de Rol */}
         <div className="px-3 py-2 shrink-0">
-          <div className={`w-full py-2 rounded-xl text-[8px] font-black bg-[#134b60]/50 border border-[#194052] text-[#e9f4f8] flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-2.5'} shadow-inner transition-all`}>
-            {isAdmin ? <ShieldCheck size={14} className="text-[#2596be] shrink-0" /> : <User size={14} className="text-[#2596be] shrink-0" />}
+          <div 
+            className={`w-full py-1.5 rounded-xl text-[9px] font-semibold flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-2'} transition-all`}
+            style={{ backgroundColor: 'rgba(0, 113, 168, 0.18)', color: '#FFFFFF', border: '1px solid rgba(0, 113, 168, 0.35)' }}
+          >
+            {isAdmin ? <ShieldCheck size={13} style={{ color: '#0071A8' }} className="shrink-0" /> : <User size={13} style={{ color: '#0071A8' }} className="shrink-0" />}
             {!sidebarCollapsed && <span className="truncate uppercase tracking-wider">{currentUser.role}</span>}
           </div>
         </div>
 
-        <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-2' : 'px-3 py-1'} space-y-0.5 overflow-y-auto scrollbar-hide`}>
+        {/* Menú de Navegación con Scroll Interno */}
+        <nav className={`flex-1 ${sidebarCollapsed ? 'px-2 py-1.5' : 'px-3 py-1'} space-y-1 overflow-y-auto scrollbar-hide`}>
           {isAdmin && (
             <>
-              {!sidebarCollapsed && <div className="text-[6px] text-slate-400 font-black uppercase tracking-widest px-2 mb-1 opacity-60">Gestión General</div>}
-              {adminMenu.map((item) => (
-                <button key={item.id} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); }} title={item.label} className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}>
-                  <span className="shrink-0">{item.icon}</span>
-                  {!sidebarCollapsed && <span className="text-[8px] tracking-wider uppercase">{item.label}</span>}
-                </button>
-              ))}
-              {!sidebarCollapsed && <div className="text-[6px] text-slate-400 font-black uppercase tracking-widest px-2 mt-2 mb-1 border-t border-[#194052] pt-2 opacity-60">Portal Cliente</div>}
+              {!sidebarCollapsed && (
+                <div className="text-[8px] font-semibold uppercase tracking-wider px-2 mb-1" style={{ color: '#B7C0C6' }}>
+                  Gestión General
+                </div>
+              )}
+              {adminMenu.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button 
+                    key={item.id} 
+                    type="button"
+                    onClick={() => { 
+                      setActiveTab(item.id); 
+                      setIsSidebarOpen(false); 
+                      if(item.id.includes('history') || item.id === 'admin_orders') setFilterStatus('TODOS'); 
+                    }} 
+                    title={item.label} 
+                    className={`flex items-center transition-all cursor-pointer ${
+                      sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold'
+                    }`}
+                    style={
+                      isActive 
+                        ? { backgroundColor: '#0071A8', color: '#FFFFFF', boxShadow: '0 2px 6px rgba(0, 113, 168, 0.4)' }
+                        : { color: '#B7C0C6' }
+                    }
+                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.backgroundColor = '#13384a'; e.currentTarget.style.color = '#FFFFFF'; } }}
+                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#B7C0C6'; } }}
+                  >
+                    <span className="shrink-0">{item.icon}</span>
+                    {!sidebarCollapsed && <span className="tracking-wide">{item.label}</span>}
+                  </button>
+                );
+              })}
+              
+              {!sidebarCollapsed && (
+                <div className="text-[8px] font-semibold uppercase tracking-wider px-2 mt-3 mb-1 pt-2 border-t" style={{ color: '#B7C0C6', borderColor: '#194052' }}>
+                  Portal Cliente
+                </div>
+              )}
             </>
           )}
 
-          {clientMenu.map((item) => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} title={item.label} className={`flex items-center transition-all ${sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-2.5 py-2 rounded-xl'} ${activeTab === item.id ? 'bg-[#2596be] text-white shadow-md font-black' : 'text-slate-300 hover:bg-[#194052] hover:text-white font-bold'}`}>
-              <span className="shrink-0">{item.icon}</span>
-              {!sidebarCollapsed && <span className="text-[8px] tracking-wider uppercase">{item.label}</span>}
-            </button>
-          ))}
+          {clientMenu.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button 
+                key={item.id} 
+                type="button"
+                onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }} 
+                title={item.label} 
+                className={`flex items-center transition-all cursor-pointer ${
+                  sidebarCollapsed ? 'w-10 h-10 mx-auto justify-center rounded-xl' : 'w-full gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold'
+                }`}
+                style={
+                  isActive 
+                    ? { backgroundColor: '#0071A8', color: '#FFFFFF', boxShadow: '0 2px 6px rgba(0, 113, 168, 0.4)' }
+                    : { color: '#B7C0C6' }
+                }
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.backgroundColor = '#13384a'; e.currentTarget.style.color = '#FFFFFF'; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#B7C0C6'; } }}
+              >
+                <span className="shrink-0">{item.icon}</span>
+                {!sidebarCollapsed && <span className="tracking-wide">{item.label}</span>}
+              </button>
+            );
+          })}
         </nav>
 
-        <div className="px-3 py-2 border-t border-[#194052] shrink-0">
-          <button onClick={onLogout} title="Salir" className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-1.5' : 'gap-2 px-2.5 py-1.5'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-black text-[8px] uppercase tracking-wider transition-all`}>
-            <span className="shrink-0"><LogOut size={13} /></span>
-            {!sidebarCollapsed && <span>SALIR</span>}
+        {/* Salir */}
+        <div className="px-3 py-2.5 border-t shrink-0" style={{ borderColor: '#194052' }}>
+          <button 
+            type="button"
+            onClick={onLogout} 
+            title="Cerrar Sesión" 
+            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0 py-1.5' : 'gap-2 px-2.5 py-1.5'} rounded-xl text-rose-400 hover:bg-rose-500/10 font-semibold text-xs transition-all cursor-pointer`}
+          >
+            <span className="shrink-0"><LogOut size={14} /></span>
+            {!sidebarCollapsed && <span>Cerrar Sesión</span>}
           </button>
         </div>
       </aside>
 
-      <main className={`flex-1 flex flex-col h-full overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-        <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm print:hidden shrink-0">
+      {/* --- ÁREA PRINCIPAL (HEADER + VISTAS VIEWPORT FIT) --- */}
+      <main className={`flex-1 flex flex-col h-full overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-60'}`}>
+        
+        {/* HEADER SUPERIOR */}
+        <header 
+          className="bg-white px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-xs z-50 print:hidden"
+          style={{ borderBottom: '1px solid #D4DBDB' }}
+        >
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2.5 text-[#134b60] lg:hidden hover:bg-slate-50 rounded-xl transition-all border border-slate-100">
-              <MenuIcon size={20} />
+            <button 
+              type="button"
+              onClick={() => setIsSidebarOpen(true)} 
+              className="p-1.5 lg:hidden hover:bg-slate-100 rounded-xl transition-all border"
+              style={{ color: '#0071A8', borderColor: '#D4DBDB' }}
+            >
+              <MenuIcon size={18} />
             </button>
-            <h1 className="text-xs md:text-sm font-black text-[#134b60] tracking-tight uppercase">
-              Bienvenido, {currentUser.name}
-            </h1>
+            <div>
+              <h1 className="text-xs sm:text-sm font-bold tracking-tight text-slate-800">
+                Bienvenido, <span style={{ color: '#0071A8' }}>{currentUser.name}</span>
+              </h1>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 ml-auto">
-            {/* Reloj y Calendario */}
+          <div className="flex items-center gap-2.5 ml-auto">
+            {/* Reloj y Calendario Desplegable */}
             <div className="relative">
-              <button onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="flex items-center gap-3.5 px-4 py-2.5 bg-slate-50 border border-slate-200/85 rounded-2xl shadow-inner text-[#134b60] hover:bg-slate-100 transition-all cursor-pointer">
-                <Clock size={20} className="text-[#2596be] shrink-0" />
+              <button 
+                type="button"
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)} 
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border rounded-xl shadow-xs hover:bg-slate-100 transition-all cursor-pointer"
+                style={{ borderColor: '#D4DBDB' }}
+              >
+                <Clock size={16} style={{ color: '#0071A8' }} className="shrink-0" />
                 <div className="flex flex-col text-left leading-tight">
-                  <span className="text-xs font-black tracking-wider">{timeString}</span>
-                  <span className="text-[9px] font-bold text-slate-400">{dateString}</span>
+                  <span className="text-xs font-bold font-mono text-slate-800">{timeString}</span>
+                  <span className="text-[9px] font-medium capitalize" style={{ color: '#B7C0C6' }}>{dateString}</span>
                 </div>
-                <ChevronDown size={14} className={`text-slate-400 transition-transform ${isCalendarOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={13} className={`text-slate-400 transition-transform ${isCalendarOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {isCalendarOpen && <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsCalendarOpen(false)}></div>}
+              {isCalendarOpen && (
+                <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsCalendarOpen(false)} />
+              )}
 
               {isCalendarOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-3xl shadow-2xl border-2 border-[#e9f4f8] p-5 z-50 uppercase font-sans text-slate-900">
-                  <div className="flex items-center justify-between mb-4">
-                    <button onClick={() => { const newD = new Date(calendarDate); newD.setMonth(newD.getMonth() - 1); setCalendarDate(newD); }} className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"><ChevronLeft size={16} /></button>
-                    <span className="text-xs font-black text-[#134b60]">{calendarDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
-                    <button onClick={() => { const newD = new Date(calendarDate); newD.setMonth(newD.getMonth() + 1); setCalendarDate(newD); }} className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"><ChevronRight size={16} /></button>
+                <div 
+                  className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border p-4 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150"
+                  style={{ borderColor: '#D4DBDB' }}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <button 
+                      type="button"
+                      onClick={() => { const newD = new Date(calendarDate); newD.setMonth(newD.getMonth() - 1); setCalendarDate(newD); }} 
+                      className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft size={15} />
+                    </button>
+                    <span className="text-xs font-bold capitalize" style={{ color: '#0071A8' }}>
+                      {calendarDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button 
+                      type="button"
+                      onClick={() => { const newD = new Date(calendarDate); newD.setMonth(newD.getMonth() + 1); setCalendarDate(newD); }} 
+                      className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors cursor-pointer"
+                    >
+                      <ChevronRight size={15} />
+                    </button>
                   </div>
-                  <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 mb-2">
-                    <span>LU</span><span>MA</span><span>MI</span><span>JU</span><span>VI</span><span className="text-slate-400">SA</span><span className="text-rose-500">DO</span>
+                  
+                  <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-semibold text-slate-400 mb-1">
+                    <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sá</span><span className="text-rose-500">Do</span>
                   </div>
-                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold">
+                  
+                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium">
                     {(() => {
                       const year = calendarDate.getFullYear(); const month = calendarDate.getMonth();
                       const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
                       const totalDays = new Date(year, month + 1, 0).getDate();
                       const today = new Date(); const holidays = getColombiaHolidays(year);
                       const days = [];
-                      for (let i = 0; i < firstDayIndex; i++) days.push(<div key={`empty-${i}`} className="p-2"></div>);
+                      for (let i = 0; i < firstDayIndex; i++) days.push(<div key={`empty-${i}`} className="p-1.5"></div>);
                       for (let day = 1; day <= totalDays; day++) {
                         const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
                         const dateKey = `${month + 1}-${day}-${year}`;
                         const isHoliday = holidays.has(dateKey);
                         const isSunday = new Date(year, month, day).getDay() === 0;
-                        let styleClass = 'hover:bg-slate-100 text-[#134b60] cursor-pointer'; let tooltip = '';
-                        if (isToday) styleClass = 'bg-[#2596be] text-white font-black shadow-md';
-                        else if (isHoliday) { styleClass = 'bg-rose-50 text-rose-600 font-black border border-rose-200'; tooltip = 'Festivo Colombia'; }
-                        else if (isSunday) styleClass = 'text-rose-500 font-bold bg-rose-50/50';
-                        days.push(<div key={day} title={tooltip} className={`p-2 rounded-xl flex items-center justify-center transition-all ${styleClass}`}>{day}</div>);
+                        let styleClass = 'hover:bg-slate-100 text-slate-700 cursor-pointer'; let tooltip = '';
+                        if (isToday) styleClass = 'text-white font-bold shadow-xs';
+                        else if (isHoliday) { styleClass = 'bg-rose-50 text-rose-600 font-semibold border border-rose-200'; tooltip = 'Festivo Colombia'; }
+                        else if (isSunday) styleClass = 'text-rose-500 font-semibold bg-rose-50/40';
+                        
+                        days.push(
+                          <div 
+                            key={day} 
+                            title={tooltip} 
+                            style={isToday ? { backgroundColor: '#0071A8' } : {}}
+                            className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${styleClass}`}
+                          >
+                            {day}
+                          </div>
+                        );
                       }
                       return days;
                     })()}
                   </div>
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex justify-center">
-                    <button onClick={() => setCalendarDate(new Date())} className="text-xs font-black text-[#2596be] hover:underline cursor-pointer">Hoy</button>
+                  
+                  <div className="mt-3 pt-2 border-t flex justify-center" style={{ borderColor: '#D4DBDB' }}>
+                    <button 
+                      type="button"
+                      onClick={() => setCalendarDate(new Date())} 
+                      className="text-xs font-semibold hover:underline cursor-pointer"
+                      style={{ color: '#0071A8' }}
+                    >
+                      Hoy
+                    </button>
                   </div>
                 </div>
               )}
@@ -7337,43 +7496,71 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
             {/* Campana de Notificaciones Interactiva */}
             <div className="relative">
               <button 
+                type="button"
                 onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); setIsCalendarOpen(false); }}
-                className="w-10 h-10 bg-slate-50 border border-slate-200/80 text-[#134b60] rounded-2xl flex items-center justify-center hover:bg-slate-100 transition-all shadow-inner relative cursor-pointer"
+                className="w-9 h-9 bg-slate-50 border rounded-xl flex items-center justify-center hover:bg-slate-100 transition-all shadow-xs relative cursor-pointer"
+                style={{ borderColor: '#D4DBDB', color: '#0071A8' }}
                 title="Notificaciones"
               >
-                <Bell size={18} className="text-[#134b60]" />
+                <Bell size={16} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-pulse">
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-pulse">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
-              {isNotificationsOpen && <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsNotificationsOpen(false)}></div>}
+              {isNotificationsOpen && (
+                <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsNotificationsOpen(false)} />
+              )}
 
               {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-3xl shadow-2xl border-2 border-[#e9f4f8] p-5 z-50 uppercase font-sans flex flex-col max-h-[400px]">
-                  <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-                    <span className="text-xs font-black text-[#134b60]">NOTIFICACIONES</span>
+                <div 
+                  className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border p-4 z-50 text-slate-800 flex flex-col max-h-[380px] animate-in fade-in zoom-in-95 duration-150"
+                  style={{ borderColor: '#D4DBDB' }}
+                >
+                  <div className="flex justify-between items-center mb-3 border-b pb-2" style={{ borderColor: '#D4DBDB' }}>
+                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#0071A8' }}>
+                      Notificaciones
+                    </span>
                     {unreadCount > 0 && (
-                      <button onClick={markAllAsRead} className="text-[8px] font-bold text-[#2596be] hover:underline cursor-pointer">
-                        MARCAR TODAS LEÍDAS
+                      <button 
+                        type="button"
+                        onClick={markAllAsRead} 
+                        className="text-[9px] font-semibold hover:underline cursor-pointer"
+                        style={{ color: '#0071A8' }}
+                      >
+                        Marcar todas leídas
                       </button>
                     )}
                   </div>
-                  <div className="overflow-y-auto scrollbar-hide space-y-2 flex-1">
+                  
+                  <div className="overflow-y-auto scrollbar-hide space-y-1.5 flex-1">
                     {userNotifications.length > 0 ? (
                       userNotifications.map(n => {
                         const isRead = n.readBy.includes(currentUser.id);
                         return (
-                          <div key={n.id} onClick={() => markAsRead(n.id)} className={`p-3 rounded-xl border transition-all cursor-pointer flex gap-3 items-center ${isRead ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-[#e9f4f8]/50 border-[#2596be]/30 shadow-sm hover:border-[#2596be]/50'}`}>
-                            {!isRead && <div className="w-2 h-2 rounded-full bg-[#2596be] shrink-0"></div>}
-                            <p className={`text-[9px] leading-relaxed ${isRead ? 'text-slate-500 font-bold' : 'text-[#134b60] font-black'}`}>{n.message}</p>
+                          <div 
+                            key={n.id} 
+                            onClick={() => markAsRead(n.id)} 
+                            className={`p-2.5 rounded-xl border transition-all cursor-pointer flex gap-2.5 items-center ${
+                              isRead 
+                                ? 'bg-slate-50 border-slate-100 opacity-60' 
+                                : 'bg-[#eff8fc] shadow-xs'
+                            }`}
+                            style={!isRead ? { borderColor: '#D4DBDB' } : {}}
+                          >
+                            {!isRead && <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: '#0071A8' }}></div>}
+                            <p className={`text-[10px] leading-snug ${isRead ? 'text-slate-500 font-medium' : 'text-slate-800 font-semibold'}`}>
+                              {n.message}
+                            </p>
                           </div>
                         );
                       })
                     ) : (
-                      <div className="text-center p-4 text-[9px] text-slate-400 font-bold">NO TIENES MENSAJES NUEVOS</div>
+                      <div className="text-center p-4 text-[10px] font-medium" style={{ color: '#B7C0C6' }}>
+                        No tienes mensajes nuevos
+                      </div>
                     )}
                   </div>
                 </div>
@@ -7382,8 +7569,8 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           </div>
         </header>
 
-        {/* Vistas dinámicas */}
-        <div className="p-8 md:p-12 max-w-[1700px] mx-auto w-full flex-1 overflow-y-auto print:overflow-visible scrollbar-hide print:p-0">
+        {/* --- CONTENEDOR DE VISTAS (VIEWPORT FIT ESTRICTO) --- */}
+        <div className="flex-1 w-full overflow-hidden p-2 sm:p-2.5 md:p-3 print:p-0 print:overflow-visible">
           {activeTab === 'dashboard' && <DashboardHome products={products} clients={clients} inventory={inventory} orders={orders} setActiveTab={setActiveTab} setFilterStatus={setFilterStatus} />}
           {activeTab === 'admin_orders' && <OrdersManagementView orders={orders} setOrders={setOrders} role="ADMIN" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} setNotifications={setNotifications} />}
           {activeTab === 'inventory' && <InventoryView inventory={inventory} setInventory={setInventory} products={products} orders={orders} />}
@@ -7398,6 +7585,7 @@ const Dashboard = ({ onLogout, currentUser, users, setUsers, globalLogo, setGlob
           {activeTab === 'client_new_order' && <ClientNewOrderView products={products} orders={orders} setOrders={setOrders} currentUser={currentUser} clients={clients} clientTypes={clientTypes} inventory={inventory} globalDiscountEngine={globalDiscountEngine} setNotifications={setNotifications} />}
           {activeTab === 'client_orders_history' && <OrdersManagementView orders={orders} setOrders={setOrders} role="CLIENTE" filterStatus={filterStatus} setFilterStatus={setFilterStatus} setActiveTab={setActiveTab} setNotifications={setNotifications} />}
         </div>
+
       </main>
     </div>
   );
